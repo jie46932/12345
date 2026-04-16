@@ -1,0 +1,112 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from 'tailwindcss'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// 自定义插件：dev 模式下把根目录的 .gltf/.bin/v3d.js/12345.js 直接 serve
+function serveRootFiles() {
+  const rootFiles = ['12345.gltf', '12345.bin', 'v3d.js', '12345.js']
+  return {
+    name: 'serve-root-files',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url.split('?')[0]
+
+        // 访问根路径或 /index.html 时，重写为 /index.dev.html 让 Vite 处理
+        if (url === '/' || url === '/index.html') {
+          req.url = '/index.dev.html'
+          return next()
+        }
+
+        const filename = url.replace(/^\//, '')
+        if (rootFiles.includes(filename)) {
+          const filePath = path.resolve(__dirname, filename)
+          if (fs.existsSync(filePath)) {
+            const ext = path.extname(filename)
+            const mime = ext === '.js' ? 'application/javascript'
+              : ext === '.gltf' ? 'model/gltf+json'
+              : 'application/octet-stream'
+            res.setHeader('Content-Type', mime)
+            fs.createReadStream(filePath).pipe(res)
+            return
+          }
+        }
+        next()
+      })
+    },
+  }
+}
+
+// 构建后修正路径，写入 index.html（本地）和 dist/index.html（Vercel）
+function fixAssetsPath() {
+  return {
+    name: 'fix-assets-path',
+    closeBundle() {
+      const distHtmlPath = path.resolve(__dirname, 'dist/index.dev.html')
+      const outHtmlPath = path.resolve(__dirname, 'index.html')
+      const distIndexPath = path.resolve(__dirname, 'dist/index.html')
+
+      // Vite 用 index.dev.html 为入口时，输出也叫 index.dev.html
+      const srcHtmlPath = fs.existsSync(distHtmlPath)
+        ? distHtmlPath
+        : path.resolve(__dirname, 'dist/index.html')
+
+      if (fs.existsSync(srcHtmlPath)) {
+        let html = fs.readFileSync(srcHtmlPath, 'utf-8')
+        // Vercel 版本：保留绝对路径 /assets/，只修正外部脚本引用
+        let htmlVercel = html
+        htmlVercel = htmlVercel.replace(/src="\/12345\.js"/g, 'src="/12345.js"')
+        htmlVercel = htmlVercel.replace(/title>.*?<\/title>/s, 'title>12345 Configurator</title>')
+        // 写入 dist/index.html 供 Vercel 使用
+        fs.writeFileSync(distIndexPath, htmlVercel)
+
+        // 本地版本：改为相对路径（供 Verge3D App Manager 使用）
+        let htmlLocal = html
+        htmlLocal = htmlLocal.replace(/src="\/assets\//g, 'src="./assets/')
+        htmlLocal = htmlLocal.replace(/href="\/assets\//g, 'href="./assets/')
+        htmlLocal = htmlLocal.replace(/src="\/12345\.js"/g, 'src="12345.js"')
+        htmlLocal = htmlLocal.replace(/title>.*?<\/title>/s, 'title>12345 Configurator</title>')
+        fs.writeFileSync(outHtmlPath, htmlLocal)
+
+        // 如果 srcHtmlPath 不是 dist/index.html 本身则删除（避免 App Manager 误扫描）
+        if (srcHtmlPath !== distIndexPath) {
+          fs.unlinkSync(srcHtmlPath)
+        }
+      }
+    }
+  }
+}
+
+export default defineConfig({
+  base: './',
+  plugins: [react(), serveRootFiles(), fixAssetsPath()],
+  css: {
+    postcss: {
+      plugins: [tailwindcss],
+    },
+  },
+  optimizeDeps: {
+    exclude: ['v3d'],
+  },
+  server: {
+    fs: {
+      allow: ['.'],
+    },
+    open: '/',
+  },
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: path.resolve(__dirname, 'index.dev.html'),
+      output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+      },
+    },
+  },
+})

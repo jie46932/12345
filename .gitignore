@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.max
+*.bak
+*.bak2
+*.log
+v3d_app_data/
+ammo.wasm.js
+ammo.wasm.wasm
+basis_transcoder.js
+basis_transcoder.wasm
+opentype.js
+environment.hdr
+assets/
