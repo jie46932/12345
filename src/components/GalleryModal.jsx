@@ -5,37 +5,37 @@ const galleryData = [
   {
     category: '简约白橡',
     title: '自然肌理，极简美学',
-    src: '/media/1.jpg',
+    src: '/media/4.png',
     desc: '白橡原木面板搭配铝合金框架，自然纹理与现代工业设计的完美融合。',
   },
   {
     category: '深胡桃色',
     title: '沉稳质感，专属品味',
-    src: '/media/2.jpg',
+    src: '/media/5.png',
     desc: '深胡桃色木纹营造出沉稳内敛的氛围，适合追求高级感的工作空间。',
   },
   {
     category: '智能升降',
     title: '站坐自由，健康工作',
-    src: '/media/3.jpg',
+    src: '/media/6.png',
     desc: '电动线性马达驱动，68–120cm 无级调节，记忆档位一键到位。',
   },
   {
     category: '整洁桌面',
     title: '走线系统，告别杂乱',
-    src: '/media/1.jpg',
+    src: '/media/7.png',
     desc: '内嵌理线槽与桌下线夹，配合无线充电模块，还你干净利落的桌面。',
   },
   {
     category: '双屏办公',
     title: '多屏协同，效率翻倍',
-    src: '/media/2.jpg',
+    src: '/media/8.png',
     desc: '宽敞桌面轻松承载双显示器臂，搭配隐藏式线槽，专注不分心。',
   },
   {
     category: '细节工艺',
     title: '每处细节，精心打磨',
-    src: '/media/3.jpg',
+    src: '/media/9.png',
     desc: '圆角倒边、无痕拼接、防指纹涂层，用手感说话的高端制造。',
   },
 ];

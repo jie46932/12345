@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import LangToggle from './LangToggle';
 import LangSwitch from './LangSwitch';
 import FullscreenToggle from './FullscreenToggle';
+import MusicToggle from './MusicToggle';
 
 function NavBtn({ children }) {
   return (
@@ -19,8 +20,9 @@ const BRAND = 'HE FURNITURE';
 const SUB   = '智能升降桌';
 const DELAY = 100; // ms per letter
 
-export default function Header({ onToggleLight, lightOn, lang, onLangChange }) {
+export default function Header({ onToggleLight, lightOn, lampVisible = true, lang, onLangChange }) {
   const [navExpanded, setNavExpanded] = useState(false);
+  const [musicOn, setMusicOn] = useState(false);
 
   return (
     <StyledWrapper>
@@ -105,8 +107,10 @@ export default function Header({ onToggleLight, lightOn, lang, onLangChange }) {
             {/* 展开区：灯光 + 语言（hover 时展开） */}
             <div className={`nav-expand-wrap ${navExpanded ? 'nav-open' : ''}`}>
               <div className="nav-expand-inner">
+                {/* 音乐开关 — 最左侧 */}
+                <NavBtn><MusicToggle checked={musicOn} onChange={setMusicOn} /></NavBtn>
                 {/* nav-lang-en (1:10) — 灯光开关 */}
-                <NavBtn><LangToggle checked={lightOn} onChange={onToggleLight} /></NavBtn>
+                <NavBtn><LangToggle checked={lightOn} onChange={onToggleLight} disabled={!lampVisible} /></NavBtn>
                 {/* nav-light (1:12) — 语言切换 */}
                 <NavBtn><LangSwitch lang={lang} onChange={onLangChange} /></NavBtn>
               </div>

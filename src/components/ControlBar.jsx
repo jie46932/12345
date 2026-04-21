@@ -1,10 +1,10 @@
 // Figma: 方案四-顶部导航+底部工具栏 (底部工具栏区域)
 // neumorphism 风格 — 与右上角三按钮统一
 import { useRef, useEffect, useState } from 'react';
-import ViewSlider from './ViewSlider';
 import GalleryModal from './GalleryModal';
 import CartModal from './CartModal';
 import { useLang, T } from '../LangContext';
+import { MATERIALS } from '../data/products';
 
 // ── SVG 图标 ──────────────────────────────────────────────
 const Icons = {
@@ -88,7 +88,7 @@ const Icons = {
 };
 
 // ── 凹槽容器 + 凸起圆形图标按钮 (同右上角结构) ──
-function NeuBtn({ icon, label, active, onClick, title, size = 44 }) {
+function NeuBtn({ icon, label, active, onClick, title, size = 44, wrapClass = '' }) {
   const circleSize = Math.round(size * 0.68);
   const handleClick = (e) => {
     e.currentTarget.blur(); // 点击后立刻释放 focus，避免光圈
@@ -98,7 +98,7 @@ function NeuBtn({ icon, label, active, onClick, title, size = 44 }) {
     <div className="nb-outer" title={title}>
       {label && <span className="nb-label">{label}</span>}
       <button
-        className={`nb-wrap ${active ? 'nb-active' : ''}`}
+        className={`nb-wrap ${active ? 'nb-active' : ''} ${wrapClass}`}
         style={{ width: size, height: size }}
         onClick={handleClick}
       >
@@ -120,8 +120,7 @@ export default function ControlBar({
 }) {
   const lang = useLang();
   const t = T[lang];
-  const intervalRef = useRef(null); // 存 rAF id
-  const movingDirRef = useRef(null); // 同步给 rAF 闭包读取
+  const movingDirRef = useRef(null);
   const accLeaveTimer = useRef(null); // 配件区 mouseLeave 延迟收起
   const shareLeaveTimer = useRef(null); // 分享区 mouseLeave 延迟收起
   const heightLeaveTimer = useRef(null); // 高度区 mouseLeave 延迟收起
@@ -144,11 +143,10 @@ export default function ControlBar({
     document.body.classList.toggle('gallery-modal-open', galleryOpen);
   }, [galleryOpen]);
 
-  const materials = [
-    { id: 'light', name: t.mat_light, color: '#c8a882' },
-    { id: 'oak',   name: t.mat_oak,   color: '#e8d5b0' },
-    { id: 'dark',  name: t.mat_dark,  color: '#3a2a1a' },
-  ];
+  const materials = MATERIALS.map(m => ({
+    ...m,
+    name: m.id === 'light' ? t.mat_light : m.id === 'oak' ? t.mat_oak : t.mat_dark
+  }));
 
   const heights = [
     { cm: 68,  label: t.rank1 },
@@ -162,38 +160,25 @@ export default function ControlBar({
     { id: 'acc4', label: t.acc_lamp, icon: Icons.lamp },
   ];
 
-  const ARROW_SPEED = 0.5; // 保留常量，仅供参考（实际速度在 App.jsx renderCallback 里控制）
-
   const toggleMove = (dir) => {
     if (movingDirRef.current === dir) {
       // 再次点击同方向：停止
       movingDirRef.current = null;
       setMovingDir(null);
-      onStepFrame?.(null); // 清除 arrowMoveRef
-      if (intervalRef.current) { cancelAnimationFrame(intervalRef.current); intervalRef.current = null; }
+      onStepFrame?.(null);
     } else {
-      // 停止旧的
-      if (intervalRef.current) { cancelAnimationFrame(intervalRef.current); intervalRef.current = null; }
       // 开始新方向
       movingDirRef.current = dir;
       setMovingDir(dir);
       setActivePreset(null);
-      onStepFrame?.(dir); // 设置 arrowMoveRef，renderCallback 开始驱动
-
-      // rAF 只用于定期触发 re-render 更新高度显示（不驱动动画）
-      const loop = (ts) => {
-        if (!movingDirRef.current) return;
-        intervalRef.current = requestAnimationFrame(loop);
-      };
-      intervalRef.current = requestAnimationFrame(loop);
+      onStepFrame?.(dir);
     }
   };
 
   const stopMove = () => {
     movingDirRef.current = null;
     setMovingDir(null);
-    onStepFrame?.(null); // 清除 arrowMoveRef
-    if (intervalRef.current) { cancelAnimationFrame(intervalRef.current); intervalRef.current = null; }
+    onStepFrame?.(null);
   };
   useEffect(() => () => stopMove(), []);
 
@@ -244,13 +229,13 @@ export default function ControlBar({
           >
             <p style={{ margin: 0, fontSize: '14px', fontFamily: 'Rajdhani, Inter, sans-serif', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(0,0,0,0.6)' }}>{t.scanQr}</p>
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}`}
+              src="/media/网址.png"
               alt="二维码"
               width={200}
               height={200}
               style={{ borderRadius: '8px', display: 'block' }}
             />
-            <p style={{ margin: 0, fontSize: '12px', fontFamily: 'Rajdhani, Inter, sans-serif', color: 'rgba(0,0,0,0.4)', letterSpacing: '0.05em' }}>{window.location.href}</p>
+            <p style={{ margin: 0, fontSize: '12px', fontFamily: 'Rajdhani, Inter, sans-serif', color: 'rgba(0,0,0,0.4)', letterSpacing: '0.05em' }}>https://12345-two-rose.vercel.app/</p>
           </div>
         </div>
       )}
@@ -823,7 +808,7 @@ export default function ControlBar({
             <div className="cb-group-row">
               <NeuBtn
                 icon={Icons.info}
-                active={showAnnotations}
+                active={!showAnnotations}
                 onClick={onToggleAnnotations}
                 title="显示/隐藏标注"
                 size={67}
@@ -946,39 +931,43 @@ export default function ControlBar({
           >
             <span className="cb-group-label">{t.accessory}</span>
             <div className="cb-group-row">
-              {/* 第一个配件按钮：始终显示 */}
+              {/* 第一个配件按钮：始终显示，nb-wrap-1 */}
               <NeuBtn
                 icon={accessories[0].icon}
                 label={accExpanded ? accessories[0].label : undefined}
                 active={activeAccessory.has(accessories[0].id)}
+                wrapClass="nb-wrap-1"
                 onClick={() => {
                   const id = accessories[0].id;
+                  const wasActive = activeAccessory.has(id);
                   setActiveAccessory(prev => {
                     const next = new Set(prev);
-                    const nowActive = next.has(id) ? (next.delete(id), false) : (next.add(id), true);
-                    onAccessoryChange?.(id, nowActive);
+                    next.has(id) ? next.delete(id) : next.add(id);
                     return next;
                   });
+                  onAccessoryChange?.(id, wasActive);
                 }}
                 title={accessories[0].label}
                 size={67}
               />
-              {/* 展开区域：挂钩 + 台灯 */}
+              {/* 展开区域：挂钩(nb-wrap-2) + 台灯(nb-wrap-3) */}
               <div className={`nb-h-expand-wrap ${accExpanded ? 'nb-h-open' : ''}`}>
-                {accessories.slice(1).map(acc => (
+                {accessories.slice(1).map((acc, idx) => (
                   <NeuBtn
                     key={acc.id}
                     icon={acc.icon}
                     label={acc.label}
                     active={activeAccessory.has(acc.id)}
+                    wrapClass={`nb-wrap-${idx + 2}`}
                     onClick={() => {
                       const id = acc.id;
+                      const wasActive = activeAccessory.has(id);
                       setActiveAccessory(prev => {
                         const next = new Set(prev);
-                        const nowActive = next.has(id) ? (next.delete(id), false) : (next.add(id), true);
-                        onAccessoryChange?.(id, nowActive);
+                        next.has(id) ? next.delete(id) : next.add(id);
                         return next;
                       });
+                      onAccessoryChange?.(id, wasActive);
                     }}
                     title={acc.label}
                     size={67}
@@ -1007,20 +996,6 @@ export default function ControlBar({
 
         </div>
 
-      </div>
-
-      {/* ══ 视角圆盘：固定左侧，与左上角 Logo 对齐 ══ */}
-      <div style={{
-        position: 'fixed',
-        bottom: 16, left: 24,
-        zIndex: 51,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: 131, height: 131,
-        pointerEvents: 'auto',
-      }}>
-        <div style={{ transform: 'scale(0.637)', transformOrigin: 'center' }}>
-          <ViewSlider onViewChange={v => onViewChange?.(v)} />
-        </div>
       </div>
 
     </>

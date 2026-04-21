@@ -1,21 +1,8 @@
 // 购物车弹窗 — 材质 + 配件 + 价格明细
 import { useEffect } from 'react';
+import { MATERIALS, ACCESSORY_INFO, BASE_PRICE } from '../data/products';
 
-const MATERIAL_INFO = {
-  light: { name: '浅胡桃色', color: '#c8a882', price: 0 },
-  oak:   { name: '白橡原木', color: '#e8d5b0', price: 200 },
-  dark:  { name: '深胡桃色', color: '#3a2a1a', price: 500 },
-};
-
-const ACCESSORY_INFO = {
-  acc2: { name: '杯架',   price: 59 },
-  acc3: { name: '挂钩',   price: 39 },
-  acc4: { name: '台灯',   price: 299 },
-  acc5: { name: 'AR 预览', price: 0 },
-  acc1: { name: '二维码', price: 0 },
-};
-
-const BASE_PRICE = 899;
+const MATERIAL_INFO = Object.fromEntries(MATERIALS.map(m => [m.id, m]));
 
 export default function CartModal({ open, onClose, material, activeAccessory, height }) {
   useEffect(() => {

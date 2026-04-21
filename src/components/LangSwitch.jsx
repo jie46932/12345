@@ -7,7 +7,7 @@ export default function LangSwitch({ lang, onChange }) {
   return (
     <StyledWrapper>
       <label
-        className="toggle-outer"
+        className="toggle-outer toggle-outer2"
         title={isZh ? '切换为英文' : 'Switch to Chinese'}
       >
         <input

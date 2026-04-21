@@ -10,7 +10,7 @@ export function useLang() {
 export const T = {
   zh: {
     height: '高度',
-    annotation: '标注',
+    annotation: '尺寸',
     share: '分享',
     qr: '二维码',
     gallery: '画廊',

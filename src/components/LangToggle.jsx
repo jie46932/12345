@@ -1,10 +1,10 @@
 // nav-lang-en(1:10) 灯光开关 — 与 cb-cart-outer 同款结构
 import styled from 'styled-components';
 
-export default function LangToggle({ checked, onChange }) {
+export default function LangToggle({ checked, onChange, disabled }) {
   return (
-    <StyledWrapper>
-      <div className="toggle-outer">
+    <StyledWrapper style={{ opacity: disabled ? 0.35 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
+      <div className="toggle-outer toggle-outer1">
         <input
           type="checkbox"
           checked={checked}
@@ -17,7 +17,7 @@ export default function LangToggle({ checked, onChange }) {
               d="M12 2a7 7 0 0 1 7 7c0 2.6-1.4 4.9-3.5 6.2V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.8A7 7 0 0 1 12 2z"
               stroke="currentColor"
               strokeWidth="1.5"
-              fill={checked ? 'rgba(0,212,255,0.3)' : 'none'}
+              fill={checked ? 'rgba(255,255,255,0.3)' : 'none'}
             />
             <line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             <line x1="10" y1="23" x2="14" y2="23" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

@@ -28,7 +28,7 @@ export default function FullscreenToggle() {
 
   return (
     <StyledWrapper>
-      <label className="toggle-outer" title="最大化/还原窗口">
+      <label className="toggle-outer toggle-outer3" title="最大化/还原窗口">
         <input ref={inputRef} type="checkbox" onChange={handleChange} />
         <span className="toggle-inner" />
         <span className="toggle-icon">
