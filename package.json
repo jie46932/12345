@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --open /index.dev.html",
     "build": "vite build && cp dist/assets/* assets/ || true",
-    "build:vercel": "vite build && cp v3d.js dist/ && cp 12345.js dist/ && cp 12345.gltf dist/ && cp 12345.bin dist/ && cp visual_logic.js dist/ && cp -r media dist/",
+    "build:vercel": "vite build && cp v3d.js dist/ && cp 12345.js dist/ && cp visual_logic.js dist/ && cp -r media dist/ && cp -r public/media dist/",
     "lint": "eslint .",
     "preview": "vite preview"
   },
