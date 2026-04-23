@@ -296,16 +296,16 @@ export default function App() {
     };
   }, []);
 
-  // 监听 Verge3D 加载进度
+  // 监听 Verge3D 加载进度（仅在已登录时启动，避免未登录时假进度条跑到 92% 透出）
   useEffect(() => {
-    // 方案1: 监听 v3d 自定义进度事件
+    if (!authed) return;
+
     const onProgress = (e) => {
       const pct = e.detail?.progress ?? e.detail?.loaded ?? 0;
       setLoadProgress(Math.min(Math.round(pct * 100), 99));
     };
     window.addEventListener('v3d-loading-progress', onProgress);
 
-    // 方案2: 每 100ms +1，平滑逐步增加到 92（兜底）
     let fakeTimer = null;
     let fakeProgress = 0;
     fakeTimer = setInterval(() => {
@@ -319,7 +319,7 @@ export default function App() {
       window.removeEventListener('v3d-loading-progress', onProgress);
       if (fakeTimer) clearInterval(fakeTimer);
     };
-  }, []);
+  }, [authed]);
 
   // 同步 height UI：只在 t 值变化时更新，避免静止时频繁 re-render
   const lastSyncedT = useRef(-1);
@@ -551,7 +551,7 @@ export default function App() {
         {/* 登录界面：未通过验证时显示，挡在所有内容之前 */}
         <LoginScreen visible={!authed} onSuccess={() => setAuthed(true)} />
 
-        <LoadingScreen progress={loadProgress} visible={loadingVisible} />
+        <LoadingScreen progress={loadProgress} visible={authed && loadingVisible} />
         {/* goo filter for cart button blob effect */}
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <defs>
