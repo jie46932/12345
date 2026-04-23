@@ -300,9 +300,10 @@ export default function App() {
   useEffect(() => {
     if (!authed) return;
 
+    // v3d-loading-progress 派发 detail.percentage（0-1 浮点），乘以 100 转为百分比
     const onProgress = (e) => {
-      const pct = e.detail?.progress ?? e.detail?.loaded ?? 0;
-      setLoadProgress(Math.min(Math.round(pct * 100), 99));
+      const pct = e.detail?.percentage ?? 0;
+      setLoadProgress(prev => Math.max(prev, Math.min(Math.round(pct * 100), 99)));
     };
     window.addEventListener('v3d-loading-progress', onProgress);
 
