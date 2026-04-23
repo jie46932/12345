@@ -4,11 +4,12 @@ import tailwindcss from 'tailwindcss'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import obfuscatorPlugin from 'vite-plugin-javascript-obfuscator'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // 自定义插件：dev 模式下把根目录的 .gltf/.bin/v3d.js/12345.js 直接 serve
-// 同时提供 /api/login mock（本地开发用，读取 .env.local 环境变量）
+// 同时提供 /api/login 和 /api/get-scene mock（本地开发用，读取 .env.local 环境变量）
 function serveRootFiles() {
   const rootFiles = ['12345.gltf', '12345.bin', 'v3d.js', '12345.js']
   return {
@@ -45,6 +46,23 @@ function serveRootFiles() {
               res.end(JSON.stringify({ success: false, message: '请求格式错误' }))
             }
           })
+          return
+        }
+
+        // 本地 /api/get-scene mock：验证 token，返回场景路径
+        if (url === '/api/get-scene' && req.method === 'GET') {
+          const authHeader = req.headers['authorization'] || ''
+          const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+          const validToken = process.env.ACCESS_TOKEN || 'he_furniture_v3d_access'
+          const devToken = 'he_furniture_dev_token'
+          res.setHeader('Content-Type', 'application/json')
+          if (token === validToken || token === devToken) {
+            res.statusCode = 200
+            res.end(JSON.stringify({ success: true, sceneURL: 'media/a3f8c2.dat' }))
+          } else {
+            res.statusCode = 401
+            res.end(JSON.stringify({ success: false, message: '无效的访问凭证' }))
+          }
           return
         }
 
@@ -109,7 +127,28 @@ function fixAssetsPath() {
 
 export default defineConfig({
   base: './',
-  plugins: [react(), serveRootFiles(), fixAssetsPath()],
+  plugins: [
+    react(),
+    serveRootFiles(),
+    fixAssetsPath(),
+    // JS 混淆：仅在 build 时生效，dev 模式跳过（避免影响 HMR 速度）
+    obfuscatorPlugin({
+      apply: 'build',
+      options: {
+        // 中等强度：变量/函数名混淆 + 字符串加密，不开控制流（体积翻倍）
+        compact: true,
+        identifierNamesGenerator: 'hexadecimal',
+        renameGlobals: false,          // 保留全局名（防止破坏 Verge3D API）
+        stringArray: true,
+        stringArrayEncoding: ['rc4'],
+        stringArrayThreshold: 0.8,
+        rotateStringArray: true,
+        selfDefending: false,          // 关闭自卫（会破坏 minify）
+        debugProtection: false,        // 关闭 debugger 陷阱（影响合法用户）
+        disableConsoleOutput: true,    // 清除所有 console.log
+      },
+    }),
+  ],
   css: {
     postcss: {
       plugins: [tailwindcss],

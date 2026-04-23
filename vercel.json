@@ -2,10 +2,11 @@
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "functions": {
-    "api/login.js": { "memory": 128, "maxDuration": 5 }
+    "api/login.js":     { "memory": 128, "maxDuration": 5 },
+    "api/get-scene.js": { "memory": 128, "maxDuration": 5 }
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/(.*)",     "destination": "/index.html" }
   ]
 }

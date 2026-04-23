@@ -2,12 +2,33 @@
 
 'use strict';
 
-window.addEventListener('load', e => {
+window.addEventListener('load', async e => {
     const params = v3d.AppUtils.getPageParams();
+
+    // 优先用 URL 参数（调试用），否则向后端请求真实场景路径
+    let sceneURL = params.load;
+    if (!sceneURL) {
+        try {
+            const token = sessionStorage.getItem('v3d_token') || '';
+            const resp = await fetch('/api/get-scene', {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            const data = await resp.json();
+            if (!data.success) {
+                console.error('Scene access denied:', data.message);
+                return;
+            }
+            sceneURL = data.sceneURL;
+        } catch (err) {
+            console.error('Failed to get scene URL:', err);
+            return;
+        }
+    }
+
     createApp({
         containerId: 'v3d-container',
         fsButtonId: 'fullscreen-button',
-        sceneURL: params.load || 'media/12345.gltf',
+        sceneURL,
         logicURL: params.logic || 'visual_logic.js',
     });
 });
@@ -33,7 +54,11 @@ async function createApp({containerId, fsButtonId = null, sceneURL, logicURL = '
         initOptions = PL.execInitPuzzles({ container: containerId }).initOptions;
     }
     initOptions.useCompAssets = true;
-    sceneURL = initOptions.useCompAssets ? `${sceneURL}.xz` : sceneURL;
+    // 若 sceneURL 已是 .dat（经 api/get-scene 返回的伪装压缩文件），不追加 .xz
+    // 若 sceneURL 是原始 .gltf（调试时 URL 参数传入），则追加 .xz
+    if (initOptions.useCompAssets && !sceneURL.endsWith('.dat')) {
+        sceneURL = `${sceneURL}.xz`;
+    }
 
     const disposeFullscreen = prepareFullscreen(containerId, fsButtonId,
             initOptions.useFullscreen);
