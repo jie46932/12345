@@ -30,6 +30,8 @@ export default function LoginScreen({ visible, onSuccess }) {
       if (data.success) {
         // 把 token 存到 sessionStorage（关闭标签页自动清除）
         sessionStorage.setItem('v3d_token', data.token);
+        // 通知 12345.js 开始加载场景
+        window.dispatchEvent(new CustomEvent('v3d-authed', { detail: { token: data.token } }));
         onSuccess?.();
       } else {
         setError(data.message || '账号或密码错误');

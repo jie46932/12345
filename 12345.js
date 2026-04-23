@@ -2,14 +2,14 @@
 
 'use strict';
 
-window.addEventListener('load', async e => {
+// 请求场景路径并启动 Verge3D 应用
+async function startApp(token) {
     const params = v3d.AppUtils.getPageParams();
 
     // 优先用 URL 参数（调试用），否则向后端请求真实场景路径
     let sceneURL = params.load;
     if (!sceneURL) {
         try {
-            const token = sessionStorage.getItem('v3d_token') || '';
             const resp = await fetch('/api/get-scene', {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
@@ -31,6 +31,20 @@ window.addEventListener('load', async e => {
         sceneURL,
         logicURL: params.logic || 'visual_logic.js',
     });
+}
+
+window.addEventListener('load', () => {
+    // 若已登录（刷新页面时 sessionStorage 仍有 token），立即加载
+    const existingToken = sessionStorage.getItem('v3d_token');
+    if (existingToken) {
+        startApp(existingToken);
+        return;
+    }
+
+    // 否则等待登录成功事件
+    window.addEventListener('v3d-authed', (e) => {
+        startApp(e.detail.token);
+    }, { once: true });
 });
 
 async function createApp({containerId, fsButtonId = null, sceneURL, logicURL = ''}) {
