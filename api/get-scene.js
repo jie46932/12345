@@ -17,9 +17,9 @@ export default function handler(req, res) {
     return res.status(401).json({ success: false, message: '无效的访问凭证' });
   }
 
-  // 验证通过，返回真实资产路径（前端网络面板只看到 /api/get-scene）
+  // 验证通过，返回伪装路径（Vercel rewrite 将 .xz 映射到实际 .dat 文件）
   return res.status(200).json({
     success: true,
-    sceneURL: 'media/a3f8c2.dat',
+    sceneURL: 'media/12345.gltf.xz',
   });
 }

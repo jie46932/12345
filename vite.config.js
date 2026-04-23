@@ -58,7 +58,7 @@ function serveRootFiles() {
           res.setHeader('Content-Type', 'application/json')
           if (token === validToken || token === devToken) {
             res.statusCode = 200
-            res.end(JSON.stringify({ success: true, sceneURL: 'media/a3f8c2.dat' }))
+            res.end(JSON.stringify({ success: true, sceneURL: 'media/12345.gltf.xz' }))
           } else {
             res.statusCode = 401
             res.end(JSON.stringify({ success: false, message: '无效的访问凭证' }))

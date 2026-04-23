@@ -68,9 +68,9 @@ async function createApp({containerId, fsButtonId = null, sceneURL, logicURL = '
         initOptions = PL.execInitPuzzles({ container: containerId }).initOptions;
     }
     initOptions.useCompAssets = true;
-    // 若 sceneURL 已是 .dat（经 api/get-scene 返回的伪装压缩文件），不追加 .xz
-    // 若 sceneURL 是原始 .gltf（调试时 URL 参数传入），则追加 .xz
-    if (initOptions.useCompAssets && !sceneURL.endsWith('.dat')) {
+    // 若 sceneURL 尚未以 .xz 结尾（如原始 .gltf 调试路径），才追加 .xz
+    // api/get-scene 现在返回 media/12345.gltf.xz，Vercel rewrite 映射到实际 .dat 文件
+    if (initOptions.useCompAssets && !sceneURL.endsWith('.xz')) {
         sceneURL = `${sceneURL}.xz`;
     }
 
