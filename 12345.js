@@ -32,6 +32,7 @@ async function createApp({containerId, fsButtonId = null, sceneURL, logicURL = '
     if (PL) {
         initOptions = PL.execInitPuzzles({ container: containerId }).initOptions;
     }
+    initOptions.useCompAssets = true;
     sceneURL = initOptions.useCompAssets ? `${sceneURL}.xz` : sceneURL;
 
     const disposeFullscreen = prepareFullscreen(containerId, fsButtonId,
@@ -65,10 +66,9 @@ async function createApp({containerId, fsButtonId = null, sceneURL, logicURL = '
 
 
 function createPreloader(containerId, initOptions, PE) {
-    const preloader = initOptions.useCustomPreloader
-            ? createCustomPreloader(initOptions.preloaderProgressCb,
-            initOptions.preloaderEndCb)
-            : new v3d.SimplePreloader({ container: containerId });
+    const updateCb = initOptions.useCustomPreloader ? initOptions.preloaderProgressCb : null;
+    const finishCb = initOptions.useCustomPreloader ? initOptions.preloaderEndCb : null;
+    const preloader = createCustomPreloader(updateCb, finishCb);
 
     if (PE) puzzlesEditorPreparePreloader(preloader, PE);
 
@@ -79,11 +79,15 @@ function createCustomPreloader(updateCb, finishCb) {
     class CustomPreloader extends v3d.Preloader {
         constructor() {
             super();
+            // 隐藏 Verge3D 默认的进度条 UI，使用 React 自定义加载界面
+            const el = document.querySelector('.v3d-preloader');
+            if (el) el.style.display = 'none';
         }
 
         onUpdate(percentage) {
             super.onUpdate(percentage);
             if (updateCb) updateCb(percentage);
+            window.dispatchEvent(new CustomEvent('v3d-loading-progress', { detail: { percentage } }));
         }
 
         onFinish() {

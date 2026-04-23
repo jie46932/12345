@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
 import UnicornScene from 'unicornstudio-react';
 import './App.css';
 import Header from './components/Header';
 import ControlBar from './components/ControlBar';
 import LoadingScreen from './components/LoadingScreen';
+import LoginScreen from './components/LoginScreen';
 import DimensionAnnotation from './components/DimensionAnnotation';
 import { LangContext } from './LangContext';
-import { MATERIALS } from './data/products';
 
 let reflectionRAF = null;
 let groundReflectionRAF = null;
@@ -61,18 +60,14 @@ export default function App() {
   const [monitorAddon, setMonitorAddon] = useState(false);
   const [lightOn, setLightOn] = useState(false);
   const [lampVisible, setLampVisible] = useState(true);
-  const lightOrigIntensity = useRef(1.52); // Material 自发光原始强度（固定值）
   const [activeView, setActiveView] = useState('front');
   const [lang, setLang] = useState('zh');
   const loadStartTime = useRef(Date.now());
   const [loadProgress, setLoadProgress] = useState(0);
   const [loadingVisible, setLoadingVisible] = useState(true);
 
-  const materials = MATERIALS;
-
-  const basePrice = 899;
-  const addonPrice = monitorAddon ? 89 : 0;
-  const totalPrice = basePrice + addonPrice;
+  // 登录状态：检查 sessionStorage 是否已有合法 token
+  const [authed, setAuthed] = useState(() => !!sessionStorage.getItem('v3d_token'));
 
   useEffect(() => {
     const updateZoom = () => {
@@ -125,10 +120,6 @@ export default function App() {
 
       // 从关键帧数据提取各档位的 y 坐标（0=一档, 0.5=二档, 1=三档）
       // Dummy003: 0→-4.1517, 1→-9.592  Dummy002: 0→-0.4365, 1→-7.1008
-      const dummies = [
-        { name: 'Dummy003', y0: -4.1517, y1: -9.592 },
-        { name: 'Dummy002', y0: -0.4365, y1: -7.1008 },
-      ];
 
       // 初始定位到二档（t=0.5，对应 94cm）
       applyT(0.5, app);
@@ -253,7 +244,8 @@ export default function App() {
         };
 
         // 监听 document 上的用户交互（包含 UI 按钮点击，防止点按钮后 autoRotate 不停止）
-        ['mousedown', 'wheel', 'touchstart', 'keydown'].forEach(evt => {
+        const idleEvents = ['mousedown', 'wheel', 'touchstart', 'keydown'];
+        idleEvents.forEach(evt => {
           document.addEventListener(evt, resetIdle, { passive: true });
         });
         // mousemove 只监听 canvas，避免鼠标在 UI 区域游走时频繁重置
@@ -265,6 +257,19 @@ export default function App() {
 
         // 启动首次倒计时
         startIdle();
+
+        // 组件卸载时清理事件监听和 timer，防止内存泄漏
+        const cleanupIdle = () => {
+          clearTimeout(idleTimer);
+          idleEvents.forEach(evt => {
+            document.removeEventListener(evt, resetIdle);
+          });
+          if (canvas) {
+            canvas.removeEventListener('mousemove', resetIdle);
+            canvas.removeEventListener('touchmove', resetIdle);
+          }
+        };
+        container._cleanupIdle = cleanupIdle;
       }
     }
 
@@ -277,6 +282,8 @@ export default function App() {
     window.addEventListener('v3d-scene-ready', onSceneReady, { once: true });
     return () => {
       window.removeEventListener('v3d-scene-ready', onSceneReady);
+      // 清理自动旋转事件监听和 timer
+      containerRef.current?._cleanupIdle?.();
       // 清理内存泄漏：取消两个 rAF 循环
       if (reflectionRAF) {
         cancelAnimationFrame(reflectionRAF);
@@ -386,14 +393,6 @@ export default function App() {
       const obj = a.scene.getObjectByName(name);
       if (obj) obj.position.y = y0 + (y1 - y0) * t;
     });
-  };
-
-  // 瞬间跳到指定档位（初始化用）
-  const changeFrame = (heightCm) => {
-    const t = heightTMap[heightCm];
-    if (t === undefined) return;
-    arrowTRef.current = t;
-    applyT(t);
   };
 
   // 从当前位置平滑播放到目标档位
@@ -549,6 +548,9 @@ export default function App() {
   return (
     <LangContext.Provider value={lang}>
       <>
+        {/* 登录界面：未通过验证时显示，挡在所有内容之前 */}
+        <LoginScreen visible={!authed} onSuccess={() => setAuthed(true)} />
+
         <LoadingScreen progress={loadProgress} visible={loadingVisible} />
         {/* goo filter for cart button blob effect */}
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>

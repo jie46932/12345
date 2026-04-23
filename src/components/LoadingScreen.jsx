@@ -61,7 +61,7 @@ const StyledWrapper = styled.div`
     /* 若宽度不够撑满高度，则改用高度为基准 */
     min-height: 100%;
     min-width: calc(100vh * 16 / 9);
-    background-image: url('/media/ComfyUI_00001_pnekf_1775978833 拷贝.jpg');
+    background-image: url('/media/ComfyUI_00001_pnekf_1775978833.jpg');
     background-repeat: no-repeat;
     background-size: 100% 100%;
     background-position: center;

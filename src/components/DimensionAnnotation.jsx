@@ -42,9 +42,10 @@ const ANNOTATIONS = [
 ];
 
 export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
-  const groupsRef  = useRef([]);   // 每条标注对应一个 Group
-  const visibleRef = useRef(visible);
-  const heightTRef = useRef(heightT);
+  const groupsRef    = useRef([]);   // 每条标注对应一个 Group
+  const visibleRef   = useRef(visible);
+  const heightTRef   = useRef(heightT);
+  const masterTickRef = useRef(null); // 用于 cleanup 移除 renderCallback
 
   useEffect(() => {
     visibleRef.current = visible;
@@ -95,18 +96,23 @@ export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
 
       const raycaster = new v3d.Raycaster();
 
+      // 预分配：避免 checkOcclusion 每次创建 5 个 Vector3 + 1 个 dir
+      const _pts = [
+        new v3d.Vector3(), new v3d.Vector3(), new v3d.Vector3(),
+        new v3d.Vector3(), new v3d.Vector3(),
+      ];
+      const _dir = new v3d.Vector3();
+
       function checkOcclusion(camPos, la, lb) {
-        const pts = [
-          la.clone(),
-          la.clone().lerp(lb, 0.25),
-          la.clone().lerp(lb, 0.5),
-          la.clone().lerp(lb, 0.75),
-          lb.clone(),
-        ];
-        for (const pt of pts) {
-          const dir  = new v3d.Vector3().subVectors(pt, camPos);
-          const dist = dir.length();
-          raycaster.set(camPos, dir.normalize());
+        _pts[0].copy(la);
+        _pts[1].copy(la).lerp(lb, 0.25);
+        _pts[2].copy(la).lerp(lb, 0.5);
+        _pts[3].copy(la).lerp(lb, 0.75);
+        _pts[4].copy(lb);
+        for (const pt of _pts) {
+          _dir.subVectors(pt, camPos);
+          const dist = _dir.length();
+          raycaster.set(camPos, _dir.normalize());
           raycaster.near = 0.1;
           raycaster.far  = dist - 0.5;
           if (raycaster.intersectObjects(occluderCache, false).length > 0) return true;
@@ -254,6 +260,9 @@ export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
         const aw = cfg.arrowW ?? ARROW_W;
         const al = cfg.arrowL ?? ARROW_L;
 
+        // 动态标注：缓存上次绘制的 cm 值，避免无变化时重复调用 drawLabel
+        let lastDynamicCm = -1;
+
         // ── 对象池：预分配复用对象，避免每帧创建临时 Vector3 ──
         const la = new v3d.Vector3();
         const lb = new v3d.Vector3();
@@ -295,11 +304,14 @@ export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
           sprite.position.copy(mid);
           sprite.position.y += 4;
 
-          // 动态 label：每帧从 heightTRef 读取当前高度（cm）并重绘
+          // 动态 label：每帧从 heightTRef 读取当前高度（cm）并重绘（值变化才重绘）
           if (cfg.dynamic) {
             const t = heightTRef.current ?? 0.5;
             const cm = Math.round(68 + t * 52);
-            drawLabel(cm + 'mm');
+            if (cm !== lastDynamicCm) {
+              lastDynamicCm = cm;
+              drawLabel(cm + 'cm');
+            }
           }
 
           // ── 判断是否应显示 ──
@@ -343,20 +355,23 @@ export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
       });
 
       // ── 主 renderCallback ──
+      // camPos 预分配在此处，避免每帧 new Vector3()
+      const _camPos = new v3d.Vector3();
+
       function masterTick(delta) {
         // 每30帧刷新障碍物缓存（所有标注共用）
         occluderFrame++;
         if (!occluderCache || occluderFrame % 30 === 0) refreshOccluders();
 
-        const cam    = app.camera;
-        const camPos = new v3d.Vector3();
-        cam.getWorldPosition(camPos);
+        const cam = app.camera;
+        cam.getWorldPosition(_camPos);
 
         const shouldShowBase = visibleRef.current;
 
-        ticks.forEach(tick => tick(delta, camPos, shouldShowBase));
+        ticks.forEach(tick => tick(delta, _camPos, shouldShowBase));
       }
 
+      masterTickRef.current = masterTick;
       if (app.renderCallbacks) app.renderCallbacks.push(masterTick);
       masterTick(0.016);
     }
@@ -365,10 +380,11 @@ export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
 
     return () => {
       const app = window.v3dApp;
-      // 清理 renderCallback 泄漏：从 app.renderCallbacks 中移除 masterTick
-      if (app?.renderCallbacks) {
-        const idx = app.renderCallbacks.indexOf(masterTick);
+      // 通过 masterTickRef 正确移除 renderCallback（cleanup 与 init 在不同作用域）
+      if (app?.renderCallbacks && masterTickRef.current) {
+        const idx = app.renderCallbacks.indexOf(masterTickRef.current);
         if (idx !== -1) app.renderCallbacks.splice(idx, 1);
+        masterTickRef.current = null;
       }
       // 清理场景对象
       if (app?.scene) {

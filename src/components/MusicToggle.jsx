@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
-const MUSIC_SRC = '/media/Rob Simonsen - Blue_cut.wav';
+const MUSIC_SRC = '/media/Rob Simonsen - Blue_cut.mp3';
 const FADE_DURATION = 2; // 秒
 
 export default function MusicToggle({ checked, onChange }) {

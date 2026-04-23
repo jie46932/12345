@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // 自定义插件：dev 模式下把根目录的 .gltf/.bin/v3d.js/12345.js 直接 serve
+// 同时提供 /api/login mock（本地开发用，读取 .env.local 环境变量）
 function serveRootFiles() {
   const rootFiles = ['12345.gltf', '12345.bin', 'v3d.js', '12345.js']
   return {
@@ -20,6 +21,31 @@ function serveRootFiles() {
         if (url === '/' || url === '/index.html') {
           req.url = '/index.dev.html'
           return next()
+        }
+
+        // 本地 /api/login mock（Vercel Functions 在本地不执行）
+        if (url === '/api/login' && req.method === 'POST') {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', () => {
+            try {
+              const { username, password } = JSON.parse(body)
+              const adminUser = process.env.ADMIN_USER || 'admin'
+              const adminPass = process.env.ADMIN_PASS || 'admin123'
+              res.setHeader('Content-Type', 'application/json')
+              if (username === adminUser && password === adminPass) {
+                res.statusCode = 200
+                res.end(JSON.stringify({ success: true, token: 'he_furniture_dev_token' }))
+              } else {
+                res.statusCode = 401
+                res.end(JSON.stringify({ success: false, message: '账号或密码错误' }))
+              }
+            } catch {
+              res.statusCode = 400
+              res.end(JSON.stringify({ success: false, message: '请求格式错误' }))
+            }
+          })
+          return
         }
 
         const filename = url.replace(/^\//, '')
