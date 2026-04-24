@@ -126,7 +126,7 @@ export default function ControlBar({
   const heightLeaveTimer = useRef(null); // 高度区 mouseLeave 延迟收起
   const matLeaveTimer = useRef(null); // 材质区 mouseLeave 延迟收起
   const [movingDir, setMovingDir] = useState(null);
-  const [activeAccessory, setActiveAccessory] = useState(new Set());
+  const [activeAccessory, setActiveAccessory] = useState(new Set(['acc2', 'acc3', 'acc4']));
   const [cartClicked, setCartClicked] = useState(false);
   const [activePreset, setActivePreset] = useState(94); // 初始二档高亮
   const [activeMats, setActiveMats] = useState(new Set());
@@ -229,13 +229,13 @@ export default function ControlBar({
           >
             <p style={{ margin: 0, fontSize: '14px', fontFamily: 'Rajdhani, Inter, sans-serif', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(0,0,0,0.6)' }}>{t.scanQr}</p>
             <img
-              src="/media/网址.png"
+              src="/media/website.jpg"
               alt="二维码"
               width={200}
               height={200}
               style={{ borderRadius: '8px', display: 'block' }}
             />
-            <p style={{ margin: 0, fontSize: '12px', fontFamily: 'Rajdhani, Inter, sans-serif', color: 'rgba(0,0,0,0.4)', letterSpacing: '0.05em' }}>https://12345-two-rose.vercel.app/</p>
+            <p style={{ margin: 0, fontSize: '12px', fontFamily: 'Rajdhani, Inter, sans-serif', color: 'rgba(0,0,0,0.4)', letterSpacing: '0.05em' }}>https://www.gsdmsj.cn/</p>
           </div>
         </div>
       )}
@@ -945,7 +945,7 @@ export default function ControlBar({
                     next.has(id) ? next.delete(id) : next.add(id);
                     return next;
                   });
-                  onAccessoryChange?.(id, wasActive);
+                  onAccessoryChange?.(id, !wasActive);
                 }}
                 title={accessories[0].label}
                 size={67}
@@ -967,7 +967,7 @@ export default function ControlBar({
                         next.has(id) ? next.delete(id) : next.add(id);
                         return next;
                       });
-                      onAccessoryChange?.(id, wasActive);
+                      onAccessoryChange?.(id, !wasActive);
                     }}
                     title={acc.label}
                     size={67}

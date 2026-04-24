@@ -68,6 +68,7 @@ export default function App() {
 
   // 登录状态：检查 sessionStorage 是否已有合法 token
   const [authed, setAuthed] = useState(() => !!sessionStorage.getItem('v3d_token'));
+  const [musicReady, setMusicReady] = useState(false); // 加载完成后才允许播放背景音乐
 
   useEffect(() => {
     const updateZoom = () => {
@@ -107,6 +108,7 @@ export default function App() {
       const delay = Math.max(800, 2500 - elapsed);
       setTimeout(() => {
         setLoadingVisible(false);  // 触发 600ms fade-out
+        setMusicReady(true);       // 加载完成，允许背景音乐响应用户交互
         // 初始状态：灯关（Material #186 = 0，UI 按钮 = false）
         setLightOn(false);
         const mat = getMat186(app.scene);
@@ -124,10 +126,10 @@ export default function App() {
       // 初始定位到二档（t=0.5，对应 94cm）
       applyT(0.5, app);
 
-      // 初始化配件：默认全部隐藏，与 ControlBar activeAccessory 初始空 Set 同步
+      // 初始化配件：默认全部显示，与 ControlBar activeAccessory 初始 Set(['acc2','acc3','acc4']) 同步
       ['对象010', '对象011'].forEach(name => {
         const obj = app.scene?.getObjectByName(name);
-        if (obj) obj.visible = false;
+        if (obj) obj.visible = true;
       });
       // 台灯（组007）：初始状态显示
       const lamp = app.scene?.getObjectByName('组007');
@@ -586,7 +588,7 @@ export default function App() {
           pointerEvents: 'none',
           isolation: 'isolate',
         }}>
-          <Header onToggleLight={(on) => toggleLight(on)} lightOn={lightOn} lampVisible={lampVisible} lang={lang} onLangChange={setLang} />
+          <Header onToggleLight={(on) => toggleLight(on)} lightOn={lightOn} lampVisible={lampVisible} lang={lang} onLangChange={setLang} musicReady={musicReady} />
           <ControlBar
             height={height}
             onHeightChange={setHeight}

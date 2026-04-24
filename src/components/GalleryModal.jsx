@@ -96,6 +96,16 @@ function CometCard({ children }) {
   );
 }
 
+// 预加载所有画廊图片，避免首次打开时卡顿
+const preloadImages = () => {
+  galleryData.forEach(item => {
+    const img = new Image();
+    img.src = item.src;
+  });
+};
+// 模块加载时立即预加载
+preloadImages();
+
 export default function GalleryModal({ open, onClose }) {
   const [current, setCurrent] = useState(0);
   const dragStartX = useRef(0);

@@ -12,8 +12,8 @@ export default function LangSwitch({ lang, onChange }) {
       >
         <input
           type="checkbox"
-          checked={isZh}
-          onChange={e => onChange?.(e.target.checked ? 'zh' : 'en')}
+          checked={!isZh}
+          onChange={e => onChange?.(e.target.checked ? 'en' : 'zh')}
         />
         <span className="toggle-inner" />
         <span className="toggle-icon">{isZh ? '中' : 'EN'}</span>

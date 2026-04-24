@@ -66,6 +66,26 @@ function serveRootFiles() {
           return
         }
 
+        // 本地模拟 Vercel rewrite：把 .xz 请求映射到实际的 .dat 文件
+        if (url === '/media/12345.gltf.xz') {
+          const filePath = path.resolve(__dirname, 'media/a3f8c2.dat')
+          if (fs.existsSync(filePath)) {
+            res.setHeader('Content-Type', 'application/octet-stream')
+            res.setHeader('Cache-Control', 'public, max-age=31536000')
+            fs.createReadStream(filePath).pipe(res)
+            return
+          }
+        }
+        if (url === '/media/12345.bin.xz') {
+          const filePath = path.resolve(__dirname, 'media/b7d1e9.dat')
+          if (fs.existsSync(filePath)) {
+            res.setHeader('Content-Type', 'application/octet-stream')
+            res.setHeader('Cache-Control', 'public, max-age=31536000')
+            fs.createReadStream(filePath).pipe(res)
+            return
+          }
+        }
+
         const filename = url.replace(/^\//, '')
         if (rootFiles.includes(filename)) {
           const filePath = path.resolve(__dirname, filename)

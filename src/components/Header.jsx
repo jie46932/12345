@@ -20,7 +20,7 @@ const BRAND = 'HE FURNITURE';
 const SUB   = '智能升降桌';
 const DELAY = 100; // ms per letter
 
-export default function Header({ onToggleLight, lightOn, lampVisible = true, lang, onLangChange }) {
+export default function Header({ onToggleLight, lightOn, lampVisible = true, lang, onLangChange, musicReady = false }) {
   const [navExpanded, setNavExpanded] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
 
@@ -108,7 +108,7 @@ export default function Header({ onToggleLight, lightOn, lampVisible = true, lan
             <div className={`nav-expand-wrap ${navExpanded ? 'nav-open' : ''}`}>
               <div className="nav-expand-inner">
                 {/* 音乐开关 — 最左侧 */}
-                <NavBtn><MusicToggle checked={musicOn} onChange={setMusicOn} /></NavBtn>
+                <NavBtn><MusicToggle checked={musicOn} onChange={setMusicOn} ready={musicReady} /></NavBtn>
                 {/* nav-lang-en (1:10) — 灯光开关 */}
                 <NavBtn><LangToggle checked={lightOn} onChange={onToggleLight} disabled={!lampVisible} /></NavBtn>
                 {/* nav-light (1:12) — 语言切换 */}

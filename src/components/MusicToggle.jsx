@@ -6,13 +6,14 @@ import styled from 'styled-components';
 const MUSIC_SRC = '/media/Rob Simonsen - Blue_cut.mp3';
 const FADE_DURATION = 2; // 秒
 
-export default function MusicToggle({ checked, onChange }) {
+export default function MusicToggle({ checked, onChange, ready = false }) {
   const ctxRef    = useRef(null);
   const sourceRef = useRef(null);
   const gainRef   = useRef(null);
   const bufferRef = useRef(null);
   const fadeRAF   = useRef(null);
   const playingRef = useRef(true); // 默认 playing=true（checked=false）
+  const readyRef   = useRef(false); // 加载完成后才允许播放
 
   // 初始化 AudioContext + 预加载音频
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function MusicToggle({ checked, onChange }) {
     // 监听首次用户交互，自动开始播放（Chrome autoplay 策略）
     const onFirstInteraction = () => {
       if (!playingRef.current) return; // 已被用户手动关闭则不播放
+      if (!readyRef.current) return;  // 加载未完成则不播放
       const startPlayback = () => {
         if (sourceRef.current) return;
         if (!bufferRef.current) return;
@@ -58,6 +60,11 @@ export default function MusicToggle({ checked, onChange }) {
       document.removeEventListener('touchstart', onFirstInteraction);
     };
   }, []);
+
+  // ready 变为 true 时更新 ref，如果用户未手动关闭则立即尝试播放（需等用户手势）
+  useEffect(() => {
+    readyRef.current = ready;
+  }, [ready]);
 
   // checked=true → 停止（凹陷），checked=false → 播放（突起）
   // playing 是内部播放状态，与 checked 语义相反
