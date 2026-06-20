@@ -2,21 +2,30 @@
 // 淡入淡出：2s 线性 gain 渐变，无缝循环播放
 import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import useStore from '../store/useStore';
 
-const MUSIC_SRC = '/media/Rob Simonsen - Blue_cut.mp3';
+const DEFAULT_MUSIC_SRC = '/media/Rob Simonsen - Blue_cut.mp3';
 const FADE_DURATION = 2; // 秒
 
+function resolveMusicSource(asset) {
+  if (typeof asset === 'string') return asset;
+  return asset?.url || asset?.path || DEFAULT_MUSIC_SRC;
+}
+
 export default function MusicToggle({ checked, onChange, ready = false }) {
+  const configuredMusic = useStore((s) => s.projectConfig.backgroundMusic);
+  const musicSrc = resolveMusicSource(configuredMusic);
   const ctxRef    = useRef(null);
   const sourceRef = useRef(null);
   const gainRef   = useRef(null);
   const bufferRef = useRef(null);
-  const fadeRAF   = useRef(null);
   const playingRef = useRef(true); // 默认 playing=true（checked=false）
   const readyRef   = useRef(false); // 加载完成后才允许播放
 
   // 初始化 AudioContext + 预加载音频
   useEffect(() => {
+    sourceRef.current = null;
+    bufferRef.current = null;
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const gain = ctx.createGain();
     gain.gain.value = 0;
@@ -24,7 +33,7 @@ export default function MusicToggle({ checked, onChange, ready = false }) {
     ctxRef.current  = ctx;
     gainRef.current = gain;
 
-    fetch(MUSIC_SRC)
+    fetch(musicSrc)
       .then(r => r.arrayBuffer())
       .then(ab => ctx.decodeAudioData(ab))
       .then(buf => { bufferRef.current = buf; })
@@ -45,7 +54,7 @@ export default function MusicToggle({ checked, onChange, ready = false }) {
         sourceRef.current = src;
         gain.gain.cancelScheduledValues(ctx.currentTime);
         gain.gain.setValueAtTime(0, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + FADE_DURATION);
+        gain.gain.linearRampToValueAtTime(0.098, ctx.currentTime + FADE_DURATION);
       };
       ctx.resume().then(startPlayback);
       document.removeEventListener('click', onFirstInteraction);
@@ -55,11 +64,13 @@ export default function MusicToggle({ checked, onChange, ready = false }) {
     document.addEventListener('touchstart', onFirstInteraction);
 
     return () => {
+      sourceRef.current = null;
+      bufferRef.current = null;
       ctx.close();
       document.removeEventListener('click', onFirstInteraction);
       document.removeEventListener('touchstart', onFirstInteraction);
     };
-  }, []);
+  }, [musicSrc]);
 
   // ready 变为 true 时更新 ref，如果用户未手动关闭则立即尝试播放（需等用户手势）
   useEffect(() => {
@@ -92,7 +103,7 @@ export default function MusicToggle({ checked, onChange, ready = false }) {
         // 淡入（resume 后 currentTime 才准确）
         gain.gain.cancelScheduledValues(ctx.currentTime);
         gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + FADE_DURATION);
+        gain.gain.linearRampToValueAtTime(0.098, ctx.currentTime + FADE_DURATION);
       };
 
       if (ctx.state === 'suspended') {

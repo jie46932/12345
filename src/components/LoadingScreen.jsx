@@ -3,6 +3,8 @@ import styled from 'styled-components';
 const BRAND = 'HE FURNITURE';
 
 export default function LoadingScreen({ progress, visible }) {
+  if (!visible) return null;
+
   return (
     <StyledWrapper className={visible ? 'ls-show' : 'ls-hide'}>
       {/* 拼铺背景图 */}
@@ -61,7 +63,7 @@ const StyledWrapper = styled.div`
     /* 若宽度不够撑满高度，则改用高度为基准 */
     min-height: 100%;
     min-width: calc(100vh * 16 / 9);
-    background-image: url('/media/ComfyUI_00001_pnekf_1775978833.jpg');
+    background-image: url('/media/10.jpg');
     background-repeat: no-repeat;
     background-size: 100% 100%;
     background-position: center;

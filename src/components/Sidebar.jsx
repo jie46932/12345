@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
-export default function Sidebar({ height, onHeightChange, material, onMaterialChange, price, monitorAddon, onMonitorAddonChange }) {
+export default function Sidebar({ height, material, onMaterialChange, price, monitorAddon, onMonitorAddonChange }) {
   const [openAccordion, setOpenAccordion] = useState('material');
-  const [cartCount, setCartCount] = useState(0);
+  const [cartCount] = useState(0);
 
   const heightLabel = height === 68 ? '最低' : height === 75 ? '坐姿' : height === 94 ? '标准' : height === 110 ? '站姿' : '最高';
 
@@ -10,14 +10,6 @@ export default function Sidebar({ height, onHeightChange, material, onMaterialCh
     { id: 'light', name: '浅胡桃木', price: 0, image: '/media/Wood03_512_BaseColor.png' },
     { id: 'oak', name: '原木白橡', price: 0, image: '/media/Wood06_512_BaseColor.png' },
     { id: 'dark', name: '黑胡桃木', price: 0, image: '/media/Wood07_512_BaseColor.png' }
-  ];
-
-  const heightPresets = [
-    { cm: 68, label: '最低' },
-    { cm: 75, label: '坐姿' },
-    { cm: 94, label: '标准' },
-    { cm: 110, label: '站姿' },
-    { cm: 120, label: '最高' }
   ];
 
   return (
@@ -173,11 +165,11 @@ export default function Sidebar({ height, onHeightChange, material, onMaterialCh
             </div>
 
             <div className="contact-info">
-              <a href="tel:4008888888" className="contact-row">
+              <a href="tel:18684747357" className="contact-row">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                   <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                400-888-8888
+                18684747357
               </a>
               <div className="contact-row">HE FURNITURE 官方旗舰店</div>
             </div>

@@ -7,6 +7,7 @@ import LangToggle from './LangToggle';
 import LangSwitch from './LangSwitch';
 import FullscreenToggle from './FullscreenToggle';
 import MusicToggle from './MusicToggle';
+import { useLang, T } from '../LangContext';
 
 function NavBtn({ children }) {
   return (
@@ -17,10 +18,15 @@ function NavBtn({ children }) {
 }
 
 const BRAND = 'HE FURNITURE';
-const SUB   = '智能升降桌';
 const DELAY = 100; // ms per letter
 
-export default function Header({ onToggleLight, lightOn, lampVisible = true, lang, onLangChange, musicReady = false }) {
+// 初始化逐字母偏移（供 HeaderPanel 读写）
+if (typeof window !== 'undefined' && !window.__letterOffsets) {
+  window.__letterOffsets = [];
+}
+
+export default function Header({ onToggleLight, lightOn, lampVisible = true, lang, onLangChange, musicReady = false, authed = false }) {
+  const t = T[lang];
   const [navExpanded, setNavExpanded] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
 
@@ -39,7 +45,7 @@ export default function Header({ onToggleLight, lightOn, lampVisible = true, lan
         }}
       >
         {/* logo4-name (1:8) + logo4-sub (1:9) */}
-        <div data-figma-id="1:8" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+        <div data-figma-id="1:8" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px', transform: 'scale(var(--ui-scale, 1))', transformOrigin: '0 0' }}>
 
           {/* HE FURNITURE — 逐字弹出（空格保留宽度） */}
           <div className="brand-loader" data-figma-id="1:8-text">
@@ -58,20 +64,34 @@ export default function Header({ onToggleLight, lightOn, lampVisible = true, lan
             ))}
           </div>
 
-          {/* 智能升降桌 — 逐字弹出，紧跟品牌名下方 */}
+          {/* 智能升降桌 — 逐字弹出，空格不包 span 避免 letter-spacing 放大词间距 */}
           <div
             data-figma-id="1:9"
             className="sub-loader"
           >
-            {SUB.split('').map((ch, i) => (
-              <span
-                key={i}
-                className="sub-letter"
-                style={{ animationDelay: `${(BRAND.length + i) * DELAY}ms` }}
-              >
-                {ch}
-              </span>
-            ))}
+            {/* 逐字弹出：空格不可见但参与动画时序，支持逐字母偏移 */}
+            {(() => {
+              const offsets = window.__letterOffsets || [];
+              let li = 0;
+              return t.subBrand.split('').map((ch, i) => {
+                const letterIdx = ch === ' ' ? -1 : li++;
+                const baseDelay = (BRAND.length + (letterIdx >= 0 ? letterIdx : i)) * DELAY;
+                const offset = offsets[i] || 0;
+                const delay = baseDelay + offset;
+                return (
+                  <span
+                    key={i}
+                    className="sub-letter"
+                    style={{
+                      animationDelay: `${delay}ms`,
+                      ...(ch === ' ' ? { letterSpacing: 0, width: 0, flexShrink: 0, background: 'none', WebkitTextFillColor: 'transparent', filter: 'none' } : {}),
+                    }}
+                  >
+                    {ch === ' ' ? '' : ch}
+                  </span>
+                );
+              });
+            })()}
           </div>
         </div>
 
@@ -108,7 +128,7 @@ export default function Header({ onToggleLight, lightOn, lampVisible = true, lan
             <div className={`nav-expand-wrap ${navExpanded ? 'nav-open' : ''}`}>
               <div className="nav-expand-inner">
                 {/* 音乐开关 — 最左侧 */}
-                <NavBtn><MusicToggle checked={musicOn} onChange={setMusicOn} ready={musicReady} /></NavBtn>
+                {authed && <NavBtn><MusicToggle checked={musicOn} onChange={setMusicOn} ready={musicReady} /></NavBtn>}
                 {/* nav-lang-en (1:10) — 灯光开关 */}
                 <NavBtn><LangToggle checked={lightOn} onChange={onToggleLight} disabled={!lampVisible} /></NavBtn>
                 {/* nav-light (1:12) — 语言切换 */}
@@ -133,6 +153,8 @@ const StyledWrapper = styled.div`
     display: flex;
     align-items: center;
     overflow: visible;
+    transform: scale(var(--ui-scale, 1));
+    transform-origin: top right;
   }
 
   /* 展开区：灯光 + 语言，折叠时宽度为 0 */
@@ -313,4 +335,6 @@ const StyledWrapper = styled.div`
     81.26%  { left: -120px; }
     100%    { left: -120px; }
   }
+
+  /* 字体缩放由 --ui-scale transform 统一处理，无需额外媒体查询 */
 `;

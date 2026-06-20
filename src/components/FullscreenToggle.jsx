@@ -1,27 +1,42 @@
 // UIverse 展开/收缩图标 — nav-max(1:14) 窗口最大化/还原
 // 与 cb-cart-outer 同款结构
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 export default function FullscreenToggle() {
   const inputRef = useRef(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const onFsChange = () => {
       const fs = !!document.fullscreenElement;
-      setIsFullscreen(fs);
       if (inputRef.current) inputRef.current.checked = fs;
+      if (!fs && screen.orientation?.unlock) {
+        try {
+          screen.orientation.unlock();
+        } catch {
+          // Some browsers expose unlock but throw outside fullscreen.
+        }
+      }
     };
     document.addEventListener('fullscreenchange', onFsChange);
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const willMax = e.target.checked;
     if (willMax) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      try {
+        await document.documentElement.requestFullscreen();
+        await screen.orientation?.lock?.('landscape');
+      } catch {
+        if (inputRef.current) inputRef.current.checked = !!document.fullscreenElement;
+      }
     } else {
+      try {
+        screen.orientation?.unlock?.();
+      } catch {
+        // Ignore unsupported orientation unlock.
+      }
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
   };

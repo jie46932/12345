@@ -2,13 +2,28 @@
 import styled from 'styled-components';
 
 export default function LangToggle({ checked, onChange, disabled }) {
+  const commitToggle = () => {
+    if (!disabled) onChange?.(!checked);
+  };
+
   return (
     <StyledWrapper style={{ opacity: disabled ? 0.35 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
       <div className="toggle-outer toggle-outer1">
         <input
           type="checkbox"
           checked={checked}
-          onChange={e => onChange?.(e.target.checked)}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            commitToggle();
+          }}
+          onClick={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              commitToggle();
+            }
+          }}
+          onChange={() => {}}
         />
         <span className="toggle-inner" />
         <span className="toggle-icon">
@@ -21,6 +36,9 @@ export default function LangToggle({ checked, onChange, disabled }) {
             />
             <line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             <line x1="10" y1="23" x2="14" y2="23" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            {!checked && (
+              <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            )}
           </svg>
         </span>
       </div>

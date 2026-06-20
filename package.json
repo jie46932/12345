@@ -5,14 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite --open /index.dev.html",
-    "build": "vite build && cp dist/assets/* assets/ || true",
-    "build:vercel": "vite build && cp v3d.js dist/ && cp 12345.js dist/ && cp visual_logic.js dist/ && cp basis_transcoder.js dist/ && cp basis_transcoder.wasm dist/ && cp ammo.wasm.js dist/ && cp ammo.wasm.wasm dist/ && cp -r media dist/ && cp -r public/media dist/",
-    "lint": "eslint .",
+    "dev:viewer": "vite --host 127.0.0.1 --port 5173 --open /index.dev.html",
+    "build": "vite build && node scripts/copy-vercel-assets.cjs && node scripts/copy-build-assets.cjs",
+    "build:vercel": "vite build && node scripts/copy-vercel-assets.cjs",
+    "check:gltf": "node scripts/inspect-gltf.cjs media/12345-verge3d-20260620.gltf",
+    "lint": "eslint src --ext .js,.jsx",
     "preview": "vite preview"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.1",
     "@radix-ui/react-slot": "^1.2.4",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@react-three/postprocessing": "^3.0.4",
+    "@supabase/supabase-js": "^2.108.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "^3.15.0",
@@ -22,7 +28,8 @@
     "styled-components": "^6.3.12",
     "tailwind-merge": "^3.5.0",
     "three": "^0.184.0",
-    "unicornstudio-react": "^2.1.4-1"
+    "unicornstudio-react": "^2.1.9",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -34,9 +41,10 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "playwright": "^1.60.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4.19",
     "vite": "^8.0.1",
-    "vite-plugin-javascript-obfuscator": "^3.1.0"
+    "ws": "^8.21.0"
   }
 }

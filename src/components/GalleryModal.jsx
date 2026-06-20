@@ -1,42 +1,50 @@
 // 画廊弹窗 — Apple Carousel 风格 + CometCard 3D 倾斜效果
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useLang, T } from '../LangContext';
+import useStore from '../store/useStore';
 
 const galleryData = [
   {
-    category: '简约白橡',
-    title: '自然肌理，极简美学',
-    src: '/media/4.png',
+    category: '简约白橡', categoryEn: 'White Oak',
+    title: '自然肌理，极简美学', titleEn: 'Natural Texture, Minimalist',
+    src: '/media/4.jpg',
     desc: '白橡原木面板搭配铝合金框架，自然纹理与现代工业设计的完美融合。',
+    descEn: 'White oak panel with aluminum frame — natural grain meets modern industrial design.',
   },
   {
-    category: '深胡桃色',
-    title: '沉稳质感，专属品味',
-    src: '/media/5.png',
+    category: '深胡桃色', categoryEn: 'Dark Walnut',
+    title: '沉稳质感，专属品味', titleEn: 'Refined Texture, Premium Taste',
+    src: '/media/5.jpg',
     desc: '深胡桃色木纹营造出沉稳内敛的氛围，适合追求高级感的工作空间。',
+    descEn: 'Dark walnut wood grain creates a composed, understated atmosphere for premium workspaces.',
   },
   {
-    category: '智能升降',
-    title: '站坐自由，健康工作',
-    src: '/media/6.png',
+    category: '浅胡桃色', categoryEn: 'Light Walnut',
+    title: '温润木纹，柔和有序', titleEn: 'Warm Grain, Soft & Orderly',
+    src: '/media/6.jpg',
+    desc: '浅胡桃色流露温润柔和的光泽，搭配利落线条，让自然气息与现代秩序优雅共生。',
+    descEn: 'Light walnut radiates a warm, gentle luster with clean lines — where nature meets modern order.',
+  },
+  {
+    category: '智能升降', categoryEn: 'Smart Lift',
+    title: '站坐自由，健康工作', titleEn: 'Sit & Stand, Work Healthy',
+    src: '/media/7.jpg',
     desc: '电动线性马达驱动，68–120cm 无级调节，记忆档位一键到位。',
+    descEn: 'Electric linear motor drive, 68–120 cm stepless adjustment with one-touch memory presets.',
   },
   {
-    category: '整洁桌面',
-    title: '走线系统，告别杂乱',
-    src: '/media/7.png',
+    category: '整洁桌面', categoryEn: 'Clean Desktop',
+    title: '走线系统，告别杂乱', titleEn: 'Cable Management, No More Clutter',
+    src: '/media/8.jpg',
     desc: '内嵌理线槽与桌下线夹，配合无线充电模块，还你干净利落的桌面。',
+    descEn: 'Built-in cable tray and under-desk clips, plus wireless charging — a perfectly clean workspace.',
   },
   {
-    category: '双屏办公',
-    title: '多屏协同，效率翻倍',
-    src: '/media/8.png',
-    desc: '宽敞桌面轻松承载双显示器臂，搭配隐藏式线槽，专注不分心。',
-  },
-  {
-    category: '细节工艺',
-    title: '每处细节，精心打磨',
-    src: '/media/9.png',
-    desc: '圆角倒边、无痕拼接、防指纹涂层，用手感说话的高端制造。',
+    category: '细节工艺', categoryEn: 'Craftsmanship',
+    title: '每处细节，精心打磨', titleEn: 'Every Detail, Carefully Polished',
+    src: '/media/9.jpg',
+    desc: '加宽斜坡设计贴合手腕不酸痛，超大圆边设计安全防磕碰。',
+    descEn: 'Wide-slope ergonomic wrist rest and oversized rounded edges for safety and comfort.',
   },
 ];
 
@@ -56,7 +64,7 @@ function CometCard({ children }) {
     const dy = (e.clientY - cy) / (rect.height / 2);
     const rotX = -dy * 12;
     const rotY = dx * 12;
-    setTransform(`perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.03,1.03,1.03)`);
+    setTransform(`perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`);
     setGlare({
       x: ((e.clientX - rect.left) / rect.width) * 100,
       y: ((e.clientY - rect.top) / rect.height) * 100,
@@ -96,24 +104,46 @@ function CometCard({ children }) {
   );
 }
 
-// 预加载所有画廊图片，避免首次打开时卡顿
-const preloadImages = () => {
-  galleryData.forEach(item => {
+function resolveAssetUrl(asset) {
+  if (typeof asset === 'string') return asset;
+  return asset?.url || asset?.path || '';
+}
+
+function buildGalleryItems(projectConfig) {
+  const images = projectConfig?.galleryImages?.length ? projectConfig.galleryImages : galleryData.map((item) => item.src);
+  const annotations = projectConfig?.annotations || [];
+  return galleryData.map((item, index) => ({
+    ...item,
+    src: resolveAssetUrl(images[index]) || item.src,
+    desc: annotations[index] || item.desc,
+  }));
+}
+
+// 预加载画廊图片，避免首次打开时卡顿
+const preloadImages = (items = galleryData) => {
+  items.forEach(item => {
     const img = new Image();
     img.src = item.src;
   });
 };
-// 模块加载时立即预加载
-preloadImages();
 
 export default function GalleryModal({ open, onClose }) {
+  const lang = useLang();
+  const projectConfig = useStore((s) => s.projectConfig);
+  const galleryItems = useMemo(() => buildGalleryItems(projectConfig), [projectConfig]);
   const [current, setCurrent] = useState(0);
+  const itemCount = galleryItems.length;
+  const safeCurrent = Math.min(current, itemCount - 1);
   const dragStartX = useRef(0);
   const dragMoved = useRef(false); // 是否发生了实质性拖拽（>5px），防止和 click 冲突
   const containerRef = useRef(null);
 
-  const prev = () => setCurrent(c => Math.max(0, c - 1));
-  const next = () => setCurrent(c => Math.min(galleryData.length - 1, c + 1));
+  const prev = useCallback(() => setCurrent(c => Math.max(0, c - 1)), []);
+  const next = useCallback(() => setCurrent(c => Math.min(itemCount - 1, c + 1)), [itemCount]);
+
+  useEffect(() => {
+    preloadImages(galleryItems);
+  }, [galleryItems]);
 
   useEffect(() => {
     if (!open) return;
@@ -124,7 +154,7 @@ export default function GalleryModal({ open, onClose }) {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [open, onClose]);
+  }, [open, onClose, next, prev]);
 
   // window 级 mouseup，防止拖出容器后丢失
   useEffect(() => {
@@ -138,7 +168,7 @@ export default function GalleryModal({ open, onClose }) {
     };
     window.addEventListener('mouseup', handleMouseUp);
     return () => window.removeEventListener('mouseup', handleMouseUp);
-  }, [open]);
+  }, [open, next, prev]);
 
   if (!open) return null;
 
@@ -199,10 +229,10 @@ export default function GalleryModal({ open, onClose }) {
         fontFamily: "'Orbitron','Rajdhani',sans-serif",
       }}>
         <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, letterSpacing: '0.2em', marginBottom: 6 }}>
-          {galleryData[current].category.toUpperCase()}
+          {(lang === 'en' ? galleryItems[safeCurrent].categoryEn : galleryItems[safeCurrent].category || galleryItems[safeCurrent].category).toUpperCase()}
         </div>
         <div style={{ color: '#fff', fontSize: 28, fontWeight: 700, letterSpacing: '0.04em' }}>
-          {galleryData[current].title}
+          {lang === 'en' ? (galleryItems[safeCurrent].titleEn || galleryItems[safeCurrent].title) : galleryItems[safeCurrent].title}
         </div>
       </div>
 
@@ -226,9 +256,9 @@ export default function GalleryModal({ open, onClose }) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {galleryData.map((item, idx) => {
-          const offset = idx - current;
-          const isCurrent = idx === current;
+        {galleryItems.map((item, idx) => {
+          const offset = idx - safeCurrent;
+          const isCurrent = idx === safeCurrent;
           const scale = isCurrent ? 1 : Math.abs(offset) === 1 ? 0.82 : 0.68;
           const opacity = isCurrent ? 1 : Math.abs(offset) === 1 ? 0.65 : 0.35;
           const translateX = offset * 780;
@@ -255,6 +285,7 @@ export default function GalleryModal({ open, onClose }) {
                 <div style={{
                   width: 720, borderRadius: 20, overflow: 'hidden',
                   background: '#1a1a1a',
+                  pointerEvents: 'none',
                   boxShadow: isCurrent
                     ? '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)'
                     : '0 16px 40px rgba(0,0,0,0.4)',
@@ -283,7 +314,7 @@ export default function GalleryModal({ open, onClose }) {
                       fontFamily: "'Rajdhani','Inter',sans-serif",
                       fontSize: 13, letterSpacing: '0.06em',
                     }}>
-                      {item.category}
+                      {lang === 'en' ? (item.categoryEn || item.category) : item.category}
                     </div>
                   </div>
                   {isCurrent && (
@@ -293,7 +324,7 @@ export default function GalleryModal({ open, onClose }) {
                       fontFamily: "'Rajdhani','Inter',sans-serif",
                       fontSize: 13, lineHeight: 1.6,
                     }}>
-                      {item.desc}
+                      {lang === 'en' ? (item.descEn || item.desc) : item.desc}
                     </div>
                   )}
                 </div>
@@ -305,14 +336,14 @@ export default function GalleryModal({ open, onClose }) {
 
       {/* 底部指示点 */}
       <div style={{ display: 'flex', gap: 8, marginTop: 16, position: 'relative', zIndex: 20 }}>
-        {galleryData.map((_, idx) => (
+        {galleryItems.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrent(idx)}
             style={{
-              width: idx === current ? 24 : 8,
+              width: idx === safeCurrent ? 24 : 8,
               height: 8, borderRadius: 4,
-              background: idx === current ? '#fff' : 'rgba(255,255,255,0.3)',
+              background: idx === safeCurrent ? '#fff' : 'rgba(255,255,255,0.3)',
               border: 'none', cursor: 'pointer', padding: 0,
               transition: 'all 0.3s cubic-bezier(0.23,1,0.32,1)',
             }}
@@ -323,4 +354,3 @@ export default function GalleryModal({ open, onClose }) {
     </div>
   );
 }
-

@@ -16,7 +16,7 @@ export default function LangSwitch({ lang, onChange }) {
           onChange={e => onChange?.(e.target.checked ? 'en' : 'zh')}
         />
         <span className="toggle-inner" />
-        <span className="toggle-icon">{isZh ? '中' : 'EN'}</span>
+        <span className="toggle-icon" style={isZh ? undefined : { fontWeight: 400 }}>{isZh ? '中' : 'EN'}</span>
       </label>
     </StyledWrapper>
   );

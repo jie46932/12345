@@ -1,560 +1,451 @@
-import { useEffect, useRef, useState } from 'react';
-import UnicornScene from 'unicornstudio-react';
+/**
+ * App — R3F 迁移版
+ *
+ * 移除 Verge3D 场景逻辑（onSceneReady/startReflection/drawLed 等约 600 行），
+ * 替换为 <Scene />（R3F Canvas）+ sceneAPI（通过 zustand store 调用）。
+ */
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import './App.css';
+import Scene from './components/Scene';
+import SceneWebGPU from './components/SceneWebGPU';
+import DynamicBackground from './components/DynamicBackground';
 import Header from './components/Header';
 import ControlBar from './components/ControlBar';
 import LoadingScreen from './components/LoadingScreen';
 import LoginScreen from './components/LoginScreen';
 import DimensionAnnotation from './components/DimensionAnnotation';
+import FeatureAnnotationPin from './components/FeatureAnnotationPin';
+import MobileControlDrawer from './components/MobileControlDrawer';
+import ProductStudioBackground from './components/ProductStudioBackground';
+import ProjectConfigBackground from './components/ProjectConfigBackground';
 import { LangContext } from './LangContext';
+import useStore from './store/useStore';
+import { getStoredAuthToken } from './utils/authStorage';
+import {
+  installTelemetryListeners,
+  trackError,
+  trackOperation,
+  trackPerformance,
+} from './utils/telemetry';
 
-let reflectionRAF = null;
-let groundReflectionRAF = null;
+const FeatureAnnotationGizmo = lazy(() => import('./components/FeatureAnnotationGizmo'));
+const HeaderPanel = lazy(() => import('./components/HeaderPanel'));
+const OutlinePanel = lazy(() => import('./components/OutlinePanel'));
+const BgPanel = lazy(() => import('./components/BgPanel'));
+const ProductStudioBgPanel = lazy(() => import('./components/ProductStudioBgPanel'));
+const LedPanel = lazy(() => import('./components/LedPanel'));
+const MaterialPanel = lazy(() => import('./components/MaterialPanel'));
 
-function startReflection(v3dContainer) {
-  const srcCanvas = v3dContainer.querySelector('canvas');
-  const reflCanvas = document.getElementById('reflection-canvas');
-  if (!srcCanvas || !reflCanvas) return;
+// 交付模式默认不显示场景调试控制面板。需要调参时使用 ?devPanels=1 显式开启。
+const DEV_PANELS_ENABLED = import.meta.env.DEV &&
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('devPanels') === '1';
+const DEFAULT_ADMIN_ORIGINS = [
+  'http://127.0.0.1:5174',
+  'http://localhost:5174',
+];
+const DEFAULT_PROJECT_CONFIG_ID = 'project_12345';
 
-  const ctx = reflCanvas.getContext('2d');
-
-  function loop() {
-    const w = srcCanvas.width;
-    const h = srcCanvas.height;
-
-    if (reflCanvas.width !== w || reflCanvas.height !== h) {
-      reflCanvas.width = w;
-      reflCanvas.height = h;
-    }
-
-    // 直接把整个 canvas 上下翻转画到 reflCanvas
-    ctx.clearRect(0, 0, w, h);
-    ctx.save();
-    ctx.translate(0, h);
-    ctx.scale(1, -1);
-    ctx.drawImage(srcCanvas, 0, 0, w, h);
-    ctx.restore();
-
-    reflectionRAF = requestAnimationFrame(loop);
-  }
-
-  if (reflectionRAF) cancelAnimationFrame(reflectionRAF);
-  loop();
-}
+// 移动端检测（模块级，不参与渲染循环）
+const IS_MOBILE = typeof window !== 'undefined' &&
+  (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
 
 const BASE_WIDTH = 1440;
 
+function getConfiguredOrigins(envValue, fallback = []) {
+  return String(envValue || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .concat(fallback);
+}
+
+function isAllowedMessageOrigin(origin) {
+  if (!origin) return false;
+  if (origin === window.location.origin) return true;
+  return getConfiguredOrigins(import.meta.env.VITE_ADMIN_ORIGINS, DEFAULT_ADMIN_ORIGINS).includes(origin);
+}
+
+function getParentTargetOrigin(fallback = '*') {
+  if (document.referrer) {
+    try {
+      return new URL(document.referrer).origin;
+    } catch {
+      // Fall through to the explicit fallback below.
+    }
+  }
+  return import.meta.env.VITE_PARENT_TARGET_ORIGIN || fallback;
+}
+
+function postViewerEvent(type, payload, targetOrigin = getParentTargetOrigin()) {
+  window.parent?.postMessage({
+    type,
+    payload,
+    sentAt: new Date().toISOString(),
+  }, targetOrigin);
+}
+
+function getProjectConfigId() {
+  const params = new URLSearchParams(window.location.search);
+  const explicitProjectId = params.get('projectId');
+  if (explicitProjectId) return explicitProjectId;
+  const projectSlug = params.get('project');
+  if (projectSlug) return projectSlug.startsWith('project_') ? projectSlug : `project_${projectSlug}`;
+  return DEFAULT_PROJECT_CONFIG_ID;
+}
+
+function getProjectConfigReadUrl() {
+  const projectId = getProjectConfigId();
+  const configuredUrl = import.meta.env.VITE_PROJECT_CONFIG_URL;
+  if (configuredUrl) {
+    if (configuredUrl.includes('{projectId}')) {
+      return configuredUrl.replace('{projectId}', encodeURIComponent(projectId));
+    }
+    const url = new URL(configuredUrl, window.location.origin);
+    url.searchParams.set('projectId', projectId);
+    return url.toString();
+  }
+  return `/api/project-config?projectId=${encodeURIComponent(projectId)}`;
+}
+
+function normalizeRemoteProjectConfig(data) {
+  const source = data?.config || data?.data || data;
+  if (!source || typeof source !== 'object') return null;
+  return {
+    ...(source.content || {}),
+    ...(source.background ? { background: source.background } : {}),
+  };
+}
+
+async function loadRemoteProjectConfig() {
+  const response = await fetch(getProjectConfigReadUrl(), { credentials: 'include' });
+  if (response.status === 404 || response.status === 204) return null;
+  if (!response.ok) throw new Error(`Project config request failed: HTTP ${response.status}`);
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) return null;
+  return normalizeRemoteProjectConfig(await response.json());
+}
+
+function splitAnnotationText(text) {
+  if (typeof text !== 'string' || !text.trim()) return null;
+  const lines = text
+    .split(/\r?\n|，|。/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return {
+    line0: lines[0] || text.trim(),
+    line1: lines.slice(1).join('，') || '',
+  };
+}
+
+function applyProjectAnnotationsToFeatureStyles(annotations) {
+  if (!Array.isArray(annotations)) return;
+  useStore.getState().setFeatStyles(
+    annotations.map((annotation) => splitAnnotationText(annotation) || {}),
+  );
+}
+
+function BackendMovedNotice({ portal }) {
+  const target = `http://127.0.0.1:5174/index.dev.html?portal=${portal}`;
+
+  return (
+    <main style={{
+      minHeight: '100vh',
+      display: 'grid',
+      placeItems: 'center',
+      padding: 24,
+      background: '#f6f7f8',
+      color: '#111',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
+      <section style={{
+        maxWidth: 560,
+        padding: 28,
+        borderRadius: 12,
+        background: '#fff',
+        boxShadow: '0 12px 40px rgba(15, 23, 42, 0.12)',
+        border: '1px solid rgba(15, 23, 42, 0.1)',
+      }}>
+        <p style={{ margin: '0 0 8px', color: '#5b6472', fontSize: 14 }}>12345 Viewer</p>
+        <h1 style={{ margin: '0 0 12px', fontSize: 24 }}>后台已迁移到 F:\\houtai</h1>
+        <p style={{ margin: '0 0 20px', lineHeight: 1.7 }}>
+          12345 项目只保留产品 Viewer、R3F 配置器和 postMessage 接收能力。
+          母后台/子后台请在独立项目中运行。
+        </p>
+        <a href={target} style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          minHeight: 40,
+          padding: '0 14px',
+          borderRadius: 8,
+          background: '#247a4d',
+          color: '#fff',
+          textDecoration: 'none',
+          fontWeight: 700,
+        }}>
+          打开独立后台
+        </a>
+      </section>
+    </main>
+  );
+}
+
 function applyUIScale() {
-  const scale = Math.min(window.innerWidth / BASE_WIDTH, 1);
+  const scale = Math.max(Math.min(window.innerWidth / BASE_WIDTH, 1), 0.38);
   document.documentElement.style.setProperty('--ui-scale', scale);
 }
-export default function App() {
-  const containerRef = useRef(null);
-  const appRef = useRef(null);
-  const playRAFRef = useRef(null);
-  const arrowMoveRef = useRef(null); // { dir: 'up'|'down' }
-  const arrowTRef = useRef(0.5);    // 当前位置 t（0=一档68cm, 1=三档120cm）
-  const [height, setHeight] = useState(94);
+
+function isDynamicBackgroundMode(mode) {
+  return mode === 'dynamic' || mode === 'unicorn';
+}
+
+function ConfiguratorApp({ viewer, rendererMode }) {
+  // ── Store 订阅 ────────────────────────────────────────────────
+  const currentHeight = useStore((s) => s.currentHeight);
+  const lightOn = useStore((s) => s.lightOn);
+  const soloActive = useStore((s) => s.soloActive);
+  const orbitActive = useStore((s) => s.orbitActive);
+  const sceneReady = useStore((s) => s.sceneReady);
+  const backgroundMode = useStore((s) => s.backgroundMode);
+  const toggleBackgroundMode = useStore((s) => s.toggleBackgroundMode);
+  const showDynamicBackground = viewer !== '1' && isDynamicBackgroundMode(backgroundMode);
+  const useWebGPU = viewer !== '1' && rendererMode === 'webgpu';
+
+  // ── UI 状态 ──────────────────────────────────────────────────
   const [material, setMaterial] = useState(null);
   const [showAnnotations, setShowAnnotations] = useState(true);
-  const [monitorAddon, setMonitorAddon] = useState(false);
-  const [lightOn, setLightOn] = useState(false);
   const [lampVisible, setLampVisible] = useState(true);
   const [activeView, setActiveView] = useState('front');
   const [lang, setLang] = useState('zh');
   const loadStartTime = useRef(Date.now());
   const [loadProgress, setLoadProgress] = useState(0);
   const [loadingVisible, setLoadingVisible] = useState(true);
+  const [authed, setAuthed] = useState(() => {
+    const bypass = new URLSearchParams(window.location.search).get('bypass');
+    if (bypass === '1') return true;
+    return !!getStoredAuthToken('v3d_token');
+  });
+  const [musicReady, setMusicReady] = useState(false);
+  const loadCompleteTrackedRef = useRef(false);
 
-  // 登录状态：检查 sessionStorage 是否已有合法 token
-  const [authed, setAuthed] = useState(() => !!sessionStorage.getItem('v3d_token'));
-  const [musicReady, setMusicReady] = useState(false); // 加载完成后才允许播放背景音乐
-
+  // ── UI 缩放 + 防缩放 ──────────────────────────────────────────
   useEffect(() => {
     const updateZoom = () => {
       const zoom = window.visualViewport ? window.visualViewport.scale : (window.outerWidth / window.innerWidth);
       const antiZoom = zoom > 0 ? 1 / zoom : 1;
       document.getElementById('ui-layer')?.style.setProperty('zoom', antiZoom);
     };
+    const blockCtrlWheel = (e) => {
+      if (e.ctrlKey) e.preventDefault();
+    };
+
     applyUIScale();
     updateZoom();
     window.addEventListener('resize', applyUIScale);
     window.addEventListener('resize', updateZoom);
+    window.addEventListener('wheel', blockCtrlWheel, { passive: false });
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateZoom);
     }
     return () => {
       window.removeEventListener('resize', applyUIScale);
       window.removeEventListener('resize', updateZoom);
+      window.removeEventListener('wheel', blockCtrlWheel);
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateZoom);
       }
     };
   }, []);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    function onSceneReady({ detail: { app } }) {
-      appRef.current = app;
-
-      // 主相机启用 layer 2，使标注对象（layer 2）可见，但不被 CubeCamera 反射捕捉
-      app.camera.layers.enable(2);
-
-      // 隐藏加载屏：最短展示 2.5s
-      setLoadProgress(100);
-      const elapsed = Date.now() - loadStartTime.current;
-      const delay = Math.max(800, 2500 - elapsed);
-      setTimeout(() => {
-        setLoadingVisible(false);  // 触发 600ms fade-out
-        setMusicReady(true);       // 加载完成，允许背景音乐响应用户交互
-        // 初始状态：灯关（Material #186 = 0，UI 按钮 = false）
-        setLightOn(false);
-        const mat = getMat186(app.scene);
-        if (mat?.nodeInputs?.float) mat.nodeInputs.float[13] = 0;
-      }, delay);
-
-      // 禁用 AnimationAction，改用直接位置插值驱动两个伸缩件同步运动
-      if (app.actions?.length) {
-        app.actions.forEach(a => { a.enabled = false; });
-      }
-
-      // 从关键帧数据提取各档位的 y 坐标（0=一档, 0.5=二档, 1=三档）
-      // Dummy003: 0→-4.1517, 1→-9.592  Dummy002: 0→-0.4365, 1→-7.1008
-
-      // 初始定位到二档（t=0.5，对应 94cm）
-      applyT(0.5, app);
-
-      // 初始化配件：默认全部显示，与 ControlBar activeAccessory 初始 Set(['acc2','acc3','acc4']) 同步
-      ['对象010', '对象011'].forEach(name => {
-        const obj = app.scene?.getObjectByName(name);
-        if (obj) obj.visible = true;
-      });
-      // 台灯（组007）：初始状态显示
-      const lamp = app.scene?.getObjectByName('组007');
-      if (lamp) lamp.children.forEach(child => { child.visible = true; });
-
-      // 初始关灯：只归零 Material #186（对象016 台灯头），按钮唯一控制对象
-      app.scene.traverse(obj => {
-        const mats = Array.isArray(obj.material) ? obj.material : (obj.material ? [obj.material] : []);
-        mats.forEach(m => {
-          if (m.name === 'Material #186' && m.nodeInputs?.float) m.nodeInputs.float[13] = 0;
-        });
-      });
-
-      // 注册 renderCallback：驱动箭头移动（直接操作位置，完全同步）
-      if (app.renderCallbacks) {
-        app.renderCallbacks.push((delta) => {
-          const move = arrowMoveRef.current;
-          if (!move) return;
-          const SPEED = 0.3; // t/秒，全程 ~3.3s
-          const step = SPEED * delta * (move.dir === 'up' ? 1 : -1);
-          const current = arrowTRef.current;
-          const next = Math.max(0, Math.min(1, current + step));
-          arrowTRef.current = next;
-          applyT(next, app);
-          if (next <= 0 || next >= 1) arrowMoveRef.current = null;
-        });
-      }
-
-      // 把 v3d canvas 移入 React 容器
-      const v3dContainer = document.getElementById('v3d-container');
-      const canvas = v3dContainer?.querySelector('canvas');
-      if (canvas) container.appendChild(canvas);
-
-      // fsdfsd31233210118 材质导出错误（Material #85），强制替换为 GalvanizedSteel02_PBR
-      // 同时修复负缩放导致的法线翻转问题（3ds Max 镜像未重置 Xform）
-      const wrongObj = app.scene.getObjectByName('fsdfsd31233210118');
-      if (wrongObj) {
-        let steelMat = null;
-        app.scene.traverse(o => {
-          if (steelMat) return;
-          const mats = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
-          const found = mats.find(m => m.name === 'GalvanizedSteel02_PBR');
-          if (found) steelMat = found;
-        });
-        if (steelMat) wrongObj.material = steelMat;
-      }
-
-      if (app.scene) {
-        app.scene.background = null;
-        // 强制 clearAlpha=0，让 v3d canvas 完全透明，Unicorn 背景层可透出
-        if (app.renderer) {
-          app.renderer.setClearColor(0x000000, 0);
-        }
-        // Verge3D 内部 render loop 每帧可能重置 background，用 renderCallbacks 持续强制清零
-        if (app.renderCallbacks) {
-          app.renderCallbacks.push(() => {
-            if (app.scene.background !== null) {
-              app.scene.background = null;
-            }
-            if (app.renderer.getClearAlpha() !== 0) {
-              app.renderer.setClearColor(0x000000, 0);
-            }
-          });
-        }
-        const ground = app.scene.getObjectByName('Plane001');
-        if (ground) {
-          const cubeRenderTarget = new window.v3d.WebGLCubeRenderTarget(256, {
-            generateMipmaps: true,
-            minFilter: window.v3d.LinearMipmapLinearFilter,
-          });
-          const cubeCamera = new window.v3d.CubeCamera(0.1, 100, cubeRenderTarget);
-          cubeCamera.position.set(ground.position.x, 0.01, ground.position.z);
-          app.scene.add(cubeCamera);
-
-          ground.material = new window.v3d.MeshStandardMaterial({
-            envMap: cubeRenderTarget.texture,
-            roughness: 0,
-            metalness: 1,
-            transparent: true,
-            opacity: 0.4,
-          });
-          ground.visible = true;
-
-          function updateReflection() {
-            ground.visible = false;
-            cubeCamera.update(app.renderer, app.scene);
-            ground.visible = true;
-            groundReflectionRAF = requestAnimationFrame(updateReflection);
-          }
-          updateReflection();
-        }
-      }
-
-      startReflection(container);
-
-      // ── 无操作 5s 后自动旋转 ──────────────────────────────────────────────
-      // 利用 Verge3D OrbitControls 内置 autoRotate，无需手动操作相机
-      const IDLE_MS = 20000;
-      const controls = app.controls;
-      if (controls) {
-        controls.autoRotateSpeed = 0.735; // 转速再降低30%（1.05 × 0.7）
-        let idleTimer = null;
-
-        const startIdle = () => {
-          idleTimer = setTimeout(() => {
-            controls.autoRotate = true;
-          }, IDLE_MS);
-        };
-
-        const resetIdle = () => {
-          controls.autoRotate = false;
-          clearTimeout(idleTimer);
-          startIdle();
-        };
-
-        // 监听 document 上的用户交互（包含 UI 按钮点击，防止点按钮后 autoRotate 不停止）
-        const idleEvents = ['mousedown', 'wheel', 'touchstart', 'keydown'];
-        idleEvents.forEach(evt => {
-          document.addEventListener(evt, resetIdle, { passive: true });
-        });
-        // mousemove 只监听 canvas，避免鼠标在 UI 区域游走时频繁重置
-        const canvas = container.querySelector('canvas');
-        if (canvas) {
-          canvas.addEventListener('mousemove', resetIdle, { passive: true });
-          canvas.addEventListener('touchmove', resetIdle, { passive: true });
-        }
-
-        // 启动首次倒计时
-        startIdle();
-
-        // 组件卸载时清理事件监听和 timer，防止内存泄漏
-        const cleanupIdle = () => {
-          clearTimeout(idleTimer);
-          idleEvents.forEach(evt => {
-            document.removeEventListener(evt, resetIdle);
-          });
-          if (canvas) {
-            canvas.removeEventListener('mousemove', resetIdle);
-            canvas.removeEventListener('touchmove', resetIdle);
-          }
-        };
-        container._cleanupIdle = cleanupIdle;
-      }
-    }
-
-    // 如果 table.js 已经初始化完成（场景已就绪）
-    if (appRef.current || window.v3dApp) {
-      onSceneReady({ detail: { app: appRef.current || window.v3dApp } });
-      return;
-    }
-
-    window.addEventListener('v3d-scene-ready', onSceneReady, { once: true });
-    return () => {
-      window.removeEventListener('v3d-scene-ready', onSceneReady);
-      // 清理自动旋转事件监听和 timer
-      containerRef.current?._cleanupIdle?.();
-      // 清理内存泄漏：取消两个 rAF 循环
-      if (reflectionRAF) {
-        cancelAnimationFrame(reflectionRAF);
-        reflectionRAF = null;
-      }
-      if (groundReflectionRAF) {
-        cancelAnimationFrame(groundReflectionRAF);
-        groundReflectionRAF = null;
-      }
-    };
-  }, []);
-
-  // 监听 Verge3D 加载进度（仅在已登录时启动，避免未登录时假进度条跑到 92% 透出）
+  // ── 加载进度：假进度条 0→92% ──────────────────────────────────
   useEffect(() => {
     if (!authed) return;
-
-    // v3d-loading-progress 派发 detail.percentage（0-1 浮点），乘以 100 转为百分比
-    const onProgress = (e) => {
-      const pct = e.detail?.percentage ?? 0;
-      setLoadProgress(prev => Math.max(prev, Math.min(Math.round(pct * 100), 99)));
-    };
-    window.addEventListener('v3d-loading-progress', onProgress);
-
     let fakeTimer = null;
     let fakeProgress = 0;
     fakeTimer = setInterval(() => {
       if (fakeProgress < 92) {
         fakeProgress += 1;
-        setLoadProgress(prev => (prev < fakeProgress ? fakeProgress : prev));
+        setLoadProgress((prev) => (prev < fakeProgress ? fakeProgress : prev));
       }
     }, 100);
-
     return () => {
-      window.removeEventListener('v3d-loading-progress', onProgress);
       if (fakeTimer) clearInterval(fakeTimer);
     };
   }, [authed]);
 
-  // 同步 height UI：只在 t 值变化时更新，避免静止时频繁 re-render
-  const lastSyncedT = useRef(-1);
+  // ── 加载屏：sceneReady 后自动隐藏 ──────────────────────────────
   useEffect(() => {
-    const timer = setInterval(() => {
-      const t = arrowTRef.current;
-      if (Math.abs(t - lastSyncedT.current) < 0.001) return;
-      lastSyncedT.current = t;
-      const cm = Math.round(68 + t * 52);
-      setHeight(Math.max(68, Math.min(120, cm)));
-    }, 50);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const app = appRef.current;
-    if (!app?.scene) return;
-    const table = app.scene.getObjectByName('Table');
-    if (table) table.position.y = 0.68 + ((height - 68) / 52) * 0.52;
-  }, [height]);
-
-  // 箭头按钮：设置/清除 arrowMoveRef，实际移动在 Verge3D renderCallback 里执行
-  const stepFrame = (dir) => {
-    arrowMoveRef.current = dir ? { dir } : null;
-  };
-
-  // 材质名称映射：按钮 id → 场景中的 PBR 材质名
-  const matNameMap = {
-    light: 'Wood03_PBR',
-    oak:   'Wood06_PBR',
-    dark:  'Wood07_PBR',
-  };
-
-  const changeMaterial = (mat) => {
-    setMaterial(mat);
-    const app = appRef.current;
-    if (!app?.scene) return;
-
-    // 从场景中找到目标材质对象
-    const targetMatName = matNameMap[mat];
-    let targetMat = null;
-    app.scene.traverse(obj => {
-      if (targetMat) return;
-      if (obj.material) {
-        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        const found = mats.find(m => m.name === targetMatName);
-        if (found) targetMat = found;
-      }
-    });
-    if (!targetMat) return;
-
-    // 赋给 Rectangle005、Rectangle006
-    ['Rectangle005', 'Rectangle006'].forEach(name => {
-      const obj = app.scene.getObjectByName(name);
-      if (obj) obj.material = targetMat;
-    });
-  };
-
-  // 高度档位 → t 值（0=一档68cm, 0.5=二档94cm, 1=三档120cm）
-  const heightTMap = { 68: 0, 94: 0.5, 120: 1 };
-
-  // 直接位置插值（绕过 AnimationAction）
-  const DUMMIES = [
-    { name: 'Dummy003', y0: -4.1517, y1: -9.592 },
-    { name: 'Dummy002', y0: -0.4365, y1: -7.1008 },
-  ];
-  const applyT = (t, app) => {
-    const a = app || appRef.current;
-    if (!a?.scene) return;
-    DUMMIES.forEach(({ name, y0, y1 }) => {
-      const obj = a.scene.getObjectByName(name);
-      if (obj) obj.position.y = y0 + (y1 - y0) * t;
-    });
-  };
-
-  // 从当前位置平滑播放到目标档位
-  const playToFrame = (targetHeightCm) => {
-    const targetT = heightTMap[targetHeightCm];
-    if (targetT === undefined) return;
-
-    if (playRAFRef.current !== null) {
-      cancelAnimationFrame(playRAFRef.current);
-      playRAFRef.current = null;
-    }
-    arrowMoveRef.current = null; // 停止箭头持续移动
-
-    const SPEED = 0.3; // t/秒，与箭头按钮速度一致
-    let lastTimestamp = null;
-
-    const drive = (timestamp) => {
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      const delta = (timestamp - lastTimestamp) / 1000;
-      lastTimestamp = timestamp;
-
-      const current = arrowTRef.current;
-      const remaining = targetT - current;
-      const step = SPEED * delta * Math.sign(remaining);
-
-      if (Math.abs(remaining) <= Math.abs(step)) {
-        arrowTRef.current = targetT;
-        applyT(targetT);
-        playRAFRef.current = null;
-        return;
-      }
-
-      arrowTRef.current = current + step;
-      applyT(current + step);
-      playRAFRef.current = requestAnimationFrame(drive);
-    };
-
-    playRAFRef.current = requestAnimationFrame(drive);
-  };
-
-  // 配件 id → 场景物体名称
-  const accObjMap = {
-    acc2: '对象010',
-    acc3: '对象011',
-    acc4: '组007',
-  };
-
-  const toggleAccessory = (accId, visible) => {
-    const app = appRef.current;
-    if (!app?.scene) return;
-    const objName = accObjMap[accId];
-    if (!objName) return;
-    const obj = app.scene.getObjectByName(objName);
-    if (!obj) return;
-
-    if (accId === 'acc4') {
-      // 台灯：控制 组007 的所有子对象
-      obj.children.forEach(child => { child.visible = visible; });
-      setLampVisible(visible);
-    } else {
-      obj.visible = visible;
-    }
-  };
-
-  // ── 灯光系统 ──────────────────────────────────────────────────────────────
-  // 按钮只控制 Material #186（对象016 台灯头）自发光，0=关，1=开
-
-  const getMat186 = (scene) => {
-    let mat = null;
-    const seen = new Set();
-    scene.traverse(obj => {
-      const mats = Array.isArray(obj.material) ? obj.material : (obj.material ? [obj.material] : []);
-      mats.forEach(m => {
-        if (seen.has(m.uuid)) return;
-        seen.add(m.uuid);
-        if (m.name === 'Material #186') mat = m;
-      });
-    });
-    return mat;
-  };
-
-  // ── 手动开关灯 ──
-  const toggleLight = (on) => {
-    setLightOn(on);
-    const app = appRef.current;
-    if (!app?.scene) return;
-    const mat = getMat186(app.scene);
-    if (mat?.nodeInputs?.float) mat.nodeInputs.float[13] = on ? 1 : 0;
-
-    // Bloom 辉光后处理：开灯启用，关灯关闭
-    // LDR 模式亮度范围 0-1，threshold 需低于 1
-    if (on) {
-      app.enablePostprocessing?.([{
-        type: 'bloom',
-        threshold: 0.8,
-        strength: 0.8,
-        radius: 0.5,
-      }]);
-
-      // Bloom 基于帧缓冲采样，无法通过 layer 排除标注。
-      // Monkey-patch BloomPass.render：渲染前隐藏标注 group，完成后恢复。
-      // 一次性收集标注 group，避免每帧 traverse
-      const bloomPass = app.postprocessing?.composer?.passes?.find(p => p.strength !== undefined);
-      if (bloomPass && !bloomPass.__origRender) {
-        const dimGroups = [];
-        app.scene.traverse(obj => {
-          if (obj.name?.startsWith('__dim_annotation_') && obj.isGroup) dimGroups.push(obj);
+    const finishLoading = () => {
+      setLoadProgress(100);
+      setLoadingVisible(false);
+      setMusicReady(true);
+      if (!loadCompleteTrackedRef.current) {
+        loadCompleteTrackedRef.current = true;
+        trackPerformance('scene_ready', {
+          elapsedMs: Date.now() - loadStartTime.current,
+          sceneReady: true,
+          meshCount: document.documentElement.dataset.viewerMeshCount || null,
+          envReady: document.documentElement.dataset.viewerEnvReady || null,
         });
-        bloomPass.__origRender = bloomPass.render.bind(bloomPass);
-        bloomPass.render = function(...args) {
-          const visStates = dimGroups.map(g => g.visible);
-          dimGroups.forEach(g => { g.visible = false; });
-          bloomPass.__origRender(...args);
-          dimGroups.forEach((g, i) => { g.visible = visStates[i]; });
-        };
       }
-    } else {
-      // 关灯时移除 patch 并关闭后处理
-      const bloomPass = app.postprocessing?.composer?.passes?.find(p => p.strength !== undefined);
-      if (bloomPass?.__origRender) {
-        bloomPass.render = bloomPass.__origRender;
-        delete bloomPass.__origRender;
-      }
-      app.disablePostprocessing?.(true, true);
-    }
-  };
-
-  const changeView = (viewKey) => {
-    const app = appRef.current;
-    if (!app?.controls || !window.v3d) return;
-
-    const target = app.controls.targetObj?.position || { x: 0, y: 0.8, z: 0 };
-    const d = 14;
-
-    const positions = {
-      front: { x: target.x, y: target.y + d * 0.25, z: target.z + d * 0.97 },
-      back: { x: target.x, y: target.y + d * 0.25, z: target.z - d * 0.97 },
-      left: { x: target.x - d * 0.97, y: target.y + d * 0.25, z: target.z },
-      right: { x: target.x + d * 0.97, y: target.y + d * 0.25, z: target.z },
-      top: { x: target.x, y: target.y + d, z: target.z }
     };
 
-    const pos = positions[viewKey];
-    if (pos) {
-      app.controls.tween(
-        new window.v3d.Vector3(pos.x, pos.y, pos.z),
-        new window.v3d.Vector3(target.x, target.y, target.z),
-        0.6
-      );
+    if (!sceneReady) {
+      window.addEventListener('viewer-scene-ready', finishLoading);
+      return () => window.removeEventListener('viewer-scene-ready', finishLoading);
     }
+
+    setLoadProgress(100);
+    const elapsed = Date.now() - loadStartTime.current;
+    const delay = Math.max(800, 2500 - elapsed);
+    const timer = setTimeout(finishLoading, delay);
+    return () => clearTimeout(timer);
+  }, [sceneReady]);
+
+  // ── 加载屏兜底：线上真实场景已挂载但 sceneReady 未同步时也收尾 ─────
+  useEffect(() => {
+    if (!authed || sceneReady || !loadingVisible) return;
+
+    const fallbackTimer = setInterval(() => {
+      const sceneMounted =
+        document.documentElement.dataset.viewerSceneReady === 'true' ||
+        !!window.__threeScene;
+
+      if (!sceneMounted) return;
+
+      setLoadProgress(100);
+      setLoadingVisible(false);
+      setMusicReady(true);
+      if (!loadCompleteTrackedRef.current) {
+        loadCompleteTrackedRef.current = true;
+        trackPerformance('scene_ready_fallback', {
+          elapsedMs: Date.now() - loadStartTime.current,
+          threeScene: !!window.__threeScene,
+          sceneReadyDataset: document.documentElement.dataset.viewerSceneReady || null,
+        });
+      }
+      clearInterval(fallbackTimer);
+    }, 300);
+
+    return () => clearInterval(fallbackTimer);
+  }, [authed, sceneReady, loadingVisible]);
+
+  // ── Scene API 包装函数（App.jsx → sceneAPI 桥接）───────────────
+  const api = () => useStore.getState().sceneAPI;
+  const applyProjectConfig = (nextConfig) => {
+    if (!nextConfig || !Object.keys(nextConfig).length) return;
+    window.__lastProjectConfig = nextConfig;
+    useStore.getState().setProjectConfig(nextConfig);
+    applyProjectAnnotationsToFeatureStyles(nextConfig.annotations);
+    api()?.changeView?.('front');
   };
+
+  const handleToggleLight = (on) => {
+    trackOperation('light_toggled', { enabled: !!on });
+    api()?.toggleLight(on);
+  };
+  const handleMaterialChange = (mat) => {
+    trackOperation('material_selected', { material: mat });
+    setMaterial(mat);
+    api()?.changeMaterial(mat);
+  };
+  const handleViewChange = (v) => {
+    trackOperation('view_changed', { view: v });
+    setActiveView(v);
+    api()?.changeView(v);
+  };
+  const handlePlayToFrame = (h) => {
+    trackOperation('height_preset_selected', { heightCm: h });
+    api()?.playToFrame(h);
+  };
+  const handleStepFrame = (dir) => {
+    trackOperation('height_step_changed', { direction: dir || 'stop' });
+    api()?.stepFrame(dir);
+  };
+  const handleAccessoryChange = (accId, visible) => {
+    trackOperation('accessory_toggled', { accessoryId: accId, visible: !!visible });
+    if (accId === 'acc4') setLampVisible(visible);
+    api()?.toggleAccessory(accId, visible);
+  };
+  const handleSoloMode = () => {
+    trackOperation('solo_mode_toggled', { activeBeforeClick: soloActive });
+    api()?.toggleSoloMode();
+  };
+  const handleOrbitMode = () => {
+    trackOperation('orbit_mode_toggled', { activeBeforeClick: orbitActive });
+    api()?.toggleOrbitMode();
+  };
+
+  useEffect(() => {
+    if (!authed) return undefined;
+    let cancelled = false;
+    loadRemoteProjectConfig()
+      .then((config) => {
+        if (!cancelled) applyProjectConfig(config);
+      })
+      .catch((error) => {
+        console.warn('[project-config] remote config unavailable', error);
+        trackError('project_config_load_failed', error, { projectId: getProjectConfigId() });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authed]);
+
+  useEffect(() => {
+    if (viewer !== '1') return;
+    postViewerEvent('VIEWER_READY', { engine: 'r3f', project: '12345' });
+
+    const onMessage = (event) => {
+      const message = event.data;
+      if (!isAllowedMessageOrigin(event.origin)) return;
+      if (!message || message.source !== 'he-furniture-admin') return;
+      try {
+        trackOperation('viewer_command_received', {
+          command: message.type,
+          origin: event.origin,
+          projectId: message.payload?.projectId || null,
+        });
+        if (message.type === 'SET_MATERIAL') handleMaterialChange(message.payload?.material || null);
+        if (message.type === 'SET_SIZE') handlePlayToFrame(94);
+        if (message.type === 'LOAD_PROJECT_CONFIG') {
+          const content = message.payload?.content || {};
+          const nextConfig = {
+            ...content,
+            ...(message.payload?.background ? { background: message.payload.background } : {}),
+          };
+          applyProjectConfig(nextConfig);
+        }
+        if (message.type === 'EXPORT_SNAPSHOT') {
+          postViewerEvent('EXPORT_DONE', { projectId: message.payload?.projectId, mode: 'demo' }, event.origin);
+          return;
+        }
+        postViewerEvent('CONFIG_CHANGED', { command: message.type, accepted: true }, event.origin);
+        trackOperation('viewer_config_applied', { command: message.type });
+      } catch (error) {
+        postViewerEvent('ERROR', { command: message.type, message: String(error?.message || error) }, event.origin);
+        trackError('viewer_command_failed', error, { command: message.type });
+      }
+    };
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+    // The viewer bridge registers once for iframe mode; handlers read the latest scene API from the store.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewer]);
+
+  // ── 渲染 ──────────────────────────────────────────────────────
+  const heightT = (currentHeight - 68) / 52;
 
   return (
     <LangContext.Provider value={lang}>
       <>
-        {/* 登录界面：未通过验证时显示，挡在所有内容之前 */}
+        {/* 登录界面 */}
         <LoginScreen visible={!authed} onSuccess={() => setAuthed(true)} />
 
+        {/* 加载屏 */}
         <LoadingScreen progress={loadProgress} visible={authed && loadingVisible} />
+
         {/* goo filter for cart button blob effect */}
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>
           <defs>
@@ -566,45 +457,116 @@ export default function App() {
             </filter>
           </defs>
         </svg>
-        <div id="v3d-container" ref={containerRef} />
-        <div id="bg-layer">
-          <UnicornScene
-            projectId="bznXS8AvCasu71Yi5hVk"
-            width="1440px"
-            height="900px"
-            scale={1}
-            dpi={1.5}
-            sdkUrl="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@2.1.9/dist/unicornStudio.umd.js"
-          />
+
+        {/* R3F 场景（替代原 Verge3D #v3d-container） */}
+        {useWebGPU ? <SceneWebGPU /> : <Scene />}
+
+        <ProductStudioBackground />
+        <ProjectConfigBackground />
+
+        <div
+          id="bg-layer"
+          style={{
+            opacity: showDynamicBackground ? 1 : 0,
+            visibility: showDynamicBackground ? 'visible' : 'hidden',
+            pointerEvents: 'none',
+            transition: 'opacity 260ms ease',
+          }}
+        >
+          {showDynamicBackground && <DynamicBackground />}
         </div>
-        <div id="ground-layer" />
-        <canvas id="reflection-canvas" />
-        <DimensionAnnotation visible={showAnnotations} heightT={(height - 68) / 52} />
-        {/* UI layer — zoom反向抵消浏览器缩放 */}
+
+        {/* 3D 标注组件 */}
+        {!useWebGPU && (
+          <DimensionAnnotation visible={showAnnotations && !soloActive} heightT={heightT} />
+        )}
+        <FeatureAnnotationPin visible={showAnnotations && !soloActive} />
+        {DEV_PANELS_ENABLED && (
+          <Suspense fallback={null}>
+            <FeatureAnnotationGizmo />
+            <HeaderPanel />
+            <OutlinePanel />
+            <BgPanel />
+            <ProductStudioBgPanel />
+            <LedPanel />
+            <MaterialPanel />
+          </Suspense>
+        )}
+
+        {/* UI 层 — zoom 反向抵消浏览器缩放 */}
         <div id="ui-layer" style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 50,
+          zIndex: 250,
           pointerEvents: 'none',
           isolation: 'isolate',
         }}>
-          <Header onToggleLight={(on) => toggleLight(on)} lightOn={lightOn} lampVisible={lampVisible} lang={lang} onLangChange={setLang} musicReady={musicReady} />
+          <Header
+            onToggleLight={handleToggleLight}
+            lightOn={lightOn}
+            lampVisible={lampVisible}
+            lang={lang}
+            onLangChange={setLang}
+            musicReady={musicReady}
+            authed={authed}
+          />
           <ControlBar
-            height={height}
-            onHeightChange={setHeight}
-            onPlayToFrame={playToFrame}
-            onStepFrame={stepFrame}
+            height={currentHeight}
+            onHeightChange={() => {}}
+            onPlayToFrame={handlePlayToFrame}
+            onStepFrame={handleStepFrame}
             material={material}
-            onMaterialChange={changeMaterial}
+            onMaterialChange={handleMaterialChange}
             showAnnotations={showAnnotations}
-            onToggleAnnotations={() => setShowAnnotations(!showAnnotations)}
+            onToggleAnnotations={() => {
+              trackOperation('annotations_toggled', { visible: !showAnnotations });
+              setShowAnnotations(!showAnnotations);
+            }}
             activeView={activeView}
-            onViewChange={(v) => { setActiveView(v); changeView(v); }}
-            onAddToCart={() => alert('已加入购物车！')}
-            onAccessoryChange={toggleAccessory}
+            onViewChange={handleViewChange}
+            onAddToCart={() => {
+              trackOperation('cart_added', { material, height: currentHeight });
+              alert('已加入购物车！');
+            }}
+            onAccessoryChange={handleAccessoryChange}
+            onSoloMode={handleSoloMode}
+            onOrbitMode={handleOrbitMode}
+            backgroundMode={backgroundMode}
+            onToggleBackground={() => {
+              trackOperation('background_toggled', { previousMode: backgroundMode });
+              toggleBackgroundMode();
+            }}
+            soloActive={soloActive}
+            orbitActive={orbitActive}
           />
         </div>
       </>
     </LangContext.Provider>
   );
 }
+
+export default function App() {
+  useEffect(() => {
+    installTelemetryListeners();
+    trackOperation('page_viewed', {
+      renderer: new URLSearchParams(window.location.search).get('renderer') || 'webgl',
+      viewer: new URLSearchParams(window.location.search).get('viewer') || '0',
+    });
+  }, []);
+
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const portal = params?.get('portal');
+  const viewer = params?.get('viewer');
+  const rendererMode = params?.get('renderer');
+
+  if (portal === 'admin' || portal === 'client') {
+    return <BackendMovedNotice portal={portal} />;
+  }
+
+  return <ConfiguratorApp viewer={viewer} rendererMode={rendererMode} />;
+}
+
+
+
+
+

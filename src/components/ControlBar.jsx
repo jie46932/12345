@@ -1,13 +1,32 @@
 // Figma: 方案四-顶部导航+底部工具栏 (底部工具栏区域)
 // neumorphism 风格 — 与右上角三按钮统一
-import { useRef, useEffect, useState } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import GalleryModal from './GalleryModal';
+import VideoModal from './VideoModal';
 import CartModal from './CartModal';
+import ContactModal from './ContactModal';
 import { useLang, T } from '../LangContext';
 import { MATERIALS } from '../data/products';
+import useStore from '../store/useStore';
+import { trackOperation } from '../utils/telemetry';
 
 // ── SVG 图标 ──────────────────────────────────────────────
 const Icons = {
+  solo: (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M9 9h6v6H9z" fill="currentColor" stroke="none" opacity="0.3"/>
+      <path d="M12 3v18M3 12h18" strokeWidth="1" opacity="0.4"/>
+    </svg>
+  ),
+  orbit360: (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="12" cy="12" rx="9" ry="4"/>
+      <path d="M12 3c0 0 4 3.5 4 9s-4 9-4 9"/>
+      <path d="M12 3c0 0-4 3.5-4 9s4 9 4 9"/>
+      <path d="M3 12h18" strokeWidth="1" opacity="0.5"/>
+    </svg>
+  ),
   wrench: (
     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
@@ -50,9 +69,22 @@ const Icons = {
       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
     </svg>
   ),
+  consult: (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+      <path d="M8 9h8M8 13h5"/>
+    </svg>
+  ),
   info: (
     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" strokeWidth="3" strokeLinecap="round"/>
+    </svg>
+  ),
+  background: (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="5" width="16" height="14" rx="2"/>
+      <path d="M4 15c3-4 6-4 9 0 2-3 4-4 7-2"/>
+      <circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none" opacity="0.35"/>
     </svg>
   ),
   eye: (
@@ -85,14 +117,20 @@ const Icons = {
       <polyline points="21 15 16 10 5 21"/>
     </svg>
   ),
+  video: (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"/>
+      <path d="M10 9.5v5l5-2.5-5-2.5z" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
 };
 
 // ── 凹槽容器 + 凸起圆形图标按钮 (同右上角结构) ──
 function NeuBtn({ icon, label, active, onClick, title, size = 44, wrapClass = '' }) {
   const circleSize = Math.round(size * 0.68);
   const handleClick = (e) => {
-    e.currentTarget.blur(); // 点击后立刻释放 focus，避免光圈
-    onClick?.();
+    e.currentTarget.blur();
+    onClick?.(e);
   };
   return (
     <div className="nb-outer" title={title}>
@@ -101,6 +139,8 @@ function NeuBtn({ icon, label, active, onClick, title, size = 44, wrapClass = ''
         className={`nb-wrap ${active ? 'nb-active' : ''} ${wrapClass}`}
         style={{ width: size, height: size }}
         onClick={handleClick}
+        title={title}
+        aria-label={title || label || 'button'}
       >
         {/* 凸起圆形（blur 产生柔和边缘） */}
         <span className="nb-circle" style={{ width: circleSize, height: circleSize }} />
@@ -112,31 +152,42 @@ function NeuBtn({ icon, label, active, onClick, title, size = 44, wrapClass = ''
 }
 
 export default function ControlBar({
-  height, onHeightChange, onPlayToFrame, onStepFrame,
+  height, onPlayToFrame, onStepFrame,
   material, onMaterialChange,
   showAnnotations, onToggleAnnotations,
-  activeView, onViewChange,
-  onAddToCart, onAccessoryChange,
+  onAccessoryChange,
+  onSoloMode, onOrbitMode, soloActive, orbitActive,
+  backgroundMode, onToggleBackground,
 }) {
   const lang = useLang();
   const t = T[lang];
+  const configuredContact = useStore((s) => s.projectConfig.consultation);
+  const contactConfig = configuredContact || {};
+  const consultLabel = contactConfig.buttonLabel || t.consult || '咨询';
+  // 触屏检测：用于区分 hover 展开（桌面）vs 点击展开（触屏）
+  const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   const movingDirRef = useRef(null);
+  const onStepFrameRef = useRef(onStepFrame);
+  // 同步 ref 到最新值（ref 不能直接在 render 中更新）
+  useEffect(() => { onStepFrameRef.current = onStepFrame; }, [onStepFrame]);
   const accLeaveTimer = useRef(null); // 配件区 mouseLeave 延迟收起
   const shareLeaveTimer = useRef(null); // 分享区 mouseLeave 延迟收起
   const heightLeaveTimer = useRef(null); // 高度区 mouseLeave 延迟收起
   const matLeaveTimer = useRef(null); // 材质区 mouseLeave 延迟收起
+  const viewLeaveTimer = useRef(null); // 查看区 mouseLeave 延迟收起
   const [movingDir, setMovingDir] = useState(null);
   const [activeAccessory, setActiveAccessory] = useState(new Set(['acc2', 'acc3', 'acc4']));
   const [cartClicked, setCartClicked] = useState(false);
   const [activePreset, setActivePreset] = useState(94); // 初始二档高亮
-  const [activeMats, setActiveMats] = useState(new Set());
   const [heightExpanded, setHeightExpanded] = useState(false);
   const [matExpanded, setMatExpanded] = useState(false);
   const [accExpanded, setAccExpanded] = useState(false);
   const [shareExpanded, setShareExpanded] = useState(false);
+  const [viewExpanded, setViewExpanded] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [qrOpen, setQrOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
 
   // 画廊打开时屏蔽右上角 nav-btn-group 的鼠标事件，防止 hover 触发展开动画
   useEffect(() => {
@@ -160,37 +211,40 @@ export default function ControlBar({
     { id: 'acc4', label: t.acc_lamp, icon: Icons.lamp },
   ];
 
-  const toggleMove = (dir) => {
-    if (movingDirRef.current === dir) {
-      // 再次点击同方向：停止
-      movingDirRef.current = null;
-      setMovingDir(null);
-      onStepFrame?.(null);
-    } else {
-      // 开始新方向
-      movingDirRef.current = dir;
-      setMovingDir(dir);
-      setActivePreset(null);
-      onStepFrame?.(dir);
-    }
-  };
-
-  const stopMove = () => {
+  // 单击箭头 → 持续移动；同方向再次点击 → 停止
+  const stopMove = useCallback(() => {
+    if (movingDirRef.current === null) return;
     movingDirRef.current = null;
     setMovingDir(null);
-    onStepFrame?.(null);
-  };
-  useEffect(() => () => stopMove(), []);
+    onStepFrameRef.current?.(null);
+  }, []);
+
+  const startMove = useCallback((dir) => {
+    // 已在同方向移动中 → 停止
+    if (movingDirRef.current === dir) {
+      stopMove();
+      return;
+    }
+    movingDirRef.current = dir;
+    setMovingDir(dir);
+    setActivePreset(null);
+    onStepFrameRef.current?.(dir);
+  }, [stopMove]);
+
+  // 组件卸载时停止移动
+  useEffect(() => {
+    return () => { onStepFrameRef.current?.(null); };
+  }, []);
 
   // 从当前位置平滑移动到目标档位：让 Verge3D 动画系统负责过渡
   const moveToPreset = (targetCm) => {
     stopMove();
     setActivePreset(targetCm);
-    onHeightChange(targetCm);      // 更新 UI 数值显示
-    onPlayToFrame?.(targetCm);     // 播放动画片段
+    onPlayToFrame?.(targetCm);
   };
 
   const handleCart = () => {
+    trackOperation('cart_opened', { open: !cartOpen, material, height });
     setCartClicked(true);
     setTimeout(() => setCartClicked(false), 600);
     setCartOpen(v => !v);
@@ -199,6 +253,7 @@ export default function ControlBar({
   return (
     <>
       <GalleryModal open={galleryOpen} onClose={() => setGalleryOpen(false)} />
+      <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} />
       <CartModal
         open={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -206,46 +261,14 @@ export default function ControlBar({
         activeAccessory={activeAccessory}
         height={height}
       />
-      {qrOpen && (
-        <div
-          onClick={() => setQrOpen(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 200,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: 'rgba(204, 208, 212, 0.55)',
-              backdropFilter: 'blur(24px) saturate(1.5)',
-              WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
-              border: '1px solid rgba(255,255,255,0.5)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7), 0 8px 40px rgba(0,0,0,0.18)',
-              borderRadius: '20px',
-              padding: '32px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
-            }}
-          >
-            <p style={{ margin: 0, fontSize: '14px', fontFamily: 'Rajdhani, Inter, sans-serif', fontWeight: 600, letterSpacing: '0.08em', color: 'rgba(0,0,0,0.6)' }}>{t.scanQr}</p>
-            <img
-              src="/media/website.jpg"
-              alt="二维码"
-              width={200}
-              height={200}
-              style={{ borderRadius: '8px', display: 'block' }}
-            />
-            <p style={{ margin: 0, fontSize: '12px', fontFamily: 'Rajdhani, Inter, sans-serif', color: 'rgba(0,0,0,0.4)', letterSpacing: '0.05em' }}>https://www.gsdmsj.cn/</p>
-          </div>
-        </div>
-      )}
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
       <style>{`
         /* ── 底部栏整体 ─────────────────────────────── */
         .cb-bar {
           position: fixed;
           bottom: 16px;
           left: 50%;
-          transform: translateX(-50%);
+          transform: translateX(-50%) scale(var(--ui-scale, 1));
           transform-origin: bottom center;
           z-index: 50;
           display: flex;
@@ -397,7 +420,7 @@ export default function ControlBar({
           font-family: 'Rajdhani', sans-serif;
           line-height: 1;
           white-space: nowrap;
-          pointer-events: none;
+          pointer-events: auto;
           text-align: center;
           display: block;
         }
@@ -466,6 +489,7 @@ export default function ControlBar({
             0 -4px 8px -2px rgba(255,255,255,0.4);
           position: relative;
           z-index: 1;
+          pointer-events: none;
         }
         /* 图标不受 blur 影响 — 绝对定位叠在圆形上 */
         .nb-icon {
@@ -633,6 +657,7 @@ export default function ControlBar({
           transition: box-shadow 300ms cubic-bezier(0.23,1,0.32,1),
                       transform 300ms cubic-bezier(0.23,1,0.32,1) !important;
           outline: none;
+          pointer-events: none;
         }
         .cb-mat-circle:active {
           transform: translateY(1px);
@@ -697,6 +722,7 @@ export default function ControlBar({
           flex-shrink: 0;
           position: relative;
           z-index: 1;
+          pointer-events: none;
         }
         .cb-cart-icon {
           position: absolute;
@@ -726,6 +752,7 @@ export default function ControlBar({
           overflow: hidden;
           max-width: 0;
           opacity: 0;
+          pointer-events: none;
           padding: 8px 0 20px;
           margin: -8px 0 -20px -8px;
           transition: max-width 400ms cubic-bezier(0.23, 1, 0.32, 1),
@@ -734,6 +761,7 @@ export default function ControlBar({
         .nb-h-expand-wrap.nb-h-open {
           max-width: 700px;
           opacity: 1;
+          pointer-events: auto;
           margin-left: 0;
         }
         /* 材质展开容器：底部对齐让圆形和 label 与第一个按钮对齐 */
@@ -760,24 +788,32 @@ export default function ControlBar({
           <div className="cb-group"
             onMouseEnter={() => { if (heightLeaveTimer.current) { clearTimeout(heightLeaveTimer.current); heightLeaveTimer.current = null; } setHeightExpanded(true); }}
             onMouseLeave={() => { heightLeaveTimer.current = setTimeout(() => setHeightExpanded(false), 150); }}
+            onClick={() => { if (isTouch && !heightExpanded) setHeightExpanded(true); }}
           >
             <span className="cb-group-label">{t.height} {heightExpanded && <em>{height}cm</em>}</span>
             <div className="cb-group-row">
 
-              {/* 下降箭头：hover 展开/折叠触发器，展开后点击切换下降 */}
+              {/* 下降箭头：单击即持续下降至最低点，无需二次点击 */}
               <button className={`nb-arrow ${heightExpanded ? 'nb-h-expanded' : ''} ${movingDir === 'down' ? 'nb-h-moving' : ''}`}
-                onClick={(e) => { e.currentTarget.blur(); if (heightExpanded) toggleMove('down'); }}
-                title={heightExpanded ? (movingDir === 'down' ? t.clickStop : t.descend) : t.expand}
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  if (isTouch && !heightExpanded) {
+                    setHeightExpanded(true);
+                    return;
+                  }
+                  startMove('down');
+                }}
+                title={heightExpanded ? t.descend : t.expand}
               >
                 <span className="nb-circle" style={{ width: 46, height: 46 }} />
                 <span className="nb-icon">{Icons.down}</span>
               </button>
 
               {/* 展开区域：上升箭头 + 档位按钮 */}
-              <div className={`nb-h-expand-wrap ${heightExpanded ? 'nb-h-open' : ''}`}>
+              <div className={`nb-h-expand-wrap ${heightExpanded ? 'nb-h-open' : ''}`} aria-hidden={!heightExpanded}>
                 <button className={`nb-arrow ${movingDir === 'up' ? 'nb-h-moving' : ''}`}
-                  onClick={(e) => { e.currentTarget.blur(); toggleMove('up'); }}
-                  title={movingDir === 'up' ? t.clickStop : t.rise}
+                  onClick={(e) => { e.currentTarget.blur(); startMove('up'); }}
+                  title={t.rise}
                 >
                   <span className="nb-circle" style={{ width: 46, height: 46 }} />
                   <span className="nb-icon">{Icons.up}</span>
@@ -802,26 +838,66 @@ export default function ControlBar({
 
           <div className="cb-sep" />
 
-          {/* 标注 */}
-          <div className="cb-group">
-            <span className="cb-group-label">{t.annotation}</span>
+          {/* 查看：背景作为初始按钮，hover 展开：尺寸 + 独显 + 360°环绕 */}
+          <div className="cb-group"
+            onMouseEnter={() => { if (viewLeaveTimer.current) { clearTimeout(viewLeaveTimer.current); viewLeaveTimer.current = null; } setViewExpanded(true); }}
+            onMouseLeave={() => { viewLeaveTimer.current = setTimeout(() => setViewExpanded(false), 150); }}
+            onClick={() => { if (!viewExpanded) setViewExpanded(true); }}
+          >
+            <span className="cb-group-label">{t.view ?? '查看'}</span>
             <div className="cb-group-row">
               <NeuBtn
-                icon={Icons.info}
-                active={!showAnnotations}
-                onClick={onToggleAnnotations}
-                title="显示/隐藏标注"
+                icon={Icons.background}
+                label={viewExpanded ? t.viewBackground : undefined}
+                active={backgroundMode !== 'solidStudio'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isTouch && !viewExpanded) {
+                    setViewExpanded(true);
+                    return;
+                  }
+                  onToggleBackground?.();
+                }}
+                title="切换动态背景/棚拍背景"
                 size={67}
               />
+              {/* 展开区：尺寸 + 独显 + 360°环绕 */}
+              <div className={`nb-h-expand-wrap ${viewExpanded ? 'nb-h-open' : ''}`} aria-hidden={!viewExpanded}>
+                <NeuBtn
+                  icon={Icons.info}
+                  label={viewExpanded ? (t.annotation ?? '尺寸') : undefined}
+                  active={!showAnnotations}
+                  onClick={(e) => { e.stopPropagation(); onToggleAnnotations(); }}
+                  title="显示/隐藏标注"
+                  size={67}
+                />
+                <NeuBtn
+                  icon={Icons.solo}
+                  label={viewExpanded ? (t.solo ?? '独显') : undefined}
+                  active={soloActive}
+                  onClick={onSoloMode}
+                  title="独显"
+                  size={67}
+                />
+                <NeuBtn
+                  icon={Icons.orbit360}
+                  label={viewExpanded ? (t.orbit ?? '环绕') : undefined}
+                  active={orbitActive}
+                  onClick={onOrbitMode}
+                  title="360°环绕"
+                  size={67}
+                />
+              </div>
             </div>
           </div>
 
           <div className="cb-sep" />
 
-          {/* AR + 二维码 + 画廊（hover 展开） */}
+          {/* AR + 画廊（hover 展开） */}
           <div className="cb-group"
             onMouseEnter={() => { if (shareLeaveTimer.current) { clearTimeout(shareLeaveTimer.current); shareLeaveTimer.current = null; } setShareExpanded(true); }}
             onMouseLeave={() => { shareLeaveTimer.current = setTimeout(() => setShareExpanded(false), 150); }}
+            onClick={() => { if (isTouch && !shareExpanded) setShareExpanded(true); }}
           >
             <span className="cb-group-label">{t.share}</span>
             <div className="cb-group-row">
@@ -830,30 +906,43 @@ export default function ControlBar({
                 icon={Icons.ar}
                 label={shareExpanded ? 'AR' : undefined}
                 active={activeAccessory.has('acc5')}
-                onClick={() => setActiveAccessory(prev => {
-                  const next = new Set(prev);
-                  next.has('acc5') ? next.delete('acc5') : next.add('acc5');
-                  return next;
-                })}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isTouch || shareExpanded) {
+                    const willEnable = !activeAccessory.has('acc5');
+                    trackOperation('ar_preview_toggled', { enabled: willEnable });
+                    setActiveAccessory(prev => {
+                      const next = new Set(prev);
+                      next.has('acc5') ? next.delete('acc5') : next.add('acc5');
+                      return next;
+                    });
+                  } else setShareExpanded(true);
+                }}
                 title="AR 预览"
                 size={67}
               />
-              {/* 展开区域：二维码 + 画廊 */}
-              <div className={`nb-h-expand-wrap ${shareExpanded ? 'nb-h-open' : ''}`}>
-                <NeuBtn
-                  icon={Icons.qr}
-                  label={shareExpanded ? t.qr : undefined}
-                  active={qrOpen}
-                  onClick={() => setQrOpen(v => !v)}
-                  title={t.qr}
-                  size={67}
-                />
+              {/* 展开区域：画廊 + 视频 */}
+              <div className={`nb-h-expand-wrap ${shareExpanded ? 'nb-h-open' : ''}`} aria-hidden={!shareExpanded}>
                 <NeuBtn
                   icon={Icons.gallery}
                   label={shareExpanded ? t.gallery : undefined}
                   active={galleryOpen}
-                  onClick={() => setGalleryOpen(v => !v)}
+                  onClick={() => {
+                    trackOperation('gallery_toggled', { open: !galleryOpen });
+                    setGalleryOpen(v => !v);
+                  }}
                   title={t.gallery}
+                  size={67}
+                />
+                <NeuBtn
+                  icon={Icons.video}
+                  label={shareExpanded ? t.video : undefined}
+                  active={videoOpen}
+                  onClick={() => {
+                    trackOperation('video_toggled', { open: !videoOpen });
+                    setVideoOpen(v => !v);
+                  }}
+                  title="视频"
                   size={67}
                 />
               </div>
@@ -869,24 +958,34 @@ export default function ControlBar({
           <div className="cb-group"
             onMouseEnter={() => { if (matLeaveTimer.current) { clearTimeout(matLeaveTimer.current); matLeaveTimer.current = null; } setMatExpanded(true); }}
             onMouseLeave={() => { matLeaveTimer.current = setTimeout(() => setMatExpanded(false), 150); }}
+            onClick={() => { if (!matExpanded) setMatExpanded(true); }}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && !matExpanded) {
+                e.preventDefault();
+                setMatExpanded(true);
+              }
+            }}
+            role="group"
+            aria-label="材质切换"
           >
             <span className="cb-group-label">{t.material} {matExpanded && <em>{materials.find(m => m.id === material)?.name}</em>}</span>
             <div className="cb-group-row">
               {/* 第一个色块：凸起圆（NeuBtn同款），hover 展开 + 点击选材质 */}
               <div className="cb-mat-outer" style={{cursor:'pointer'}}>
                 <button
-                  className={`nb-wrap ${activeMats.has(materials[0].id) ? 'nb-active' : ''}`}
+                  className={`nb-wrap ${material === materials[0].id ? 'nb-active' : ''}`}
                   style={{ width: 67, height: 67 }}
                   onClick={(e) => {
                     e.currentTarget.blur();
-                    setActiveMats(prev => {
-                      const next = new Set(prev);
-                      next.has(materials[0].id) ? next.delete(materials[0].id) : next.add(materials[0].id);
-                      return next;
-                    });
+                    e.stopPropagation();
+                    if (!matExpanded) {
+                      setMatExpanded(true);
+                      return;
+                    }
                     onMaterialChange(materials[0].id);
                   }}
                   title={materials[0].name}
+                  aria-label={`切换材质：${materials[0].name}`}
                 >
                   <span className="nb-circle" style={{
                     width: 46, height: 46,
@@ -896,22 +995,19 @@ export default function ControlBar({
                 {matExpanded && <span className="nb-label">{materials[0].name}</span>}
               </div>
               {/* 展开区域：剩余色块，结构与第一个按钮一致（nb-wrap + nb-circle） */}
-              <div className={`nb-h-expand-wrap nb-mat-expand-wrap ${matExpanded ? 'nb-h-open' : ''}`}>
+              <div className={`nb-h-expand-wrap nb-mat-expand-wrap ${matExpanded ? 'nb-h-open' : ''}`} aria-hidden={!matExpanded}>
                 {materials.slice(1).map(mat => (
                   <div key={mat.id} className="cb-mat-outer">
                     <button
-                      className={`nb-wrap ${activeMats.has(mat.id) ? 'nb-active' : ''}`}
+                      className={`nb-wrap ${material === mat.id ? 'nb-active' : ''}`}
                       style={{ width: 67, height: 67 }}
                       onClick={(e) => {
                         e.currentTarget.blur();
-                        setActiveMats(prev => {
-                          const next = new Set(prev);
-                          next.has(mat.id) ? next.delete(mat.id) : next.add(mat.id);
-                          return next;
-                        });
+                        e.stopPropagation();
                         onMaterialChange(mat.id);
                       }}
                       title={mat.name}
+                      aria-label={`切换材质：${mat.name}`}
                     >
                       <span className="nb-circle" style={{ width: 46, height: 46, background: mat.color }} />
                     </button>
@@ -928,6 +1024,7 @@ export default function ControlBar({
           <div className="cb-group"
             onMouseEnter={() => { if (accLeaveTimer.current) { clearTimeout(accLeaveTimer.current); accLeaveTimer.current = null; } setAccExpanded(true); }}
             onMouseLeave={() => { accLeaveTimer.current = setTimeout(() => setAccExpanded(false), 150); }}
+            onClick={() => { if (isTouch && !accExpanded) setAccExpanded(true); }}
           >
             <span className="cb-group-label">{t.accessory}</span>
             <div className="cb-group-row">
@@ -937,7 +1034,9 @@ export default function ControlBar({
                 label={accExpanded ? accessories[0].label : undefined}
                 active={activeAccessory.has(accessories[0].id)}
                 wrapClass="nb-wrap-1"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isTouch && !accExpanded) { setAccExpanded(true); return; }
                   const id = accessories[0].id;
                   const wasActive = activeAccessory.has(id);
                   setActiveAccessory(prev => {
@@ -951,7 +1050,7 @@ export default function ControlBar({
                 size={67}
               />
               {/* 展开区域：挂钩(nb-wrap-2) + 台灯(nb-wrap-3) */}
-              <div className={`nb-h-expand-wrap ${accExpanded ? 'nb-h-open' : ''}`}>
+              <div className={`nb-h-expand-wrap ${accExpanded ? 'nb-h-open' : ''}`} aria-hidden={!accExpanded}>
                 {accessories.slice(1).map((acc, idx) => (
                   <NeuBtn
                     key={acc.id}
@@ -991,6 +1090,23 @@ export default function ControlBar({
                 <span className="cb-cart-inner" />
                 <span className="cb-cart-icon">{Icons.cart}</span>
               </button>
+            </div>
+          </div>
+
+          {/* 咨询 */}
+          <div className="cb-group">
+            <span className="cb-group-label">{consultLabel}</span>
+            <div className="cb-group-row">
+              <NeuBtn
+                icon={Icons.consult}
+                active={contactOpen}
+                onClick={() => {
+                  trackOperation('contact_toggled', { open: !contactOpen });
+                  setContactOpen(v => !v);
+                }}
+                title={consultLabel}
+                size={67}
+              />
             </div>
           </div>
 

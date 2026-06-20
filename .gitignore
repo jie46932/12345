@@ -1,10 +1,23 @@
 node_modules/
 dist/
+.env
+.trash/
+test-results/
 *.max
 *.bak
 *.bak2
 *.log
+*.colorfix
+*副本*
+vite-*.log
 v3d_app_data/
 opentype.js
 environment.hdr
 assets/
+_archive/
+backups/
+
+# 12345 只保留 Viewer；后台/Electron/Supabase 在 F:\houtai 推进。
+src/saas/
+electron/
+supabase/

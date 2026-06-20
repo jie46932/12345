@@ -175,6 +175,7 @@ export default function ConfiguratorLayout({ children, slots = {} }) {
                   { id: 'material',    label: 'MAT', Icon: AppstoreOutlined },
                   { id: 'height',      label: 'HGT', Icon: ColumnHeightOutlined  },
                   { id: 'accessories', label: 'ACC', Icon: GiftOutlined },
+                // eslint-disable-next-line no-unused-vars
                 ].map(({ id, label, Icon }) => (
                   <button
                     key={id}

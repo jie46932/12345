@@ -107,7 +107,8 @@ button:focus-visible,
 }
 
 html {
-  background: transparent !important;
+  /* 兜底色与站点主色一致：resize 时两个 canvas 短暂透明，露出此色而非浏览器白/黑 */
+  background: #F5F0E8 !important;
 }
 body {
   font-family: 'Inter', 'PingFang SC', system-ui, sans-serif;
@@ -130,17 +131,21 @@ a { text-decoration: none; color: inherit; }
   width: 100% !important;
   height: 100% !important;
 }
-#v3d-container {
+.dynamic-background-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#r3f-canvas {
   position: fixed; inset: 0;
   z-index: 2;
   background: transparent;
 }
-#v3d-container canvas {
+#r3f-canvas canvas {
   display: block;
   width: 100% !important;
   height: 100% !important;
   background: transparent !important;
-  z-index: 1 !important;
 }
 
 /* ══════════════════════════════════════
@@ -1682,47 +1687,6 @@ a { text-decoration: none; color: inherit; }
   .control-mat { min-width: 44px; padding: 4px 6px; }
 }
 
-/* ════════════════════════════════════════
-   假反射地面系统
-   ground-layer:      椭圆渐变地面（模拟3D渲染的地面光晕）
-   reflection-canvas: 以 Plane001 为轴的倒影，从上到下淡出
-   ════════════════════════════════════════ */
-
-/* 椭圆渐变地面：覆盖屏幕下半部分，中心亮四周暗 */
-#ground-layer {
-  display: none;
-}
-
-/* 倒影 canvas：全屏翻转，CSS mask 控制显示范围 */
-#reflection-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-  transform: scaleY(-1);
-  /* 只显示下半部分（对应翻转后的地面以下区域），从50%开始往下淡出 */
-  -webkit-mask-image: linear-gradient(
-    to top,
-    rgba(0,0,0,0)    0%,
-    rgba(0,0,0,0)    50%,
-    rgba(0,0,0,0.4)  60%,
-    rgba(0,0,0,0.15) 75%,
-    rgba(0,0,0,0)    100%
-  );
-  mask-image: linear-gradient(
-    to top,
-    rgba(0,0,0,0)    0%,
-    rgba(0,0,0,0)    50%,
-    rgba(0,0,0,0.4)  60%,
-    rgba(0,0,0,0.15) 75%,
-    rgba(0,0,0,0)    100%
-  );
-  filter: blur(1px);
-}
-
 /* ════════════════════════════════════════════════════════════
    来源：critical-fixes.css（8pt 网格系统修复）
    ════════════════════════════════════════════════════════════ */
@@ -2107,4 +2071,105 @@ small, .text-sm { font-size: var(--font-size-sm); }
 
 @media (min-width: 1024px) {
   :root { --spacing-container: 32px; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   移动端 / 平板端适配
+   ════════════════════════════════════════════════════════════ */
+
+/* 手机端：保留本地动态背景，避免背景按钮失效 */
+@media (max-width: 768px) {
+  html { background: #ebebeb !important; }
+}
+
+/* Verge3D watermark CSS removed in R3F migration */
+
+.bridge-r3f-viewer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 18%, #27384a 0, #111820 42%, #080b10 100%);
+}
+
+.bridge-r3f-viewer canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.bridge-r3f-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.bridge-r3f-title {
+  position: absolute;
+  top: 24px;
+  left: 26px;
+  display: grid;
+  gap: 8px;
+  color: #fff;
+  text-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
+}
+
+.bridge-r3f-title strong {
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.bridge-r3f-title span {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0;
+}
+
+.bridge-r3f-status {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(9, 13, 18, 0.72);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.bridge-r3f-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f0b84b;
+  box-shadow: 0 0 14px rgba(240, 184, 75, 0.72);
+}
+
+.bridge-r3f-status.ready::before {
+  background: #45d982;
+  box-shadow: 0 0 14px rgba(69, 217, 130, 0.72);
+}
+
+@media (max-width: 768px) {
+  .bridge-r3f-title {
+    top: 16px;
+    left: 16px;
+  }
+
+  .bridge-r3f-title strong {
+    font-size: 22px;
+  }
+
+  .bridge-r3f-status {
+    right: 12px;
+    bottom: 12px;
+  }
 }

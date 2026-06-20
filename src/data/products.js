@@ -1,7 +1,7 @@
 // 统一产品数据：材质、配件、价格
 export const MATERIALS = [
   { id: 'light', name: '浅胡桃色', color: '#c8a882', price: 0 },
-  { id: 'oak',   name: '白橡原木', color: '#e8d5b0', price: 200 },
+  { id: 'oak',   name: '原木白橡', color: '#e8d5b0', price: 200 },
   { id: 'dark',  name: '深胡桃色', color: '#3a2a1a', price: 500 },
 ];
 

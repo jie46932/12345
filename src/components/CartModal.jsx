@@ -1,8 +1,14 @@
 // 购物车弹窗 — 材质 + 配件 + 价格明细
 import { useEffect } from 'react';
+import { useLang, T } from '../LangContext';
 import { MATERIALS, ACCESSORY_INFO, BASE_PRICE } from '../data/products';
 
 const MATERIAL_INFO = Object.fromEntries(MATERIALS.map(m => [m.id, m]));
+
+// 配件 ID → T key 映射
+const ACC_T_KEY = { acc2: 'acc_cup', acc3: 'acc_hook', acc4: 'acc_lamp' };
+// 材质 ID → T key 映射
+const MAT_T_KEY = { light: 'mat_light', oak: 'mat_oak', dark: 'mat_dark' };
 
 export default function CartModal({ open, onClose, material, activeAccessory, height }) {
   useEffect(() => {
@@ -11,6 +17,8 @@ export default function CartModal({ open, onClose, material, activeAccessory, he
     window.addEventListener('keydown', handle);
     return () => window.removeEventListener('keydown', handle);
   }, [open, onClose]);
+
+  const t = T[useLang()];
 
   if (!open) return null;
 
@@ -27,10 +35,14 @@ export default function CartModal({ open, onClose, material, activeAccessory, he
 
   const total = BASE_PRICE + matPrice + accPrice;
 
+  const matName = t[MAT_T_KEY[material]] || matInfo?.name || '';
   const lineItems = [
-    { label: '智能升降桌 · 基础款', desc: `桌高 ${height}cm 档位`, price: BASE_PRICE, isBase: true },
-    matInfo && { label: `桌面材质 · ${matInfo.name}`, desc: '实木贴面工艺', price: matPrice, isMat: true },
-    ...accItems.map(a => ({ label: `配件 · ${a.name}`, desc: '原厂配套', price: a.price })),
+    { label: t.cartBaseDesc, desc: t.cartHeightDesc.replace('{h}', height), price: BASE_PRICE, isBase: true },
+    matInfo && { label: `${t.material} · ${matName}`, desc: t.cartMatDesc, price: matPrice, isMat: true },
+    ...[...accSet]
+      .map(id => ({ id, info: ACCESSORY_INFO[id] }))
+      .filter(a => a.info && a.info.price > 0)
+      .map(a => ({ label: `${t.accessory} · ${t[ACC_T_KEY[a.id]] || a.info.name}`, desc: t.cartAccDesc, price: a.info.price })),
   ].filter(Boolean);
 
   return (
@@ -68,7 +80,7 @@ export default function CartModal({ open, onClose, material, activeAccessory, he
           borderBottom: '1px solid rgba(0,0,0,0.08)',
         }}>
           <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(0,0,0,0.7)' }}>
-            购物清单
+            {t.cartTitle}
           </div>
           <button onClick={onClose} style={{
             width: 32, height: 32, borderRadius: '50%',
@@ -105,7 +117,7 @@ export default function CartModal({ open, onClose, material, activeAccessory, he
                 </div>
               </div>
               <div style={{ fontSize: 16, fontWeight: 700, color: 'rgba(0,0,0,0.65)', whiteSpace: 'nowrap', marginLeft: 12 }}>
-                {item.price === 0 ? '已包含' : `¥${item.price}`}
+                {item.price === 0 ? t.cartIncluded : `¥${item.price}`}
               </div>
             </div>
           ))}
@@ -118,7 +130,7 @@ export default function CartModal({ open, onClose, material, activeAccessory, he
           background: 'rgba(0,0,0,0.03)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <span style={{ fontSize: 14, color: 'rgba(0,0,0,0.45)', letterSpacing: '0.08em' }}>合计</span>
+            <span style={{ fontSize: 14, color: 'rgba(0,0,0,0.45)', letterSpacing: '0.08em' }}>{t.cartTotal}</span>
             <span style={{
               fontSize: 32, fontWeight: 800, lineHeight: 1,
               color: 'rgba(0,0,0,0.75)',
@@ -161,7 +173,7 @@ export default function CartModal({ open, onClose, material, activeAccessory, he
               color: 'rgba(0,0,0,0.6)',
               fontFamily: "'Rajdhani','Inter',sans-serif",
               pointerEvents: 'none',
-            }}>立即下单</span>
+            }}>{t.cartOrder}</span>
             <style>{`
               .order-btn-wrap:active .order-btn-inner {
                 transform: translateY(1px);
