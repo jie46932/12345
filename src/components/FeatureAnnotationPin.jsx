@@ -48,6 +48,9 @@ function getConfiguredLines(annotation, fallbackLines) {
 export default function FeatureAnnotationPin({ visible = true }) {
   const lang = useContext(LangContext);
   const [expanded, setExpanded] = useState(null);
+  const isMobile = typeof window !== 'undefined'
+    && (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(window.navigator?.userAgent || ''));
+  const mobileTextScale = isMobile ? 0.6 : 1;
   const featStyles = useStore((s) => s.featStyles);
   const projectAnnotations = useStore((s) => s.projectConfig.annotations);
   const pinRefs = useRef([]);
@@ -211,6 +214,12 @@ export default function FeatureAnnotationPin({ visible = true }) {
         const bgAlpha = ov.bgAlpha ?? 0.62;
         const bgW = ov.bgW ?? 330;
         const bgH = ov.bgH ?? 125;
+        const scaledBgW = bgW * mobileTextScale;
+        const scaledBgH = bgH * mobileTextScale;
+        const scaledSize0 = size0 * mobileTextScale;
+        const scaledSize1 = size1 * mobileTextScale;
+        const scaledPadLeft = 22 * mobileTextScale;
+        const scaledPadRight = 14 * mobileTextScale;
         const _bgR = parseInt(bgColor.slice(1, 3), 16) || 0;
         const _bgG = parseInt(bgColor.slice(3, 5), 16) || 0;
         const _bgB = parseInt(bgColor.slice(5, 7), 16) || 0;
@@ -258,47 +267,47 @@ export default function FeatureAnnotationPin({ visible = true }) {
               <div
                 style={{
                   position: 'absolute',
-                  bottom: 46,
+                  bottom: isMobile ? 34 : 46,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   background: bgRgba,
                   backdropFilter: 'blur(18px)',
                   WebkitBackdropFilter: 'blur(18px)',
                   border: '1px solid rgba(255,255,255,0.22)',
-                  borderRadius: 10,
-                  width: bgW,
-                  height: bgH,
+                  borderRadius: 10 * mobileTextScale,
+                  width: scaledBgW,
+                  height: scaledBgH,
                   boxSizing: 'border-box',
                   boxShadow: '0 6px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
                   pointerEvents: 'none',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
-                  padding: '0 14px 0 22px',
+                  padding: `0 ${scaledPadRight}px 0 ${scaledPadLeft}px`,
                 }}
               >
                 <div style={{
                   position: 'absolute',
-                  left: 8,
-                  top: 10,
-                  bottom: 10,
-                  width: 3,
-                  borderRadius: 2,
+                  left: 8 * mobileTextScale,
+                  top: 10 * mobileTextScale,
+                  bottom: 10 * mobileTextScale,
+                  width: 3 * mobileTextScale,
+                  borderRadius: 2 * mobileTextScale,
                   background: 'rgba(255,255,255,0.75)',
                 }} />
 
                 <div style={{
-                  fontSize: size0,
+                  fontSize: scaledSize0,
                   fontWeight: bold0 ? 700 : 400,
                   color: color0,
                   fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif',
-                  marginBottom: 3,
+                  marginBottom: 3 * mobileTextScale,
                   lineHeight: 1.4,
                 }}>
                   {line0}
                 </div>
                 <div style={{
-                  fontSize: size1,
+                  fontSize: scaledSize1,
                   fontWeight: bold1 ? 700 : 400,
                   color: color1,
                   fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif',
@@ -314,9 +323,9 @@ export default function FeatureAnnotationPin({ visible = true }) {
                   transform: 'translateX(-50%)',
                   width: 0,
                   height: 0,
-                  borderLeft: '7px solid transparent',
-                  borderRight: '7px solid transparent',
-                  borderTop: '7px solid rgba(255,255,255,0.22)',
+                  borderLeft: `${7 * mobileTextScale}px solid transparent`,
+                  borderRight: `${7 * mobileTextScale}px solid transparent`,
+                  borderTop: `${7 * mobileTextScale}px solid rgba(255,255,255,0.22)`,
                 }} />
               </div>
             )}

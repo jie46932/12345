@@ -132,6 +132,10 @@ export default function GalleryModal({ open, onClose }) {
   const projectConfig = useStore((s) => s.projectConfig);
   const galleryItems = useMemo(() => buildGalleryItems(projectConfig), [projectConfig]);
   const [current, setCurrent] = useState(0);
+  const [viewport, setViewport] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1280,
+    height: typeof window !== 'undefined' ? window.innerHeight : 900,
+  }));
   const itemCount = galleryItems.length;
   const safeCurrent = Math.min(current, itemCount - 1);
   const dragStartX = useRef(0);
@@ -144,6 +148,23 @@ export default function GalleryModal({ open, onClose }) {
   useEffect(() => {
     preloadImages(galleryItems);
   }, [galleryItems]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const updateViewport = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    window.visualViewport?.addEventListener('resize', updateViewport);
+    return () => {
+      window.removeEventListener('resize', updateViewport);
+      window.visualViewport?.removeEventListener('resize', updateViewport);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -185,6 +206,16 @@ export default function GalleryModal({ open, onClose }) {
     if (diff > 50) next();
     else if (diff < -50) prev();
   };
+  const isMobile = viewport.width <= 768;
+  const cardWidth = isMobile
+    ? Math.min(Math.max(viewport.width - 72, 248), 320)
+    : 720;
+  const mobileCardHeight = cardWidth * 1.45;
+  const carouselHeight = isMobile
+    ? Math.min(Math.max(viewport.height * 0.52, 320), mobileCardHeight + 72)
+    : 1020;
+  const sideGap = isMobile ? cardWidth * 0.7 : 780;
+  const overlayPaddingTop = isMobile ? 18 : 80;
 
   return (
     <div
@@ -195,9 +226,10 @@ export default function GalleryModal({ open, onClose }) {
         WebkitBackdropFilter: 'blur(12px)',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'flex-start',
-        paddingTop: 80,
+        paddingTop: overlayPaddingTop,
         animation: 'gallery-in 0.3s cubic-bezier(0.23,1,0.32,1)',
         pointerEvents: 'auto',
+        overflow: 'hidden',
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
     >
@@ -211,8 +243,8 @@ export default function GalleryModal({ open, onClose }) {
 
       {/* 关闭按钮 — fixed + right:90 避开右上角全屏按钮，pointerEvents:auto 覆盖父层 none */}
       <button onClick={onClose} style={{
-        position: 'fixed', top: 24, right: 90,
-        width: 44, height: 44, borderRadius: '50%',
+        position: 'fixed', top: isMobile ? 14 : 24, right: isMobile ? 14 : 90,
+        width: isMobile ? 38 : 44, height: isMobile ? 38 : 44, borderRadius: '50%',
         background: 'rgba(255,255,255,0.15)',
         border: '1px solid rgba(255,255,255,0.25)',
         color: '#fff', fontSize: 20, cursor: 'pointer',
@@ -225,13 +257,15 @@ export default function GalleryModal({ open, onClose }) {
 
       {/* 标题 */}
       <div style={{
-        textAlign: 'center', marginBottom: 16,
+        textAlign: 'center',
+          marginBottom: isMobile ? 6 : 16,
+        padding: '0 18px',
         fontFamily: "'Orbitron','Rajdhani',sans-serif",
       }}>
-        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, letterSpacing: '0.2em', marginBottom: 6 }}>
+        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: isMobile ? 11 : 13, letterSpacing: '0.2em', marginBottom: 6 }}>
           {(lang === 'en' ? galleryItems[safeCurrent].categoryEn : galleryItems[safeCurrent].category || galleryItems[safeCurrent].category).toUpperCase()}
         </div>
-        <div style={{ color: '#fff', fontSize: 28, fontWeight: 700, letterSpacing: '0.04em' }}>
+        <div style={{ color: '#fff', fontSize: isMobile ? 18 : 28, fontWeight: 700, letterSpacing: '0.04em' }}>
           {lang === 'en' ? (galleryItems[safeCurrent].titleEn || galleryItems[safeCurrent].title) : galleryItems[safeCurrent].title}
         </div>
       </div>
@@ -243,7 +277,7 @@ export default function GalleryModal({ open, onClose }) {
         style={{
           position: 'relative',
           width: '100%',
-          height: 1020,
+          height: carouselHeight,
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
@@ -259,9 +293,9 @@ export default function GalleryModal({ open, onClose }) {
         {galleryItems.map((item, idx) => {
           const offset = idx - safeCurrent;
           const isCurrent = idx === safeCurrent;
-          const scale = isCurrent ? 1 : Math.abs(offset) === 1 ? 0.82 : 0.68;
-          const opacity = isCurrent ? 1 : Math.abs(offset) === 1 ? 0.65 : 0.35;
-          const translateX = offset * 780;
+          const scale = isCurrent ? 1 : Math.abs(offset) === 1 ? (isMobile ? 0.74 : 0.82) : (isMobile ? 0.58 : 0.68);
+          const opacity = isCurrent ? 1 : Math.abs(offset) === 1 ? (isMobile ? 0.28 : 0.65) : (isMobile ? 0 : 0.35);
+          const translateX = offset * sideGap;
           const zIndex = 10 - Math.abs(offset);
 
           return (
@@ -283,7 +317,7 @@ export default function GalleryModal({ open, onClose }) {
             >
               <CometCard>
                 <div style={{
-                  width: 720, borderRadius: 20, overflow: 'hidden',
+                  width: cardWidth, borderRadius: isMobile ? 16 : 20, overflow: 'hidden',
                   background: '#1a1a1a',
                   pointerEvents: 'none',
                   boxShadow: isCurrent
@@ -312,17 +346,17 @@ export default function GalleryModal({ open, onClose }) {
                       position: 'absolute', bottom: 16, left: 16, right: 16,
                       color: 'rgba(255,255,255,0.9)',
                       fontFamily: "'Rajdhani','Inter',sans-serif",
-                      fontSize: 13, letterSpacing: '0.06em',
+                      fontSize: isMobile ? 12 : 13, letterSpacing: '0.06em',
                     }}>
                       {lang === 'en' ? (item.categoryEn || item.category) : item.category}
                     </div>
                   </div>
                   {isCurrent && (
                     <div style={{
-                      padding: '16px 16px 20px',
+                      padding: isMobile ? '10px 12px 12px' : '16px 16px 20px',
                       color: 'rgba(255,255,255,0.65)',
                       fontFamily: "'Rajdhani','Inter',sans-serif",
-                      fontSize: 13, lineHeight: 1.6,
+                      fontSize: isMobile ? 11 : 13, lineHeight: 1.45,
                     }}>
                       {lang === 'en' ? (item.descEn || item.desc) : item.desc}
                     </div>
@@ -335,7 +369,7 @@ export default function GalleryModal({ open, onClose }) {
       </div>
 
       {/* 底部指示点 */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 16, position: 'relative', zIndex: 20 }}>
+      <div style={{ display: 'flex', gap: 8, marginTop: isMobile ? 8 : 16, position: 'relative', zIndex: 20 }}>
         {galleryItems.map((_, idx) => (
           <button
             key={idx}

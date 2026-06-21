@@ -277,7 +277,8 @@ export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
             const dist = mid.distanceTo(camPos);
             const _minD = 30, _maxD = 280;
             const _tDist = Math.max(0, Math.min(1, (dist - _minD) / (_maxD - _minD)));
-            const _fs = Math.round(14 - _tDist * 4);
+            const _mobileScale = window.innerWidth <= 768 ? 0.6 : 1;
+            const _fs = Math.round((14 - _tDist * 4) * _mobileScale);
             labelDiv.style.fontSize = _fs + 'px';
             if (labelBehind) {
               labelDiv.style.opacity = '0';
@@ -387,7 +388,7 @@ export default function DimensionAnnotation({ visible = true, heightT = 0.5 }) {
             background: `rgba(${parseInt(dimStyle.bgColor.slice(1,3),16)},${parseInt(dimStyle.bgColor.slice(3,5),16)},${parseInt(dimStyle.bgColor.slice(5,7),16)},${dimStyle.bgAlpha})`,
             color: dimStyle.textColor,
             borderRadius: 8,
-            padding: '5px 16px',
+            padding: window.innerWidth <= 768 ? '3px 10px' : '5px 16px',
             fontSize: dimStyle.fontSize,
             fontFamily: "'Rajdhani', 'Inter', sans-serif",
             fontWeight: 700,

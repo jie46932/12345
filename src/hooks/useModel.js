@@ -35,7 +35,7 @@ function createKTX2Loader(renderer) {
  */
 export function useModel(url, options = {}) {
   const [gltf, setGltf] = useState(null);
-  const renderer = options.renderer;
+  const { renderer, onProgress } = options;
 
   useEffect(() => {
     if (!url) return;
@@ -54,6 +54,9 @@ export function useModel(url, options = {}) {
     }
 
     console.log('[useModel] Loading:', url);
+    window.dispatchEvent(new CustomEvent('viewer-model-phase', {
+      detail: { phase: 'download', url },
+    }));
 
     let timeoutId = null;
     const startedAt = Date.now();
@@ -63,6 +66,14 @@ export function useModel(url, options = {}) {
       (result) => {
         if (cancelled) return;
         if (timeoutId) clearTimeout(timeoutId);
+        window.dispatchEvent(new CustomEvent('viewer-model-phase', {
+          detail: {
+            phase: 'loaded',
+            url,
+            elapsedMs: Date.now() - startedAt,
+            animations: result?.animations?.length || 0,
+          },
+        }));
         console.log('[useModel] Loaded, scene:', !!result?.scene,
           'animations:', result?.animations?.length,
           's8s:', !!result?.userData?.s8s);
@@ -75,11 +86,25 @@ export function useModel(url, options = {}) {
         });
         setGltf(result);
       },
-      options.onProgress,
+      (event) => {
+        const total = Number(event?.total || 0);
+        const loaded = Number(event?.loaded || 0);
+        const ratio = total > 0 ? Math.min(1, loaded / total) : 0;
+        window.dispatchEvent(new CustomEvent('viewer-model-progress', {
+          detail: { url, loaded, total, ratio },
+        }));
+        onProgress?.(event);
+      },
       (error) => {
         if (timeoutId) clearTimeout(timeoutId);
         console.error('[useModel] Error:', error?.message || error);
         trackModelError('model_load_failed', error, { url });
+        window.dispatchEvent(new CustomEvent('viewer-model-error', {
+          detail: {
+            url,
+            message: error?.message || String(error),
+          },
+        }));
         if (cancelled) return;
       }
     );
@@ -96,7 +121,7 @@ export function useModel(url, options = {}) {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [url, renderer, options.onProgress]);
+  }, [url, renderer, onProgress]);
 
   return gltf;
 }

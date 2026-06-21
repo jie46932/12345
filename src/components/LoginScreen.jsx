@@ -157,8 +157,11 @@ export default function LoginScreen({ visible, onSuccess }) {
 
   if (!visible) return null;
 
+  const isMobileLogin = typeof window !== 'undefined'
+    && (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(window.navigator?.userAgent || ''));
+
   return (
-    <Overlay className="ls-show">
+    <Overlay className={`ls-show${isMobileLogin ? ' is-mobile-login' : ''}`}>
       {/* 与 LoadingScreen 一致的背景图 */}
       <div className="bg-tile" />
 
@@ -365,13 +368,40 @@ const Overlay = styled.div`
   @media (max-width: 768px) {
     .bg-tile {
       background-image: url('/media/11.jpg');
+      width: 100%;
+      height: 100%;
+      min-width: 100%;
+      min-height: 100%;
+      aspect-ratio: auto;
+      background-size: cover;
+      background-position: center;
     }
 
     .brand-loader {
       top: max(12px, env(safe-area-inset-top));
       left: max(12px, env(safe-area-inset-left));
       height: 40px;
+      transform: scale(0.46);
     }
+  }
+
+  &.is-mobile-login .bg-tile {
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    aspect-ratio: auto;
+    background-image: url('/media/11.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+  }
+
+  &.is-mobile-login .brand-loader {
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    height: 30px;
+    transform: scale(0.46) !important;
+    transform-origin: 0 0;
   }
 `;
 

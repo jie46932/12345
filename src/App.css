@@ -2026,6 +2026,14 @@ body.gallery-modal-open .nav-btn-group {
   pointer-events: none !important;
 }
 
+body.pseudo-fullscreen,
+body.pseudo-fullscreen #root {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 /* ════════════════════════════════════════════════════════════
    来源：medium-priority-fixes.css（字体缩放与响应式）
    ════════════════════════════════════════════════════════════ */

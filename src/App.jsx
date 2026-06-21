@@ -45,6 +45,15 @@ const DEFAULT_ADMIN_ORIGINS = [
   'http://localhost:5174',
 ];
 const DEFAULT_PROJECT_CONFIG_ID = 'project_12345';
+const LOADING_STAGE_TEXT = {
+  download: '正在下载模型',
+  structure: '正在解析模型结构',
+  material: '正在还原材质与纹理',
+  environment: '正在初始化环境光',
+  ready: '即将进入场景',
+  slow: '模型较大，正在继续加载',
+  error: '模型加载失败，请刷新重试',
+};
 
 // 移动端检测（模块级，不参与渲染循环）
 const IS_MOBILE = typeof window !== 'undefined' &&
@@ -218,7 +227,11 @@ function ConfiguratorApp({ viewer, rendererMode }) {
   const [activeView, setActiveView] = useState('front');
   const [lang, setLang] = useState('zh');
   const loadStartTime = useRef(Date.now());
+  const loadProgressRef = useRef(0);
+  const loadErrorRef = useRef('');
   const [loadProgress, setLoadProgress] = useState(0);
+  const [loadMessage, setLoadMessage] = useState(LOADING_STAGE_TEXT.download);
+  const [loadError, setLoadError] = useState('');
   const [loadingVisible, setLoadingVisible] = useState(true);
   const [authed, setAuthed] = useState(() => {
     const bypass = new URLSearchParams(window.location.search).get('bypass');
@@ -227,6 +240,14 @@ function ConfiguratorApp({ viewer, rendererMode }) {
   });
   const [musicReady, setMusicReady] = useState(false);
   const loadCompleteTrackedRef = useRef(false);
+
+  useEffect(() => {
+    loadProgressRef.current = loadProgress;
+  }, [loadProgress]);
+
+  useEffect(() => {
+    loadErrorRef.current = loadError;
+  }, [loadError]);
 
   // ── UI 缩放 + 防缩放 ──────────────────────────────────────────
   useEffect(() => {
@@ -257,26 +278,103 @@ function ConfiguratorApp({ viewer, rendererMode }) {
     };
   }, []);
 
-  // ── 加载进度：假进度条 0→92% ──────────────────────────────────
+  // ── 加载进度：真实下载 + 分阶段慢推进，避免长时间卡在固定 92% ────────
   useEffect(() => {
-    if (!authed) return;
-    let fakeTimer = null;
-    let fakeProgress = 0;
-    fakeTimer = setInterval(() => {
-      if (fakeProgress < 92) {
-        fakeProgress += 1;
-        setLoadProgress((prev) => (prev < fakeProgress ? fakeProgress : prev));
-      }
-    }, 100);
-    return () => {
-      if (fakeTimer) clearInterval(fakeTimer);
+    if (!authed || !loadingVisible) return undefined;
+
+    loadStartTime.current = Date.now();
+    loadErrorRef.current = '';
+    setLoadError('');
+    setLoadMessage(LOADING_STAGE_TEXT.download);
+    setLoadProgress((prev) => Math.max(prev, 1));
+
+    const setProgressFloor = (floor) => {
+      setLoadProgress((prev) => Math.max(prev, floor));
     };
-  }, [authed]);
+    const handleModelProgress = (event) => {
+      const ratio = Number(event.detail?.ratio || 0);
+      if (ratio > 0) {
+        setProgressFloor(Math.min(70, Math.max(2, ratio * 70)));
+      }
+      setLoadMessage(LOADING_STAGE_TEXT.download);
+    };
+    const handleModelPhase = (event) => {
+      if (event.detail?.phase === 'loaded') {
+        setProgressFloor(78);
+        setLoadMessage(LOADING_STAGE_TEXT.material);
+      }
+    };
+    const handleModelError = (event) => {
+      const message = event.detail?.message || LOADING_STAGE_TEXT.error;
+      loadErrorRef.current = message;
+      setLoadError(message);
+      setLoadMessage(LOADING_STAGE_TEXT.error);
+    };
+    const handleEnvReady = () => {
+      setProgressFloor(96);
+      setLoadMessage(LOADING_STAGE_TEXT.ready);
+    };
+
+    window.addEventListener('viewer-model-progress', handleModelProgress);
+    window.addEventListener('viewer-model-phase', handleModelPhase);
+    window.addEventListener('viewer-model-error', handleModelError);
+    window.addEventListener('viewer-env-ready', handleEnvReady);
+
+    const stagedTimer = setInterval(() => {
+      if (loadErrorRef.current) return;
+
+      const current = loadProgressRef.current;
+      const elapsedMs = Date.now() - loadStartTime.current;
+      const sceneMounted =
+        document.documentElement.dataset.viewerSceneReady === 'true' ||
+        !!window.__threeScene;
+      const envReady = document.documentElement.dataset.viewerEnvReady === 'true';
+
+      let cap = 70;
+      let step = elapsedMs > 20000 ? 0.35 : 0.18;
+      let message = LOADING_STAGE_TEXT.download;
+
+      if (envReady) {
+        cap = 98;
+        step = IS_MOBILE ? 0.22 : 0.1;
+        message = LOADING_STAGE_TEXT.ready;
+      } else if (sceneMounted) {
+        cap = 97;
+        step = IS_MOBILE ? 0.68 : 0.32;
+        message = LOADING_STAGE_TEXT.environment;
+      } else if (current >= 88 || elapsedMs > 45000) {
+        cap = 97;
+        step = IS_MOBILE ? 0.72 : 0.36;
+        message = elapsedMs > 45000 ? LOADING_STAGE_TEXT.slow : LOADING_STAGE_TEXT.material;
+      } else if (current >= 70) {
+        cap = 88;
+        step = IS_MOBILE ? 0.46 : 0.28;
+        message = current < 80 ? LOADING_STAGE_TEXT.structure : LOADING_STAGE_TEXT.material;
+      }
+
+      setLoadMessage(message);
+      if (current < cap) {
+        let next = Math.min(cap, current + step);
+        if (Math.round(next) === 92) next = Math.min(cap, 92.6);
+        loadProgressRef.current = next;
+        setLoadProgress(next);
+      }
+    }, 700);
+
+    return () => {
+      window.removeEventListener('viewer-model-progress', handleModelProgress);
+      window.removeEventListener('viewer-model-phase', handleModelPhase);
+      window.removeEventListener('viewer-model-error', handleModelError);
+      window.removeEventListener('viewer-env-ready', handleEnvReady);
+      clearInterval(stagedTimer);
+    };
+  }, [authed, loadingVisible]);
 
   // ── 加载屏：sceneReady 后自动隐藏 ──────────────────────────────
   useEffect(() => {
     const finishLoading = () => {
       setLoadProgress(100);
+      setLoadMessage(LOADING_STAGE_TEXT.ready);
       setLoadingVisible(false);
       setMusicReady(true);
       if (!loadCompleteTrackedRef.current) {
@@ -444,7 +542,12 @@ function ConfiguratorApp({ viewer, rendererMode }) {
         <LoginScreen visible={!authed} onSuccess={() => setAuthed(true)} />
 
         {/* 加载屏 */}
-        <LoadingScreen progress={loadProgress} visible={authed && loadingVisible} />
+        <LoadingScreen
+          progress={loadProgress}
+          message={loadMessage}
+          error={loadError}
+          visible={authed && loadingVisible}
+        />
 
         {/* goo filter for cart button blob effect */}
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>

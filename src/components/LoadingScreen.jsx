@@ -2,11 +2,16 @@ import styled from 'styled-components';
 
 const BRAND = 'HE FURNITURE';
 
-export default function LoadingScreen({ progress, visible }) {
+export default function LoadingScreen({ progress, message = '正在下载模型', error = '', visible }) {
   if (!visible) return null;
 
+  const isMobile = typeof window !== 'undefined'
+    && (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(window.navigator?.userAgent || ''));
+  const roundedProgress = Math.round(progress);
+  const displayProgress = roundedProgress === 92 ? 93 : roundedProgress;
+
   return (
-    <StyledWrapper className={visible ? 'ls-show' : 'ls-hide'}>
+    <StyledWrapper className={`${visible ? 'ls-show' : 'ls-hide'}${isMobile ? ' is-mobile-loading' : ''}`}>
       {/* 拼铺背景图 */}
       <div className="bg-tile" />
 
@@ -26,8 +31,16 @@ export default function LoadingScreen({ progress, visible }) {
       {/* 中央 spinner + 进度数字 */}
       <div className="center-wrap">
         <div className="spinner-ring">
-          <span className="progress-text">{Math.round(progress)}%</span>
+          <span className="progress-text">{displayProgress}%</span>
         </div>
+        <div className={`loading-stage${error ? ' is-error' : ''}`}>
+          {message}
+        </div>
+        {error && (
+          <div className="loading-error">
+            {error}
+          </div>
+        )}
       </div>
     </StyledWrapper>
   );
@@ -123,8 +136,10 @@ const StyledWrapper = styled.div`
     transform: translateX(-50%);
     z-index: 2;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 14px;
   }
 
   /* Spinner 圆环 */
@@ -157,11 +172,113 @@ const StyledWrapper = styled.div`
     animation: counter-rotate 2.0s infinite linear;
   }
 
+  .loading-stage,
+  .loading-error {
+    min-width: 180px;
+    max-width: min(78vw, 360px);
+    padding: 8px 14px;
+    border-radius: 999px;
+    text-align: center;
+    color: rgba(22, 28, 34, 0.88);
+    background: rgba(236, 241, 245, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 10px 28px rgba(20, 31, 42, 0.16);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+    user-select: none;
+  }
+
+  .loading-stage.is-error,
+  .loading-error {
+    color: #7f1d1d;
+    background: rgba(254, 226, 226, 0.78);
+  }
+
+  .loading-error {
+    margin-top: -6px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
   @keyframes rotate {
     100% { transform: rotate(1turn); }
   }
 
   @keyframes counter-rotate {
     100% { transform: rotate(-1turn); }
+  }
+
+  @media (max-width: 768px) {
+    .bg-tile {
+      width: 100%;
+      height: 100%;
+      min-width: 100%;
+      min-height: 100%;
+      aspect-ratio: auto;
+      background-image: url('/media/11.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .brand-loader {
+      top: 16px;
+      left: 16px;
+      height: 34px;
+      transform: scale(0.56);
+      transform-origin: 0 0;
+    }
+
+    .brand-letter {
+      font-size: 44px;
+    }
+
+    .center-wrap {
+      bottom: max(44px, env(safe-area-inset-bottom));
+      gap: 10px;
+    }
+
+    .spinner-ring {
+      width: 78px;
+      height: 78px;
+    }
+
+    .progress-text {
+      font-size: 15px;
+    }
+
+    .loading-stage,
+    .loading-error {
+      min-width: 148px;
+      max-width: calc(100vw - 48px);
+      padding: 7px 12px;
+      font-size: 13px;
+    }
+  }
+
+  &.is-mobile-loading .bg-tile {
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    aspect-ratio: auto;
+    background-image: url('/media/11.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+  }
+
+  &.is-mobile-loading .brand-loader {
+    top: 14px;
+    left: 14px;
+    height: 30px;
+    transform: scale(0.46) !important;
+    transform-origin: 0 0;
   }
 `;

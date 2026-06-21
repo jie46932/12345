@@ -3,13 +3,20 @@
 import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
+const isMobileDevice = () => (
+  typeof window !== 'undefined'
+  && (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(window.navigator?.userAgent || ''))
+);
+
 export default function FullscreenToggle() {
   const inputRef = useRef(null);
 
   useEffect(() => {
     const onFsChange = () => {
       const fs = !!document.fullscreenElement;
-      if (inputRef.current) inputRef.current.checked = fs;
+      const pseudo = document.body.classList.contains('pseudo-fullscreen');
+      document.documentElement.dataset.viewerFullscreen = fs ? 'native' : (pseudo ? 'pseudo' : 'off');
+      if (inputRef.current) inputRef.current.checked = fs || pseudo;
       if (!fs && screen.orientation?.unlock) {
         try {
           screen.orientation.unlock();
@@ -26,10 +33,35 @@ export default function FullscreenToggle() {
     const willMax = e.target.checked;
     if (willMax) {
       try {
-        await document.documentElement.requestFullscreen();
-        await screen.orientation?.lock?.('landscape');
-      } catch {
-        if (inputRef.current) inputRef.current.checked = !!document.fullscreenElement;
+        if (isMobileDevice()) {
+          document.body.classList.add('pseudo-fullscreen');
+          document.documentElement.dataset.viewerFullscreen = 'pseudo';
+        }
+        const target = document.documentElement;
+        const requestFullscreen =
+          target.requestFullscreen ||
+          target.webkitRequestFullscreen ||
+          target.msRequestFullscreen;
+        if (requestFullscreen) {
+          await requestFullscreen.call(target);
+          document.documentElement.dataset.viewerFullscreen = 'native';
+        } else {
+          document.body.classList.add('pseudo-fullscreen');
+          document.documentElement.dataset.viewerFullscreen = 'pseudo';
+        }
+        try {
+          await screen.orientation?.lock?.('landscape');
+        } catch {
+          // Orientation lock is best-effort and often rejected on mobile.
+        }
+      } catch (error) {
+        console.warn('[fullscreen] request failed:', error?.message || error);
+        document.body.classList.add('pseudo-fullscreen');
+        document.documentElement.dataset.viewerFullscreen = 'pseudo';
+      } finally {
+        if (inputRef.current) {
+          inputRef.current.checked = !!document.fullscreenElement || document.body.classList.contains('pseudo-fullscreen');
+        }
       }
     } else {
       try {
@@ -37,7 +69,10 @@ export default function FullscreenToggle() {
       } catch {
         // Ignore unsupported orientation unlock.
       }
+      document.body.classList.remove('pseudo-fullscreen');
+      document.documentElement.dataset.viewerFullscreen = 'off';
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      if (inputRef.current) inputRef.current.checked = false;
     }
   };
 
