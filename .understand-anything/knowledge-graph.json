@@ -1,0 +1,1909 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "12345 智能升降桌 Viewer",
+    "languages": [
+      "config",
+      "unknown",
+      "javascript",
+      "markdown",
+      "html",
+      "gltf",
+      "json",
+      "wasm",
+      "powershell",
+      "sql",
+      "css",
+      "typescript"
+    ],
+    "frameworks": [
+      "React",
+      "R3F",
+      "Three.js",
+      "Zustand",
+      "Vite",
+      "Supabase",
+      "Verge3D export pipeline"
+    ],
+    "description": "智能升降桌 Web3D 产品配置器：用 React/R3F 运行 Verge3D 导出的 glTF/S8S 资产，并通过 Zustand 与 postMessage 驱动交互配置。",
+    "analyzedAt": "2026-06-22T04:59:52.506Z",
+    "gitCommitHash": "29e759625b17d40b411bd98d9765ad38a45bdc72"
+  },
+  "nodes": [
+    {
+      "id": "config:.env.example",
+      "type": "config",
+      "name": ".env.example",
+      "filePath": ".env.example",
+      "summary": ".env.example 是 12345 Viewer 项目中的 .example 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "config",
+      "sizeLines": 7
+    },
+    {
+      "id": "config:.gitattributes",
+      "type": "config",
+      "name": ".gitattributes",
+      "filePath": ".gitattributes",
+      "summary": ".gitattributes 是 12345 Viewer 项目中的 配置 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "unknown",
+      "sizeLines": 6
+    },
+    {
+      "id": "file:.understand-anything/.understandignore",
+      "type": "file",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": ".understand-anything/.understandignore 是 12345 Viewer 项目中的 配置 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "unknown",
+      "sizeLines": 69
+    },
+    {
+      "id": "endpoint:api/get-scene.js",
+      "type": "endpoint",
+      "name": "get-scene.js",
+      "filePath": "api/get-scene.js",
+      "summary": "Vercel Serverless 风格 API；阿里云静态部署时不会自动执行。",
+      "tags": [
+        "serverless-api"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 25
+    },
+    {
+      "id": "endpoint:api/login.js",
+      "type": "endpoint",
+      "name": "login.js",
+      "filePath": "api/login.js",
+      "summary": "Vercel Serverless 风格 API；阿里云静态部署时不会自动执行。",
+      "tags": [
+        "serverless-api"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 24
+    },
+    {
+      "id": "document:DESIGN.md",
+      "type": "document",
+      "name": "DESIGN.md",
+      "filePath": "DESIGN.md",
+      "summary": "DESIGN.md 是 12345 Viewer 项目中的 .md 文件。",
+      "tags": [
+        "documentation"
+      ],
+      "complexity": "complex",
+      "language": "markdown",
+      "sizeLines": 506
+    },
+    {
+      "id": "config:eslint.config.js",
+      "type": "config",
+      "name": "eslint.config.js",
+      "filePath": "eslint.config.js",
+      "summary": "eslint.config.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 48
+    },
+    {
+      "id": "file:index.dev.html",
+      "type": "file",
+      "name": "index.dev.html",
+      "filePath": "index.dev.html",
+      "summary": "index.dev.html 是 12345 Viewer 项目中的 .html 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "html",
+      "sizeLines": 13
+    },
+    {
+      "id": "file:index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "index.html",
+      "summary": "index.html 是 12345 Viewer 项目中的 .html 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "html",
+      "sizeLines": 13
+    },
+    {
+      "id": "resource:media/12345-verge3d-20260620.gltf",
+      "type": "resource",
+      "name": "12345-verge3d-20260620.gltf",
+      "filePath": "media/12345-verge3d-20260620.gltf",
+      "summary": "media/12345-verge3d-20260620.gltf 是 12345 Viewer 项目中的 .gltf 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "gltf",
+      "sizeLines": 1
+    },
+    {
+      "id": "resource:media/12345.gltf",
+      "type": "resource",
+      "name": "12345.gltf",
+      "filePath": "media/12345.gltf",
+      "summary": "media/12345.gltf 是 12345 Viewer 项目中的 .gltf 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "gltf",
+      "sizeLines": 1
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "package.json 是 12345 Viewer 项目中的 .json 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "json",
+      "sizeLines": 50
+    },
+    {
+      "id": "config:postcss.config.js",
+      "type": "config",
+      "name": "postcss.config.js",
+      "filePath": "postcss.config.js",
+      "summary": "postcss.config.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 5
+    },
+    {
+      "id": "resource:public/basis_transcoder/basis_transcoder.js",
+      "type": "resource",
+      "name": "basis_transcoder.js",
+      "filePath": "public/basis_transcoder/basis_transcoder.js",
+      "summary": "public/basis_transcoder/basis_transcoder.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 21
+    },
+    {
+      "id": "resource:public/basis_transcoder/basis_transcoder.wasm",
+      "type": "resource",
+      "name": "basis_transcoder.wasm",
+      "filePath": "public/basis_transcoder/basis_transcoder.wasm",
+      "summary": "public/basis_transcoder/basis_transcoder.wasm 是 12345 Viewer 项目中的 .wasm 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "complex",
+      "language": "wasm",
+      "sizeLines": 4988
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "项目说明：定义 12345 Viewer 边界、启动方式、验证命令、遥测配置和静态部署清单。",
+      "tags": [
+        "documentation"
+      ],
+      "complexity": "simple",
+      "language": "markdown",
+      "sizeLines": 104
+    },
+    {
+      "id": "pipeline:scripts/copy-build-assets.cjs",
+      "type": "pipeline",
+      "name": "copy-build-assets.cjs",
+      "filePath": "scripts/copy-build-assets.cjs",
+      "summary": "项目检查、构建后资产复制或浏览器/CDP 验证脚本。",
+      "tags": [
+        "tooling"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 14
+    },
+    {
+      "id": "pipeline:scripts/copy-vercel-assets.cjs",
+      "type": "pipeline",
+      "name": "copy-vercel-assets.cjs",
+      "filePath": "scripts/copy-vercel-assets.cjs",
+      "summary": "项目检查、构建后资产复制或浏览器/CDP 验证脚本。",
+      "tags": [
+        "tooling"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 23
+    },
+    {
+      "id": "pipeline:scripts/inspect-gltf.cjs",
+      "type": "pipeline",
+      "name": "inspect-gltf.cjs",
+      "filePath": "scripts/inspect-gltf.cjs",
+      "summary": "glTF 资产检查脚本：统计节点、mesh、材质、纹理、动画、扩展和外部资源缺失。",
+      "tags": [
+        "tooling"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 120
+    },
+    {
+      "id": "pipeline:scripts/start-debug-chrome.ps1",
+      "type": "pipeline",
+      "name": "start-debug-chrome.ps1",
+      "filePath": "scripts/start-debug-chrome.ps1",
+      "summary": "项目检查、构建后资产复制或浏览器/CDP 验证脚本。",
+      "tags": [
+        "tooling"
+      ],
+      "complexity": "simple",
+      "language": "powershell",
+      "sizeLines": 57
+    },
+    {
+      "id": "pipeline:scripts/verify-chrome-cdp.ps1",
+      "type": "pipeline",
+      "name": "verify-chrome-cdp.ps1",
+      "filePath": "scripts/verify-chrome-cdp.ps1",
+      "summary": "项目检查、构建后资产复制或浏览器/CDP 验证脚本。",
+      "tags": [
+        "tooling"
+      ],
+      "complexity": "moderate",
+      "language": "powershell",
+      "sizeLines": 237
+    },
+    {
+      "id": "schema:scripts/viewer-events.sql",
+      "type": "schema",
+      "name": "viewer-events.sql",
+      "filePath": "scripts/viewer-events.sql",
+      "summary": "Supabase 事件表与 RLS schema：用于匿名写入 Viewer 事件和异常上报。",
+      "tags": [
+        "telemetry",
+        "tooling"
+      ],
+      "complexity": "simple",
+      "language": "sql",
+      "sizeLines": 52
+    },
+    {
+      "id": "file:src/App.css",
+      "type": "file",
+      "name": "App.css",
+      "filePath": "src/App.css",
+      "summary": "src/App.css 是 12345 Viewer 项目中的 .css 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "complex",
+      "language": "css",
+      "sizeLines": 2183
+    },
+    {
+      "id": "file:src/App.jsx",
+      "type": "file",
+      "name": "App.jsx",
+      "filePath": "src/App.jsx",
+      "summary": "应用壳：负责登录/加载页、背景层、R3F 场景、控制栏、postMessage 项目配置和遥测安装。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "complex",
+      "language": "javascript",
+      "sizeLines": 675
+    },
+    {
+      "id": "file:src/components/BgPanel.jsx",
+      "type": "file",
+      "name": "BgPanel.jsx",
+      "filePath": "src/components/BgPanel.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 176
+    },
+    {
+      "id": "file:src/components/CartModal.jsx",
+      "type": "file",
+      "name": "CartModal.jsx",
+      "filePath": "src/components/CartModal.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 193
+    },
+    {
+      "id": "file:src/components/ContactModal.jsx",
+      "type": "file",
+      "name": "ContactModal.jsx",
+      "filePath": "src/components/ContactModal.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 203
+    },
+    {
+      "id": "file:src/components/ControlBar.jsx",
+      "type": "file",
+      "name": "ControlBar.jsx",
+      "filePath": "src/components/ControlBar.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "complex",
+      "language": "javascript",
+      "sizeLines": 1119
+    },
+    {
+      "id": "file:src/components/DimensionAnnotation.jsx",
+      "type": "file",
+      "name": "DimensionAnnotation.jsx",
+      "filePath": "src/components/DimensionAnnotation.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 407
+    },
+    {
+      "id": "file:src/components/DynamicBackground.jsx",
+      "type": "file",
+      "name": "DynamicBackground.jsx",
+      "filePath": "src/components/DynamicBackground.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 93
+    },
+    {
+      "id": "file:src/components/Effects.jsx",
+      "type": "file",
+      "name": "Effects.jsx",
+      "filePath": "src/components/Effects.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 94
+    },
+    {
+      "id": "file:src/components/FeatureAnnotation.jsx",
+      "type": "file",
+      "name": "FeatureAnnotation.jsx",
+      "filePath": "src/components/FeatureAnnotation.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 338
+    },
+    {
+      "id": "file:src/components/FeatureAnnotationGizmo.jsx",
+      "type": "file",
+      "name": "FeatureAnnotationGizmo.jsx",
+      "filePath": "src/components/FeatureAnnotationGizmo.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 350
+    },
+    {
+      "id": "file:src/components/FeatureAnnotationPin.jsx",
+      "type": "file",
+      "name": "FeatureAnnotationPin.jsx",
+      "filePath": "src/components/FeatureAnnotationPin.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 337
+    },
+    {
+      "id": "file:src/components/FeaturePanel.jsx",
+      "type": "file",
+      "name": "FeaturePanel.jsx",
+      "filePath": "src/components/FeaturePanel.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 291
+    },
+    {
+      "id": "file:src/components/FullscreenToggle.jsx",
+      "type": "file",
+      "name": "FullscreenToggle.jsx",
+      "filePath": "src/components/FullscreenToggle.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 193
+    },
+    {
+      "id": "file:src/components/GalleryModal.jsx",
+      "type": "file",
+      "name": "GalleryModal.jsx",
+      "filePath": "src/components/GalleryModal.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component",
+        "gallery"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 390
+    },
+    {
+      "id": "file:src/components/Header.jsx",
+      "type": "file",
+      "name": "Header.jsx",
+      "filePath": "src/components/Header.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 340
+    },
+    {
+      "id": "file:src/components/HeaderPanel.jsx",
+      "type": "file",
+      "name": "HeaderPanel.jsx",
+      "filePath": "src/components/HeaderPanel.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 189
+    },
+    {
+      "id": "file:src/components/HeightTrack.jsx",
+      "type": "file",
+      "name": "HeightTrack.jsx",
+      "filePath": "src/components/HeightTrack.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 10
+    },
+    {
+      "id": "file:src/components/LangSwitch.jsx",
+      "type": "file",
+      "name": "LangSwitch.jsx",
+      "filePath": "src/components/LangSwitch.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 117
+    },
+    {
+      "id": "file:src/components/LangToggle.jsx",
+      "type": "file",
+      "name": "LangToggle.jsx",
+      "filePath": "src/components/LangToggle.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 138
+    },
+    {
+      "id": "file:src/components/LedPanel.jsx",
+      "type": "file",
+      "name": "LedPanel.jsx",
+      "filePath": "src/components/LedPanel.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 335
+    },
+    {
+      "id": "file:src/components/LoadingScreen.jsx",
+      "type": "file",
+      "name": "LoadingScreen.jsx",
+      "filePath": "src/components/LoadingScreen.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component",
+        "loading-ux"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 288
+    },
+    {
+      "id": "file:src/components/LoginScreen.jsx",
+      "type": "file",
+      "name": "LoginScreen.jsx",
+      "filePath": "src/components/LoginScreen.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "complex",
+      "language": "javascript",
+      "sizeLines": 720
+    },
+    {
+      "id": "file:src/components/MaterialPanel.jsx",
+      "type": "file",
+      "name": "MaterialPanel.jsx",
+      "filePath": "src/components/MaterialPanel.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "complex",
+      "language": "javascript",
+      "sizeLines": 565
+    },
+    {
+      "id": "file:src/components/MobileControlDrawer.jsx",
+      "type": "file",
+      "name": "MobileControlDrawer.jsx",
+      "filePath": "src/components/MobileControlDrawer.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 428
+    },
+    {
+      "id": "file:src/components/MusicToggle.jsx",
+      "type": "file",
+      "name": "MusicToggle.jsx",
+      "filePath": "src/components/MusicToggle.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 246
+    },
+    {
+      "id": "file:src/components/OutlinePanel.jsx",
+      "type": "file",
+      "name": "OutlinePanel.jsx",
+      "filePath": "src/components/OutlinePanel.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 191
+    },
+    {
+      "id": "file:src/components/ProductStudioBackground.jsx",
+      "type": "file",
+      "name": "ProductStudioBackground.jsx",
+      "filePath": "src/components/ProductStudioBackground.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 35
+    },
+    {
+      "id": "file:src/components/ProductStudioBgPanel.jsx",
+      "type": "file",
+      "name": "ProductStudioBgPanel.jsx",
+      "filePath": "src/components/ProductStudioBgPanel.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 188
+    },
+    {
+      "id": "file:src/components/ProjectConfigBackground.jsx",
+      "type": "file",
+      "name": "ProjectConfigBackground.jsx",
+      "filePath": "src/components/ProjectConfigBackground.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 57
+    },
+    {
+      "id": "file:src/components/Scene.jsx",
+      "type": "file",
+      "name": "Scene.jsx",
+      "filePath": "src/components/Scene.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component",
+        "r3f",
+        "threejs"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 46
+    },
+    {
+      "id": "file:src/components/SceneContent.jsx",
+      "type": "file",
+      "name": "SceneContent.jsx",
+      "filePath": "src/components/SceneContent.jsx",
+      "summary": "R3F 场景核心：加载 Verge3D 导出的 glTF/S8S 资产，注册场景 API，并管理材质、高度、灯光、独显和标注。",
+      "tags": [
+        "react-component",
+        "r3f",
+        "threejs"
+      ],
+      "complexity": "complex",
+      "language": "javascript",
+      "sizeLines": 1213
+    },
+    {
+      "id": "file:src/components/SceneWebGPU.jsx",
+      "type": "file",
+      "name": "SceneWebGPU.jsx",
+      "filePath": "src/components/SceneWebGPU.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component",
+        "r3f",
+        "threejs"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 139
+    },
+    {
+      "id": "file:src/components/Sidebar.jsx",
+      "type": "file",
+      "name": "Sidebar.jsx",
+      "filePath": "src/components/Sidebar.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 181
+    },
+    {
+      "id": "file:src/components/ui/button.jsx",
+      "type": "file",
+      "name": "button.jsx",
+      "filePath": "src/components/ui/button.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 41
+    },
+    {
+      "id": "file:src/components/VideoModal.jsx",
+      "type": "file",
+      "name": "VideoModal.jsx",
+      "filePath": "src/components/VideoModal.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 89
+    },
+    {
+      "id": "file:src/components/ViewCube.jsx",
+      "type": "file",
+      "name": "ViewCube.jsx",
+      "filePath": "src/components/ViewCube.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 30
+    },
+    {
+      "id": "file:src/components/ViewSlider.jsx",
+      "type": "file",
+      "name": "ViewSlider.jsx",
+      "filePath": "src/components/ViewSlider.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 176
+    },
+    {
+      "id": "file:src/components/ViewSwitcher.jsx",
+      "type": "file",
+      "name": "ViewSwitcher.jsx",
+      "filePath": "src/components/ViewSwitcher.jsx",
+      "summary": "React UI/3D 辅助组件，支撑产品配置器的显示、交互或调试面板。",
+      "tags": [
+        "react-component"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 26
+    },
+    {
+      "id": "file:src/ControlPanel.jsx",
+      "type": "file",
+      "name": "ControlPanel.jsx",
+      "filePath": "src/ControlPanel.jsx",
+      "summary": "src/ControlPanel.jsx 是 12345 Viewer 项目中的 .jsx 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 40
+    },
+    {
+      "id": "file:src/data/materialDefaults.js",
+      "type": "file",
+      "name": "materialDefaults.js",
+      "filePath": "src/data/materialDefaults.js",
+      "summary": "src/data/materialDefaults.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 189
+    },
+    {
+      "id": "file:src/data/products.js",
+      "type": "file",
+      "name": "products.js",
+      "filePath": "src/data/products.js",
+      "summary": "src/data/products.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 16
+    },
+    {
+      "id": "file:src/hooks/useModel.js",
+      "type": "file",
+      "name": "useModel.js",
+      "filePath": "src/hooks/useModel.js",
+      "summary": "模型加载 hook：封装 GLTFLoader、KTX2Loader 与 S8SExtension，并派发加载进度、错误和性能事件。",
+      "tags": [
+        "hook"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 127
+    },
+    {
+      "id": "file:src/index.css",
+      "type": "file",
+      "name": "index.css",
+      "filePath": "src/index.css",
+      "summary": "src/index.css 是 12345 Viewer 项目中的 .css 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "css",
+      "sizeLines": 123
+    },
+    {
+      "id": "file:src/LangContext.js",
+      "type": "file",
+      "name": "LangContext.js",
+      "filePath": "src/LangContext.js",
+      "summary": "src/LangContext.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 139
+    },
+    {
+      "id": "file:src/layouts/ConfiguratorLayout_v2.jsx",
+      "type": "file",
+      "name": "ConfiguratorLayout_v2.jsx",
+      "filePath": "src/layouts/ConfiguratorLayout_v2.jsx",
+      "summary": "src/layouts/ConfiguratorLayout_v2.jsx 是 12345 Viewer 项目中的 .jsx 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 310
+    },
+    {
+      "id": "file:src/layouts/ConfiguratorLayout.jsx",
+      "type": "file",
+      "name": "ConfiguratorLayout.jsx",
+      "filePath": "src/layouts/ConfiguratorLayout.jsx",
+      "summary": "src/layouts/ConfiguratorLayout.jsx 是 12345 Viewer 项目中的 .jsx 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 310
+    },
+    {
+      "id": "file:src/lib/utils.js",
+      "type": "file",
+      "name": "utils.js",
+      "filePath": "src/lib/utils.js",
+      "summary": "src/lib/utils.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 6
+    },
+    {
+      "id": "file:src/main.jsx",
+      "type": "file",
+      "name": "main.jsx",
+      "filePath": "src/main.jsx",
+      "summary": "src/main.jsx 是 12345 Viewer 项目中的 .jsx 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 5
+    },
+    {
+      "id": "file:src/SlotLayout.jsx",
+      "type": "file",
+      "name": "SlotLayout.jsx",
+      "filePath": "src/SlotLayout.jsx",
+      "summary": "src/SlotLayout.jsx 是 12345 Viewer 项目中的 .jsx 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 13
+    },
+    {
+      "id": "file:src/slots.js",
+      "type": "file",
+      "name": "slots.js",
+      "filePath": "src/slots.js",
+      "summary": "src/slots.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 12
+    },
+    {
+      "id": "file:src/store/useStore.js",
+      "type": "file",
+      "name": "useStore.js",
+      "filePath": "src/store/useStore.js",
+      "summary": "Zustand 全局状态：集中保存场景状态、UI 参数、项目配置、背景、标注、灯光和 Three 引用。",
+      "tags": [
+        "zustand"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 181
+    },
+    {
+      "id": "file:src/table.css",
+      "type": "file",
+      "name": "table.css",
+      "filePath": "src/table.css",
+      "summary": "src/table.css 是 12345 Viewer 项目中的 .css 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "complex",
+      "language": "css",
+      "sizeLines": 1701
+    },
+    {
+      "id": "file:src/utils/authStorage.js",
+      "type": "file",
+      "name": "authStorage.js",
+      "filePath": "src/utils/authStorage.js",
+      "summary": "运行时工具模块，服务模型材质解析、认证缓存或遥测。",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 29
+    },
+    {
+      "id": "file:src/utils/PhysicalMXShaderPatcher.js",
+      "type": "file",
+      "name": "PhysicalMXShaderPatcher.js",
+      "filePath": "src/utils/PhysicalMXShaderPatcher.js",
+      "summary": "运行时工具模块，服务模型材质解析、认证缓存或遥测。",
+      "tags": [
+        "utility"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 123
+    },
+    {
+      "id": "file:src/utils/S8SExtension.js",
+      "type": "file",
+      "name": "S8SExtension.js",
+      "filePath": "src/utils/S8SExtension.js",
+      "summary": "Verge3D S8S 扩展解析层：还原材质、纹理、节点、动画、相机、灯光和场景数据。",
+      "tags": [
+        "utility",
+        "verge3d-export-chain"
+      ],
+      "complexity": "complex",
+      "language": "javascript",
+      "sizeLines": 510
+    },
+    {
+      "id": "file:src/utils/S8SMaterialLoader.js",
+      "type": "file",
+      "name": "S8SMaterialLoader.js",
+      "filePath": "src/utils/S8SMaterialLoader.js",
+      "summary": "S8S 材质转换器：把 Verge3D/3ds Max 导出材质转换为 Three.js 可渲染材质。",
+      "tags": [
+        "utility",
+        "verge3d-export-chain"
+      ],
+      "complexity": "complex",
+      "language": "javascript",
+      "sizeLines": 561
+    },
+    {
+      "id": "file:src/utils/telemetry.js",
+      "type": "file",
+      "name": "telemetry.js",
+      "filePath": "src/utils/telemetry.js",
+      "summary": "用户操作与异常上报：通过 Supabase 记录脱敏操作、资源错误、模型错误和性能事件。",
+      "tags": [
+        "utility",
+        "telemetry"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 284
+    },
+    {
+      "id": "file:src/utils/v3d-loader.ts",
+      "type": "file",
+      "name": "v3d-loader.ts",
+      "filePath": "src/utils/v3d-loader.ts",
+      "summary": "运行时工具模块，服务模型材质解析、认证缓存或遥测。",
+      "tags": [
+        "utility",
+        "verge3d-export-chain"
+      ],
+      "complexity": "complex",
+      "language": "typescript",
+      "sizeLines": 635
+    },
+    {
+      "id": "config:tailwind.config.js",
+      "type": "config",
+      "name": "tailwind.config.js",
+      "filePath": "tailwind.config.js",
+      "summary": "tailwind.config.js 是 12345 Viewer 项目中的 .js 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "javascript",
+      "sizeLines": 19
+    },
+    {
+      "id": "config:vercel.json",
+      "type": "config",
+      "name": "vercel.json",
+      "filePath": "vercel.json",
+      "summary": "vercel.json 是 12345 Viewer 项目中的 .json 文件。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "simple",
+      "language": "json",
+      "sizeLines": 8
+    },
+    {
+      "id": "config:vite.config.js",
+      "type": "config",
+      "name": "vite.config.js",
+      "filePath": "vite.config.js",
+      "summary": "Vite 配置与本地开发 API：包含 dev mock 登录、微信扫码 mock、项目配置读取和本地调参写入接口。",
+      "tags": [
+        "project-file"
+      ],
+      "complexity": "moderate",
+      "language": "javascript",
+      "sizeLines": 465
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/App.css",
+      "type": "imports",
+      "label": "./App.css"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/Scene.jsx",
+      "type": "imports",
+      "label": "./components/Scene"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/SceneWebGPU.jsx",
+      "type": "imports",
+      "label": "./components/SceneWebGPU"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/DynamicBackground.jsx",
+      "type": "imports",
+      "label": "./components/DynamicBackground"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/Header.jsx",
+      "type": "imports",
+      "label": "./components/Header"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/ControlBar.jsx",
+      "type": "imports",
+      "label": "./components/ControlBar"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/LoadingScreen.jsx",
+      "type": "imports",
+      "label": "./components/LoadingScreen"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/LoginScreen.jsx",
+      "type": "imports",
+      "label": "./components/LoginScreen"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/DimensionAnnotation.jsx",
+      "type": "imports",
+      "label": "./components/DimensionAnnotation"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/FeatureAnnotationPin.jsx",
+      "type": "imports",
+      "label": "./components/FeatureAnnotationPin"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/MobileControlDrawer.jsx",
+      "type": "imports",
+      "label": "./components/MobileControlDrawer"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/ProductStudioBackground.jsx",
+      "type": "imports",
+      "label": "./components/ProductStudioBackground"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/ProjectConfigBackground.jsx",
+      "type": "imports",
+      "label": "./components/ProjectConfigBackground"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "./LangContext"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "./store/useStore"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/utils/authStorage.js",
+      "type": "imports",
+      "label": "./utils/authStorage"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/utils/telemetry.js",
+      "type": "imports",
+      "label": "./utils/telemetry"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/FeatureAnnotationGizmo.jsx",
+      "type": "imports",
+      "label": "./components/FeatureAnnotationGizmo"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/HeaderPanel.jsx",
+      "type": "imports",
+      "label": "./components/HeaderPanel"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/OutlinePanel.jsx",
+      "type": "imports",
+      "label": "./components/OutlinePanel"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/BgPanel.jsx",
+      "type": "imports",
+      "label": "./components/BgPanel"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/ProductStudioBgPanel.jsx",
+      "type": "imports",
+      "label": "./components/ProductStudioBgPanel"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/LedPanel.jsx",
+      "type": "imports",
+      "label": "./components/LedPanel"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/components/MaterialPanel.jsx",
+      "type": "imports",
+      "label": "./components/MaterialPanel"
+    },
+    {
+      "source": "file:src/components/BgPanel.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/CartModal.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/CartModal.jsx",
+      "target": "file:src/data/products.js",
+      "type": "imports",
+      "label": "../data/products"
+    },
+    {
+      "source": "file:src/components/ContactModal.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/ContactModal.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/components/GalleryModal.jsx",
+      "type": "imports",
+      "label": "./GalleryModal"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/components/VideoModal.jsx",
+      "type": "imports",
+      "label": "./VideoModal"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/components/CartModal.jsx",
+      "type": "imports",
+      "label": "./CartModal"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/components/ContactModal.jsx",
+      "type": "imports",
+      "label": "./ContactModal"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/data/products.js",
+      "type": "imports",
+      "label": "../data/products"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/ControlBar.jsx",
+      "target": "file:src/utils/telemetry.js",
+      "type": "imports",
+      "label": "../utils/telemetry"
+    },
+    {
+      "source": "file:src/components/DimensionAnnotation.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/Effects.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/FeatureAnnotationGizmo.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/FeatureAnnotationPin.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/FeatureAnnotationPin.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/GalleryModal.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/GalleryModal.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/Header.jsx",
+      "target": "file:src/components/LangToggle.jsx",
+      "type": "imports",
+      "label": "./LangToggle"
+    },
+    {
+      "source": "file:src/components/Header.jsx",
+      "target": "file:src/components/LangSwitch.jsx",
+      "type": "imports",
+      "label": "./LangSwitch"
+    },
+    {
+      "source": "file:src/components/Header.jsx",
+      "target": "file:src/components/FullscreenToggle.jsx",
+      "type": "imports",
+      "label": "./FullscreenToggle"
+    },
+    {
+      "source": "file:src/components/Header.jsx",
+      "target": "file:src/components/MusicToggle.jsx",
+      "type": "imports",
+      "label": "./MusicToggle"
+    },
+    {
+      "source": "file:src/components/Header.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/HeaderPanel.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/LedPanel.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/LoginScreen.jsx",
+      "target": "file:src/utils/authStorage.js",
+      "type": "imports",
+      "label": "../utils/authStorage"
+    },
+    {
+      "source": "file:src/components/LoginScreen.jsx",
+      "target": "file:src/utils/telemetry.js",
+      "type": "imports",
+      "label": "../utils/telemetry"
+    },
+    {
+      "source": "file:src/components/MaterialPanel.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/MaterialPanel.jsx",
+      "target": "file:src/data/materialDefaults.js",
+      "type": "imports",
+      "label": "../data/materialDefaults"
+    },
+    {
+      "source": "file:src/components/MobileControlDrawer.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/MobileControlDrawer.jsx",
+      "target": "file:src/data/products.js",
+      "type": "imports",
+      "label": "../data/products"
+    },
+    {
+      "source": "file:src/components/MobileControlDrawer.jsx",
+      "target": "file:src/components/GalleryModal.jsx",
+      "type": "imports",
+      "label": "./GalleryModal"
+    },
+    {
+      "source": "file:src/components/MobileControlDrawer.jsx",
+      "target": "file:src/components/CartModal.jsx",
+      "type": "imports",
+      "label": "./CartModal"
+    },
+    {
+      "source": "file:src/components/MusicToggle.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/OutlinePanel.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/ProductStudioBackground.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/ProductStudioBgPanel.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/ProjectConfigBackground.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/Scene.jsx",
+      "target": "file:src/components/SceneContent.jsx",
+      "type": "imports",
+      "label": "./SceneContent"
+    },
+    {
+      "source": "file:src/components/Scene.jsx",
+      "target": "file:src/components/Effects.jsx",
+      "type": "imports",
+      "label": "./Effects"
+    },
+    {
+      "source": "file:src/components/Scene.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/SceneContent.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/SceneContent.jsx",
+      "target": "file:src/hooks/useModel.js",
+      "type": "imports",
+      "label": "../hooks/useModel"
+    },
+    {
+      "source": "file:src/components/SceneContent.jsx",
+      "target": "file:src/data/materialDefaults.js",
+      "type": "imports",
+      "label": "../data/materialDefaults"
+    },
+    {
+      "source": "file:src/components/SceneWebGPU.jsx",
+      "target": "file:src/components/Scene.jsx",
+      "type": "imports",
+      "label": "./Scene"
+    },
+    {
+      "source": "file:src/components/SceneWebGPU.jsx",
+      "target": "file:src/components/SceneContent.jsx",
+      "type": "imports",
+      "label": "./SceneContent"
+    },
+    {
+      "source": "file:src/components/SceneWebGPU.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/components/ui/button.jsx",
+      "target": "file:src/lib/utils.js",
+      "type": "imports",
+      "label": "../../lib/utils"
+    },
+    {
+      "source": "file:src/components/VideoModal.jsx",
+      "target": "file:src/LangContext.js",
+      "type": "imports",
+      "label": "../LangContext"
+    },
+    {
+      "source": "file:src/components/VideoModal.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "imports",
+      "label": "../store/useStore"
+    },
+    {
+      "source": "file:src/hooks/useModel.js",
+      "target": "file:src/utils/S8SExtension.js",
+      "type": "imports",
+      "label": "../utils/S8SExtension"
+    },
+    {
+      "source": "file:src/hooks/useModel.js",
+      "target": "file:src/utils/telemetry.js",
+      "type": "imports",
+      "label": "../utils/telemetry"
+    },
+    {
+      "source": "file:src/main.jsx",
+      "target": "file:src/index.css",
+      "type": "imports",
+      "label": "./index.css"
+    },
+    {
+      "source": "file:src/main.jsx",
+      "target": "file:src/App.jsx",
+      "type": "imports",
+      "label": "./App.jsx"
+    },
+    {
+      "source": "file:src/utils/S8SExtension.js",
+      "target": "file:src/utils/S8SMaterialLoader.js",
+      "type": "imports",
+      "label": "./S8SMaterialLoader"
+    },
+    {
+      "source": "file:src/utils/S8SMaterialLoader.js",
+      "target": "file:src/utils/v3d-loader.ts",
+      "type": "imports",
+      "label": "./v3d-loader"
+    },
+    {
+      "source": "file:src/utils/S8SMaterialLoader.js",
+      "target": "file:src/utils/PhysicalMXShaderPatcher.js",
+      "type": "imports",
+      "label": "./PhysicalMXShaderPatcher"
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:src/App.jsx",
+      "type": "documents",
+      "label": "README explains app boundary"
+    },
+    {
+      "source": "config:package.json",
+      "target": "pipeline:scripts/inspect-gltf.cjs",
+      "type": "configures",
+      "label": "npm run check:gltf"
+    },
+    {
+      "source": "config:package.json",
+      "target": "pipeline:scripts/copy-build-assets.cjs",
+      "type": "configures",
+      "label": "build post step"
+    },
+    {
+      "source": "config:package.json",
+      "target": "pipeline:scripts/copy-vercel-assets.cjs",
+      "type": "configures",
+      "label": "vercel build post step"
+    },
+    {
+      "source": "config:vite.config.js",
+      "target": "endpoint:api/login.js",
+      "type": "mirrors",
+      "label": "dev mock mirrors serverless API"
+    },
+    {
+      "source": "config:vite.config.js",
+      "target": "endpoint:api/get-scene.js",
+      "type": "mirrors",
+      "label": "dev mock mirrors serverless API"
+    },
+    {
+      "source": "file:src/App.jsx",
+      "target": "file:src/store/useStore.js",
+      "type": "uses_state",
+      "label": "Zustand store"
+    },
+    {
+      "source": "file:src/components/SceneContent.jsx",
+      "target": "file:src/hooks/useModel.js",
+      "type": "loads_model",
+      "label": "glTF pipeline"
+    },
+    {
+      "source": "file:src/hooks/useModel.js",
+      "target": "file:src/utils/S8SExtension.js",
+      "type": "uses_extension",
+      "label": "S8S parser"
+    },
+    {
+      "source": "file:src/utils/S8SExtension.js",
+      "target": "file:src/utils/S8SMaterialLoader.js",
+      "type": "uses_material_loader",
+      "label": "S8S material conversion"
+    },
+    {
+      "source": "schema:scripts/viewer-events.sql",
+      "target": "file:src/utils/telemetry.js",
+      "type": "supports",
+      "label": "viewer_events table"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:docs-and-boundaries",
+      "name": "文档与项目边界",
+      "description": "README、设计说明、环境示例和 Git 规则，定义 12345 Viewer 的职责与交付边界。",
+      "nodeIds": [
+        "config:.env.example",
+        "config:.gitattributes",
+        "document:DESIGN.md",
+        "document:README.md"
+      ]
+    },
+    {
+      "id": "layer:app-shell",
+      "name": "应用入口与页面壳",
+      "description": "React 入口、App 壳、布局、语言和全局样式。",
+      "nodeIds": [
+        "file:src/App.css",
+        "file:src/App.jsx",
+        "file:src/index.css",
+        "file:src/LangContext.js",
+        "file:src/layouts/ConfiguratorLayout_v2.jsx",
+        "file:src/layouts/ConfiguratorLayout.jsx",
+        "file:src/main.jsx",
+        "file:src/SlotLayout.jsx",
+        "file:src/slots.js",
+        "file:src/table.css"
+      ]
+    },
+    {
+      "id": "layer:web3d-runtime",
+      "name": "R3F / Three 运行时",
+      "description": "Canvas、SceneContent、模型加载、S8S 材质扩展、效果和 WebGPU 实验入口。",
+      "nodeIds": [
+        "file:src/components/Effects.jsx",
+        "file:src/components/Scene.jsx",
+        "file:src/components/SceneContent.jsx",
+        "file:src/components/SceneWebGPU.jsx",
+        "file:src/hooks/useModel.js",
+        "file:src/utils/PhysicalMXShaderPatcher.js",
+        "file:src/utils/S8SExtension.js",
+        "file:src/utils/S8SMaterialLoader.js",
+        "file:src/utils/v3d-loader.ts"
+      ]
+    },
+    {
+      "id": "layer:viewer-ui",
+      "name": "产品配置器 UI",
+      "description": "控制栏、弹窗、画廊、咨询、登录、加载页、标注和移动端抽屉。",
+      "nodeIds": [
+        "file:src/components/BgPanel.jsx",
+        "file:src/components/CartModal.jsx",
+        "file:src/components/ContactModal.jsx",
+        "file:src/components/ControlBar.jsx",
+        "file:src/components/DimensionAnnotation.jsx",
+        "file:src/components/DynamicBackground.jsx",
+        "file:src/components/FeatureAnnotation.jsx",
+        "file:src/components/FeatureAnnotationGizmo.jsx",
+        "file:src/components/FeatureAnnotationPin.jsx",
+        "file:src/components/FeaturePanel.jsx",
+        "file:src/components/FullscreenToggle.jsx",
+        "file:src/components/GalleryModal.jsx",
+        "file:src/components/Header.jsx",
+        "file:src/components/HeaderPanel.jsx",
+        "file:src/components/HeightTrack.jsx",
+        "file:src/components/LangSwitch.jsx",
+        "file:src/components/LangToggle.jsx",
+        "file:src/components/LedPanel.jsx",
+        "file:src/components/LoadingScreen.jsx",
+        "file:src/components/LoginScreen.jsx",
+        "file:src/components/MaterialPanel.jsx",
+        "file:src/components/MobileControlDrawer.jsx",
+        "file:src/components/MusicToggle.jsx",
+        "file:src/components/OutlinePanel.jsx",
+        "file:src/components/ProductStudioBackground.jsx",
+        "file:src/components/ProductStudioBgPanel.jsx",
+        "file:src/components/ProjectConfigBackground.jsx",
+        "file:src/components/Sidebar.jsx",
+        "file:src/components/ui/button.jsx",
+        "file:src/components/VideoModal.jsx",
+        "file:src/components/ViewCube.jsx",
+        "file:src/components/ViewSlider.jsx",
+        "file:src/components/ViewSwitcher.jsx"
+      ]
+    },
+    {
+      "id": "layer:state-and-data",
+      "name": "状态与配置数据",
+      "description": "Zustand store、产品/材质默认数据、认证缓存与遥测。",
+      "nodeIds": [
+        "file:src/data/materialDefaults.js",
+        "file:src/data/products.js",
+        "file:src/lib/utils.js",
+        "file:src/store/useStore.js",
+        "file:src/utils/authStorage.js",
+        "file:src/utils/telemetry.js"
+      ]
+    },
+    {
+      "id": "layer:api-and-data-backend",
+      "name": "API / Supabase 边界",
+      "description": "Vercel Serverless API、Supabase schema/functions 和数据上报边界；阿里云静态部署需单独后端承载。",
+      "nodeIds": [
+        "endpoint:api/get-scene.js",
+        "endpoint:api/login.js"
+      ]
+    },
+    {
+      "id": "layer:build-and-deploy",
+      "name": "构建、部署与验证脚本",
+      "description": "Vite、Vercel、ESLint、Tailwind、构建后资产复制、CDP 验证和 glTF 检查脚本。",
+      "nodeIds": [
+        "config:eslint.config.js",
+        "file:index.dev.html",
+        "file:index.html",
+        "config:package.json",
+        "config:postcss.config.js",
+        "pipeline:scripts/copy-build-assets.cjs",
+        "pipeline:scripts/copy-vercel-assets.cjs",
+        "pipeline:scripts/inspect-gltf.cjs",
+        "pipeline:scripts/start-debug-chrome.ps1",
+        "pipeline:scripts/verify-chrome-cdp.ps1",
+        "config:tailwind.config.js",
+        "config:vercel.json",
+        "config:vite.config.js"
+      ]
+    },
+    {
+      "id": "layer:runtime-assets",
+      "name": "运行资产索引",
+      "description": "被纳入文本扫描的公开资源索引；大型模型、图片、音频已按 ignore 排除，只在报告中记录。",
+      "nodeIds": [
+        "resource:media/12345-verge3d-20260620.gltf",
+        "resource:media/12345.gltf",
+        "resource:public/basis_transcoder/basis_transcoder.js",
+        "resource:public/basis_transcoder/basis_transcoder.wasm"
+      ]
+    },
+    {
+      "id": "layer:misc",
+      "name": "其他项目文件",
+      "description": "未被前述规则归类但仍参与项目分析的文件。",
+      "nodeIds": [
+        "file:.understand-anything/.understandignore",
+        "schema:scripts/viewer-events.sql",
+        "file:src/ControlPanel.jsx"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "确认项目边界",
+      "description": "从 README 开始，理解 12345 只负责 Viewer，后台在 F:\\houtai 推进。",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "理解应用启动",
+      "description": "查看 React 入口和 App 壳，理解登录、加载、背景、场景、控制栏和 postMessage 的装配方式。",
+      "nodeIds": [
+        "file:src/main.jsx",
+        "file:src/App.jsx",
+        "file:src/store/useStore.js"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "理解 Web3D 加载链路",
+      "description": "沿 SceneContent → useModel → S8SExtension → S8SMaterialLoader 查看 Verge3D 导出资产如何被 R3F 渲染。",
+      "nodeIds": [
+        "file:src/components/SceneContent.jsx",
+        "file:src/hooks/useModel.js",
+        "file:src/utils/S8SExtension.js",
+        "file:src/utils/S8SMaterialLoader.js"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "理解用户交互",
+      "description": "查看控制栏、画廊、咨询、标注、移动端抽屉和全屏按钮等用户操作面。",
+      "nodeIds": [
+        "file:src/components/ControlBar.jsx",
+        "file:src/components/GalleryModal.jsx",
+        "file:src/components/ContactModal.jsx",
+        "file:src/components/MobileControlDrawer.jsx",
+        "file:src/components/FullscreenToggle.jsx"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "理解质量与部署",
+      "description": "查看 glTF 检查、构建后资产复制、CDP 验证、Vercel 配置和 Supabase 事件表。",
+      "nodeIds": [
+        "pipeline:scripts/inspect-gltf.cjs",
+        "pipeline:scripts/copy-build-assets.cjs",
+        "pipeline:scripts/verify-chrome-cdp.ps1",
+        "config:vercel.json",
+        "schema:scripts/viewer-events.sql"
+      ]
+    }
+  ]
+}

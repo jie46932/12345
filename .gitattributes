@@ -4,3 +4,4 @@
 *.jpg !text !filter !merge !diff
 *.jpeg !text !filter !merge !diff
 v3d.js !text !filter !merge !diff
+*.usdz filter=lfs diff=lfs merge=lfs -text

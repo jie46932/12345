@@ -8,7 +8,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($Url)) {
-  $Url = "https://12345.gsdmsj.cn/?bypass=1&cacheBust=$([DateTimeOffset]::Now.ToUnixTimeMilliseconds())"
+  $Url = "https://hefurniture.gsdmsj.cn/?bypass=1&cacheBust=$([DateTimeOffset]::Now.ToUnixTimeMilliseconds())"
 }
 
 function ConvertFrom-CdpJson([string]$Text) {
@@ -83,7 +83,7 @@ $target = $null
 if ($ReuseExistingTarget) {
   $tabs = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/json" -TimeoutSec 8
   $target = $tabs |
-    Where-Object { $_.type -eq "page" -and $_.url -like "https://12345.gsdmsj.cn*" } |
+    Where-Object { $_.type -eq "page" -and $_.url -like "https://hefurniture.gsdmsj.cn*" } |
     Select-Object -First 1
 }
 

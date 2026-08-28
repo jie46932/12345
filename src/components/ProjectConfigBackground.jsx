@@ -1,15 +1,20 @@
 import useStore from '../store/useStore';
+import { mediaUrl } from '../utils/assetUrl';
 
 function resolveAssetUrl(asset) {
-  if (typeof asset === 'string') return asset;
-  return asset?.url || asset?.path || '';
+  if (typeof asset === 'string') return mediaUrl(asset);
+  return mediaUrl(asset?.url || asset?.path || '');
 }
 
 export default function ProjectConfigBackground() {
+  const backgroundMode = useStore((s) => s.backgroundMode);
   const background = useStore((s) => s.projectConfig.background);
+  if (backgroundMode !== 'solidStudio') return null;
   if (!background) return null;
 
   const isMedia = background.mode === 'media' && resolveAssetUrl(background.asset);
+  if (!isMedia) return null;
+
   const isVideo = isMedia && background.asset?.mime?.startsWith('video/');
   const mediaStyle = {
     width: '100%',
@@ -31,7 +36,7 @@ export default function ProjectConfigBackground() {
         zIndex: 1,
         overflow: 'hidden',
         pointerEvents: 'none',
-        backgroundColor: background.solidColor || '#f6f7f8',
+        backgroundColor: 'transparent',
       }}
     >
       {isMedia && (

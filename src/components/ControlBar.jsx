@@ -158,6 +158,7 @@ export default function ControlBar({
   onAccessoryChange,
   onSoloMode, onOrbitMode, soloActive, orbitActive,
   backgroundMode, onToggleBackground,
+  onEnterAR, arActive = false,
 }) {
   const lang = useLang();
   const t = T[lang];
@@ -838,7 +839,7 @@ export default function ControlBar({
 
           <div className="cb-sep" />
 
-          {/* 查看：背景作为初始按钮，hover 展开：尺寸 + 独显 + 360°环绕 */}
+          {/* 查看：背景作为初始按钮，展开后显示尺寸 + 独显 + 360°环绕 */}
           <div className="cb-group"
             onMouseEnter={() => { if (viewLeaveTimer.current) { clearTimeout(viewLeaveTimer.current); viewLeaveTimer.current = null; } setViewExpanded(true); }}
             onMouseLeave={() => { viewLeaveTimer.current = setTimeout(() => setViewExpanded(false), 150); }}
@@ -858,7 +859,7 @@ export default function ControlBar({
                   }
                   onToggleBackground?.();
                 }}
-                title="切换动态背景/棚拍背景"
+                title="切换默认背景/棚拍背景"
                 size={67}
               />
               {/* 展开区：尺寸 + 独显 + 360°环绕 */}
@@ -905,18 +906,11 @@ export default function ControlBar({
               <NeuBtn
                 icon={Icons.ar}
                 label={shareExpanded ? 'AR' : undefined}
-                active={activeAccessory.has('acc5')}
+                active={arActive}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!isTouch || shareExpanded) {
-                    const willEnable = !activeAccessory.has('acc5');
-                    trackOperation('ar_preview_toggled', { enabled: willEnable });
-                    setActiveAccessory(prev => {
-                      const next = new Set(prev);
-                      next.has('acc5') ? next.delete('acc5') : next.add('acc5');
-                      return next;
-                    });
-                  } else setShareExpanded(true);
+                  trackOperation('ar_preview_requested', { supportedMode: 'immersive-ar' });
+                  onEnterAR?.();
                 }}
                 title="AR 预览"
                 size={67}

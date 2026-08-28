@@ -7,7 +7,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($Url)) {
-  $Url = "https://12345.gsdmsj.cn/?bypass=1&cacheBust=$([DateTimeOffset]::Now.ToUnixTimeMilliseconds())"
+  $Url = "https://hefurniture.gsdmsj.cn/?bypass=1&cacheBust=$([DateTimeOffset]::Now.ToUnixTimeMilliseconds())"
 }
 
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"

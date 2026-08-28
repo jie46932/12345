@@ -17,6 +17,7 @@ import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLigh
 import useStore from '../store/useStore';
 import { useModel } from '../hooks/useModel';
 import materialDefaults from '../data/materialDefaults';
+import { mediaUrl } from '../utils/assetUrl';
 
 // ── 桌面材质名称映射 ───────────────────────────────────────────
 const MAT_NAME_MAP = {
@@ -27,21 +28,21 @@ const MAT_NAME_MAP = {
 
 const WOOD_TEXTURES = {
   light: {
-    map: './media/Wood03_512_BaseColor.jpg',
-    normalMap: './media/Wood03_512_Normal.jpg',
-    roughnessMap: './media/Wood03_512_Roughness.jpg',
+    map: mediaUrl('Wood03_512_BaseColor.jpg'),
+    normalMap: mediaUrl('Wood03_512_Normal.jpg'),
+    roughnessMap: mediaUrl('Wood03_512_Roughness.jpg'),
     fallbackColor: '#c8a882',
   },
   oak: {
-    map: './media/Wood06_512_BaseColor.jpg',
-    normalMap: './media/Wood06_512_Normal.jpg',
-    roughnessMap: './media/Wood06_512_Roughness.jpg',
+    map: mediaUrl('Wood06_512_BaseColor.jpg'),
+    normalMap: mediaUrl('Wood06_512_Normal.jpg'),
+    roughnessMap: mediaUrl('Wood06_512_Roughness.jpg'),
     fallbackColor: '#e8d5b0',
   },
   dark: {
-    map: './media/Wood07_512_BaseColor.jpg',
-    normalMap: './media/Wood07_512_Normal.jpg',
-    roughnessMap: './media/Wood07_512_Roughness.jpg',
+    map: mediaUrl('Wood07_512_BaseColor.jpg'),
+    normalMap: mediaUrl('Wood07_512_Normal.jpg'),
+    roughnessMap: mediaUrl('Wood07_512_Roughness.jpg'),
     fallbackColor: '#3a2a1a',
   },
 };
@@ -58,7 +59,7 @@ const IDLE_AUTO_ROTATE_SPEED = 0.3675;
 const DESK_LAMP_AREA_LIGHT_INTENSITY = 14;
 const DESK_LAMP_AREA_LIGHT_WIDTH = 16;
 const DESK_LAMP_AREA_LIGHT_HEIGHT = 0.7;
-const PRODUCT_MODEL_URL = './media/12345-verge3d-20260620.gltf';
+const PRODUCT_MODEL_URL = mediaUrl('12345-draco.gltf');
 
 // ── 伸缩 Dummy 数据 ───────────────────────────────────────────
 const DUMMIES = [
@@ -179,6 +180,8 @@ export default function SceneContent({
   const setSoloActive = useStore((s) => s.setSoloActive);
   const setOrbitActive = useStore((s) => s.setOrbitActive);
   const led = useStore((s) => s.led);
+  const setLed = useStore((s) => s.setLed);
+  const triggerLedRedraw = useStore((s) => s.triggerLedRedraw);
   const ledVersion = useStore((s) => s.ledVersion);
   const currentHeight = useStore((s) => s.currentHeight);
   const soloActive = useStore((s) => s.soloActive);
@@ -233,6 +236,10 @@ export default function SceneContent({
     applyDummyT(targetScene, normalizedT);
   }, []);
 
+  const dispatchLiftMotion = useCallback((phase, detail = {}) => {
+    window.dispatchEvent(new CustomEvent(`viewer-lift-motion-${phase}`, { detail }));
+  }, []);
+
   // 材质缓存（changeMaterial 避免全场景遍历）
   const matCacheRef = useRef({});
 
@@ -255,6 +262,21 @@ export default function SceneContent({
       detail: { meshCount },
     }));
   }, []);
+
+  useEffect(() => {
+    const isLocalDev = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (!isLocalDev) return undefined;
+    window.__ledCtrl = {
+      get value() { return useStore.getState().led; },
+      set(partial) {
+        setLed(partial);
+        triggerLedRedraw();
+      },
+    };
+    return () => {
+      delete window.__ledCtrl;
+    };
+  }, [setLed, triggerLedRedraw]);
 
   useEffect(() => {
     if (!gltf?.scene) return;
@@ -343,7 +365,7 @@ export default function SceneContent({
       });
     });
 
-    // 应用材质覆盖（来自 MaterialPanel DEFAULTS 写入）
+    // 应用材质覆盖（来自材质默认配置）
     const defaultKeys = Object.keys(materialDefaults).filter(k => k !== '_env' && k !== '_lightOn');
     if (defaultKeys.length > 0) {
       loadedScene.traverse((obj) => {
@@ -439,7 +461,7 @@ export default function SceneContent({
       ledCanvas.height = 128;
       ledCanvasRef.current = ledCanvas;
 
-      drawLed(ledCanvas, 94);
+      drawLed(ledCanvas, 94, ledRef.current);
 
       const ledTex = new THREE.CanvasTexture(ledCanvas);
       ledTex.flipY = false;
@@ -473,8 +495,8 @@ export default function SceneContent({
       const ledMat = new THREE.MeshStandardMaterial({
         map: ledTex,
         emissiveMap: ledTex,
-        emissive: new THREE.Color(LED_DEFAULTS.textColor),
-        emissiveIntensity: LED_DEFAULTS.emissiveIntensity,
+        emissive: new THREE.Color(ledRef.current.textColor || LED_DEFAULTS.textColor),
+        emissiveIntensity: ledRef.current.emissiveIntensity ?? LED_DEFAULTS.emissiveIntensity,
         roughness: 0.5,
         metalness: 0.1,
       });
@@ -555,7 +577,7 @@ export default function SceneContent({
 
     // ── HDR 环境贴图 ────────────────────────────────────────────
     {
-      new HDRLoader().load('/media/22.hdr', (hdrTexture) => {
+      new HDRLoader().load(mediaUrl('22.hdr'), (hdrTexture) => {
         hdrTexture.wrapS = THREE.RepeatWrapping;
         hdrTexture.wrapT = THREE.ClampToEdgeWrapping;
         const pmrem = new THREE.PMREMGenerator(gl);
@@ -782,7 +804,7 @@ export default function SceneContent({
 
           const current = useStore.getState().arrowT;
           const remaining = targetT - current;
-          // 手动插值速度：8秒全长
+        // 手动插值速度：8秒全长
           const duration = 8.0;
           const step = (delta / duration) * Math.sign(remaining);
 
@@ -790,6 +812,7 @@ export default function SceneContent({
             setArrowT(targetT);
             applyLiftT(loadedScene, targetT);
             if (driveId === liftDriveIdRef.current) playRAFRef.current = null;
+            dispatchLiftMotion('ended', { mode: 'preset', targetHeightCm });
             return;
           }
 
@@ -801,6 +824,12 @@ export default function SceneContent({
           }
         };
 
+        const current = useStore.getState().arrowT;
+        dispatchLiftMotion('started', {
+          mode: 'preset',
+          targetHeightCm,
+          duration: Math.abs(targetT - current) * 8.0,
+        });
         playRAFRef.current = requestAnimationFrame(drive);
       },
 
@@ -812,6 +841,16 @@ export default function SceneContent({
           playRAFRef.current = null;
         }
         arrowMoveRef.current = dir ? { dir } : null;
+        if (dir) {
+          const current = useStore.getState().arrowT;
+          dispatchLiftMotion('started', {
+            mode: 'step',
+            direction: dir,
+            duration: (dir === 'up' ? 1 - current : current) * 12.0,
+          });
+        } else {
+          dispatchLiftMotion('ended', { mode: 'step', reason: 'manual-stop' });
+        }
       },
 
       // 配件切换
@@ -1047,7 +1086,10 @@ export default function SceneContent({
         const next = Math.max(0, Math.min(1, current + step));
         setArrowT(next);
         applyLiftT(loadedScene, next);
-        if (next <= 0 || next >= 1) arrowMoveRef.current = null;
+        if (next <= 0 || next >= 1) {
+          arrowMoveRef.current = null;
+          dispatchLiftMotion('ended', { mode: 'step', reason: 'boundary' });
+        }
       }
     }
 

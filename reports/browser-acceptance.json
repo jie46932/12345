@@ -1,0 +1,60 @@
+{
+  "ok": true,
+  "url": "https://hefurniture.gsdmsj.cn/?bypass=1&viewer=1",
+  "mode": "playwright",
+  "sceneReadySeconds": 21.704,
+  "state": {
+    "readyState": "complete",
+    "loading92": false,
+    "canvasCount": 1,
+    "sceneReady": "true",
+    "meshCount": 134,
+    "scene": true,
+    "renderer": true,
+    "render": {
+      "drawCalls": 175,
+      "triangles": 272592,
+      "geometries": 163,
+      "textures": 40
+    },
+    "resources": [
+      "https://hefurniture.gsdmsj.cn/assets/index-DrzEPZQx.js",
+      "https://hefurniture.gsdmsj.cn/assets/styled-components.browser.esm-CaVqj6iB.js",
+      "https://hefurniture.gsdmsj.cn/assets/index-C2zXCVf9.css",
+      "https://hefurniture.gsdmsj.cn/media/10.jpg",
+      "https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap",
+      "https://hefurniture.gsdmsj.cn/api/project-config?projectId=project_12345",
+      "https://hefurniture.gsdmsj.cn/media/12345-draco.gltf",
+      "https://hefurniture.gsdmsj.cn/favicon.svg",
+      "https://hefurniture.gsdmsj.cn/draco/draco_wasm_wrapper.js",
+      "https://hefurniture.gsdmsj.cn/draco/draco_decoder.wasm",
+      "https://hefurniture.gsdmsj.cn/media/12345-draco.bin",
+      "https://hefurniture.gsdmsj.cn/media/GalvanizedSteel02_1K_BaseColor.jpg",
+      "https://hefurniture.gsdmsj.cn/media/GalvanizedSteel02_1K_Roughness.jpg",
+      "https://hefurniture.gsdmsj.cn/media/GalvanizedSteel02_1K_Normal.jpg",
+      "https://hefurniture.gsdmsj.cn/media/Wood03_512_BaseColor.jpg",
+      "https://hefurniture.gsdmsj.cn/media/Wood03_512_Roughness.jpg",
+      "https://hefurniture.gsdmsj.cn/media/Wood03_512_Normal.jpg",
+      "https://hefurniture.gsdmsj.cn/media/fsdfsd31233210184.jpg",
+      "https://hefurniture.gsdmsj.cn/media/shang.jpg",
+      "https://hefurniture.gsdmsj.cn/media/1.jpg",
+      "https://hefurniture.gsdmsj.cn/media/2.jpg",
+      "https://hefurniture.gsdmsj.cn/media/3.jpg",
+      "https://hefurniture.gsdmsj.cn/media/22.hdr",
+      "https://hefurniture.gsdmsj.cn/media/Rob%20Simonsen%20-%20Blue_cut.mp3"
+    ]
+  },
+  "baseline": {
+    "drawCalls": null,
+    "triangles": null,
+    "geometries": null,
+    "textures": null,
+    "growthPercent": 15,
+    "sceneReadyWarnSeconds": 20,
+    "sceneReadyFailSeconds": 45
+  },
+  "expectedBundle": "index-DrzEPZQx.js",
+  "consoleErrors": [],
+  "failed": [],
+  "errors": []
+}

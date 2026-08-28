@@ -2,47 +2,48 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useLang, T } from '../LangContext';
 import useStore from '../store/useStore';
+import { mediaUrl } from '../utils/assetUrl';
 
 const galleryData = [
   {
     category: '简约白橡', categoryEn: 'White Oak',
     title: '自然肌理，极简美学', titleEn: 'Natural Texture, Minimalist',
-    src: '/media/4.jpg',
+    src: mediaUrl('4.jpg'),
     desc: '白橡原木面板搭配铝合金框架，自然纹理与现代工业设计的完美融合。',
     descEn: 'White oak panel with aluminum frame — natural grain meets modern industrial design.',
   },
   {
     category: '深胡桃色', categoryEn: 'Dark Walnut',
     title: '沉稳质感，专属品味', titleEn: 'Refined Texture, Premium Taste',
-    src: '/media/5.jpg',
+    src: mediaUrl('5.jpg'),
     desc: '深胡桃色木纹营造出沉稳内敛的氛围，适合追求高级感的工作空间。',
     descEn: 'Dark walnut wood grain creates a composed, understated atmosphere for premium workspaces.',
   },
   {
     category: '浅胡桃色', categoryEn: 'Light Walnut',
     title: '温润木纹，柔和有序', titleEn: 'Warm Grain, Soft & Orderly',
-    src: '/media/6.jpg',
+    src: mediaUrl('6.jpg'),
     desc: '浅胡桃色流露温润柔和的光泽，搭配利落线条，让自然气息与现代秩序优雅共生。',
     descEn: 'Light walnut radiates a warm, gentle luster with clean lines — where nature meets modern order.',
   },
   {
     category: '智能升降', categoryEn: 'Smart Lift',
     title: '站坐自由，健康工作', titleEn: 'Sit & Stand, Work Healthy',
-    src: '/media/7.jpg',
+    src: mediaUrl('7.jpg'),
     desc: '电动线性马达驱动，68–120cm 无级调节，记忆档位一键到位。',
     descEn: 'Electric linear motor drive, 68–120 cm stepless adjustment with one-touch memory presets.',
   },
   {
     category: '整洁桌面', categoryEn: 'Clean Desktop',
     title: '走线系统，告别杂乱', titleEn: 'Cable Management, No More Clutter',
-    src: '/media/8.jpg',
+    src: mediaUrl('8.jpg'),
     desc: '内嵌理线槽与桌下线夹，配合无线充电模块，还你干净利落的桌面。',
     descEn: 'Built-in cable tray and under-desk clips, plus wireless charging — a perfectly clean workspace.',
   },
   {
     category: '细节工艺', categoryEn: 'Craftsmanship',
     title: '每处细节，精心打磨', titleEn: 'Every Detail, Carefully Polished',
-    src: '/media/9.jpg',
+    src: mediaUrl('9.jpg'),
     desc: '加宽斜坡设计贴合手腕不酸痛，超大圆边设计安全防磕碰。',
     descEn: 'Wide-slope ergonomic wrist rest and oversized rounded edges for safety and comfort.',
   },
@@ -51,8 +52,8 @@ const galleryData = [
 // CometCard 3D 倾斜效果
 function CometCard({ children }) {
   const cardRef = useRef(null);
-  const [transform, setTransform] = useState('');
-  const [glare, setGlare] = useState({ x: 50, y: 50, opacity: 0 });
+  const glareRef = useRef(null);
+  const frameRef = useRef(0);
 
   const handleMouseMove = (e) => {
     const card = cardRef.current;
@@ -64,18 +65,31 @@ function CometCard({ children }) {
     const dy = (e.clientY - cy) / (rect.height / 2);
     const rotX = -dy * 12;
     const rotY = dx * 12;
-    setTransform(`perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`);
-    setGlare({
-      x: ((e.clientX - rect.left) / rect.width) * 100,
-      y: ((e.clientY - rect.top) / rect.height) * 100,
-      opacity: 0.15,
+    const glareX = ((e.clientX - rect.left) / rect.width) * 100;
+    const glareY = ((e.clientY - rect.top) / rect.height) * 100;
+
+    cancelAnimationFrame(frameRef.current);
+    frameRef.current = requestAnimationFrame(() => {
+      card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(0)`;
+      if (glareRef.current) {
+        glareRef.current.style.opacity = '1';
+        glareRef.current.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.08) 24%, transparent 62%)`;
+      }
     });
   };
 
   const handleMouseLeave = () => {
-    setTransform('perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)');
-    setGlare(g => ({ ...g, opacity: 0 }));
+    cancelAnimationFrame(frameRef.current);
+    const card = cardRef.current;
+    if (card) {
+      card.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)';
+    }
+    if (glareRef.current) {
+      glareRef.current.style.opacity = '0';
+    }
   };
+
+  useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
 
   return (
     <div
@@ -84,20 +98,26 @@ function CometCard({ children }) {
       onMouseLeave={handleMouseLeave}
       style={{
         transformStyle: 'preserve-3d',
-        transform: transform || 'perspective(800px) rotateX(0deg) rotateY(0deg)',
-        transition: 'transform 0.15s ease-out',
+        transform: 'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)',
+        transition: 'transform 0.18s ease-out',
         position: 'relative',
         borderRadius: '20px',
         overflow: 'hidden',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        willChange: 'transform',
+        contain: 'paint',
         cursor: 'pointer',
       }}
     >
       {children}
       {/* 光晕层 */}
-      <div style={{
+      <div ref={glareRef} style={{
         position: 'absolute', inset: 0, borderRadius: '20px', pointerEvents: 'none',
-        background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,${glare.opacity * 2}) 0%, transparent 60%)`,
-        transition: 'opacity 0.15s ease-out',
+        opacity: 0,
+        background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.28) 0%, transparent 62%)',
+        transition: 'opacity 0.18s ease-out',
+        transform: 'translateZ(1px)',
         zIndex: 10,
       }} />
     </div>
@@ -105,8 +125,8 @@ function CometCard({ children }) {
 }
 
 function resolveAssetUrl(asset) {
-  if (typeof asset === 'string') return asset;
-  return asset?.url || asset?.path || '';
+  if (typeof asset === 'string') return mediaUrl(asset);
+  return mediaUrl(asset?.url || asset?.path || '');
 }
 
 function buildGalleryItems(projectConfig) {
@@ -309,8 +329,11 @@ export default function GalleryModal({ open, onClose }) {
                 transform: `translateX(calc(-50% + ${translateX}px)) translateY(-50%) scale(${scale})`,
                 opacity,
                 zIndex,
-                transition: 'all 0.45s cubic-bezier(0.23,1,0.32,1)',
+                transition: 'transform 0.45s cubic-bezier(0.23,1,0.32,1), opacity 0.45s cubic-bezier(0.23,1,0.32,1)',
                 transformOrigin: 'center center',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                willChange: 'transform, opacity',
                 flexShrink: 0,
                 cursor: isCurrent ? 'default' : 'pointer',
               }}
@@ -320,19 +343,41 @@ export default function GalleryModal({ open, onClose }) {
                   width: cardWidth, borderRadius: isMobile ? 16 : 20, overflow: 'hidden',
                   background: '#1a1a1a',
                   pointerEvents: 'none',
+                  transformStyle: 'preserve-3d',
+                  transform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  contain: 'paint',
                   boxShadow: isCurrent
                     ? '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)'
                     : '0 16px 40px rgba(0,0,0,0.4)',
                 }}>
-                  <div style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden' }}>
+                  <div style={{
+                    position: 'relative',
+                    aspectRatio: '3 / 4',
+                    width: '100%',
+                    overflow: 'hidden',
+                    borderRadius: isMobile ? 14 : 16,
+                    background: '#000',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    contain: 'paint',
+                  }}>
                     <img
                       src={item.src}
                       alt={item.title}
                       style={{
+                        position: 'absolute',
+                        inset: 0,
                         width: '100%', height: '100%',
                         objectFit: 'cover',
                         filter: isCurrent ? 'contrast(1.05) saturate(1.1)' : 'contrast(0.8) saturate(0.8)',
                         transition: 'filter 0.4s ease',
+                        transform: 'translateZ(0) scale(1.002)',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        willChange: 'filter',
                       }}
                       draggable={false}
                     />

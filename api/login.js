@@ -7,15 +7,22 @@ export default function handler(req, res) {
   }
 
   const { username, password } = req.body || {};
+  const adminUser = process.env.ADMIN_USER;
+  const adminPass = process.env.ADMIN_PASS;
+  const accessToken = process.env.ACCESS_TOKEN;
+
+  if (!adminUser || !adminPass || !accessToken) {
+    return res.status(500).json({ success: false, message: 'Auth service is not configured' });
+  }
 
   if (
-    username === process.env.ADMIN_USER &&
-    password === process.env.ADMIN_PASS
+    username === adminUser &&
+    password === adminPass
   ) {
     // 验证通过：返回一个访问令牌（生产环境建议换成 JWT）
     return res.status(200).json({
       success: true,
-      token: process.env.ACCESS_TOKEN || 'he_furniture_v3d_access',
+      token: accessToken,
     });
   }
 

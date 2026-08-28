@@ -176,6 +176,10 @@ export default function FeatureAnnotationPin({ visible = true }) {
         // NDC 投影
         const ndc = worldPos.clone().project(camera);
         if (ndc.z > 1) { el.style.display = 'none'; return; }
+        if (ndc.x < -1 || ndc.x > 1 || ndc.y < -1 || ndc.y > 1) {
+          el.style.display = 'none';
+          return;
+        }
 
         const x = rect.left + (ndc.x * 0.5 + 0.5) * rect.width;
         const y = rect.top + (-ndc.y * 0.5 + 0.5) * rect.height;
@@ -202,8 +206,8 @@ export default function FeatureAnnotationPin({ visible = true }) {
         const textLines = lang === 'en'
           ? (cfg.linesEn || cfg.lines)
           : getConfiguredLines(projectAnnotations?.[idx], cfg.lines);
-        const line0 = ov.line0 || textLines[0];
-        const line1 = ov.line1 || textLines[1];
+        const line0 = lang === 'en' ? textLines[0] : (ov.line0 || textLines[0]);
+        const line1 = lang === 'en' ? textLines[1] : (ov.line1 || textLines[1]);
         const color0 = ov.color0 ?? '#ffffff';
         const color1 = ov.color1 ?? '#ffffff';
         const size0 = ov.size0 ?? 18;

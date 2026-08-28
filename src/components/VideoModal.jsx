@@ -1,9 +1,10 @@
 import { useLang, T } from '../LangContext';
 import useStore from '../store/useStore';
+import { mediaUrl } from '../utils/assetUrl';
 
 function resolveAssetUrl(asset) {
-  if (typeof asset === 'string') return asset;
-  return asset?.url || asset?.path || '';
+  if (typeof asset === 'string') return mediaUrl(asset);
+  return mediaUrl(asset?.url || asset?.path || '');
 }
 
 export default function VideoModal({ open, onClose }) {

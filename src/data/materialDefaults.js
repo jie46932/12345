@@ -31,46 +31,6 @@ const MATERIAL_DEFAULTS = {
     "emissive": "#000000",
     "emissiveIntensity": 0
   },
-  "Material #178": {
-    "roughness": 0.05,
-    "metalness": 0,
-    "color": "#ffffff",
-    "opacity": 1,
-    "emissive": "#000000",
-    "emissiveIntensity": 1
-  },
-  "Material #180": {
-    "roughness": 0.05,
-    "metalness": 0,
-    "color": "#ffffff",
-    "opacity": 1,
-    "emissive": "#000000",
-    "emissiveIntensity": 1
-  },
-  "Material #181": {
-    "roughness": 0.05,
-    "metalness": 0,
-    "color": "#ffffff",
-    "opacity": 1,
-    "emissive": "#000000",
-    "emissiveIntensity": 1
-  },
-  "Material #184": {
-    "roughness": 0.05,
-    "metalness": 0,
-    "color": "#ffffff",
-    "opacity": 1,
-    "emissive": "#000000",
-    "emissiveIntensity": 1
-  },
-  "Material #185": {
-    "roughness": 0.05,
-    "metalness": 0,
-    "color": "#ffffff",
-    "opacity": 1,
-    "emissive": "#000000",
-    "emissiveIntensity": 1
-  },
   "Material #186": {
     "roughness": 0.05,
     "metalness": 0,

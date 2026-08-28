@@ -1,0 +1,166 @@
+{
+  "projectId": "12345",
+  "generatedAt": "2026-07-18T12:46:27.617Z",
+  "totals": {
+    "distMB": 7.79,
+    "largestJavaScriptMB": 1.82,
+    "gltfBinMB": 1.38
+  },
+  "textures": [
+    {
+      "file": "media\\GalvanizedSteel02_1K_BaseColor.jpg",
+      "width": 256,
+      "height": 256,
+      "format": "jpg",
+      "bytes": 21302,
+      "materials": [
+        "GalvanizedSteel02_PBR"
+      ]
+    },
+    {
+      "file": "media\\GalvanizedSteel02_1K_Roughness.jpg",
+      "width": 256,
+      "height": 256,
+      "format": "jpg",
+      "bytes": 24967,
+      "materials": [
+        "GalvanizedSteel02_PBR"
+      ]
+    },
+    {
+      "file": "media\\GalvanizedSteel02_1K_Normal.jpg",
+      "width": 256,
+      "height": 256,
+      "format": "jpg",
+      "bytes": 25366,
+      "materials": [
+        "GalvanizedSteel02_PBR"
+      ]
+    },
+    {
+      "file": "media\\Wood03_512_BaseColor.jpg",
+      "width": 256,
+      "height": 256,
+      "format": "jpg",
+      "bytes": 15193,
+      "materials": [
+        "Wood03_PBR"
+      ]
+    },
+    {
+      "file": "media\\Wood03_512_Roughness.jpg",
+      "width": 256,
+      "height": 256,
+      "format": "jpg",
+      "bytes": 20740,
+      "materials": [
+        "Wood03_PBR"
+      ]
+    },
+    {
+      "file": "media\\Wood03_512_Normal.jpg",
+      "width": 256,
+      "height": 256,
+      "format": "jpg",
+      "bytes": 22214,
+      "materials": [
+        "Wood03_PBR"
+      ]
+    },
+    {
+      "file": "media\\fsdfsd31233210184.jpg",
+      "width": 512,
+      "height": 288,
+      "format": "jpg",
+      "bytes": 35772,
+      "materials": [
+        "Material #83"
+      ]
+    },
+    {
+      "file": "media\\shang.ktx2",
+      "width": 128,
+      "height": 128,
+      "format": "ktx2",
+      "bytes": 6104,
+      "materials": [
+        "Material #178",
+        "Material #180"
+      ]
+    },
+    {
+      "file": "media\\1.ktx2",
+      "width": 128,
+      "height": 128,
+      "format": "ktx2",
+      "bytes": 2958,
+      "materials": [
+        "Material #181"
+      ]
+    },
+    {
+      "file": "media\\2.ktx2",
+      "width": 128,
+      "height": 128,
+      "format": "ktx2",
+      "bytes": 5442,
+      "materials": [
+        "Material #184"
+      ]
+    },
+    {
+      "file": "media\\3.ktx2",
+      "width": 128,
+      "height": 128,
+      "format": "ktx2",
+      "bytes": 5779,
+      "materials": [
+        "Material #185"
+      ]
+    }
+  ],
+  "largest": [
+    {
+      "file": "assets\\index-wJ6QaRHJ.js",
+      "bytes": 1906997
+    },
+    {
+      "file": "media\\12345-draco.bin",
+      "bytes": 1279270
+    },
+    {
+      "file": "media\\12345-draco.bin.gz",
+      "bytes": 1063734
+    },
+    {
+      "file": "media\\Rob Simonsen - Blue_cut.mp3",
+      "bytes": 862158
+    },
+    {
+      "file": "draco\\draco_decoder.js",
+      "bytes": 512465
+    },
+    {
+      "file": "basis_transcoder\\basis_transcoder.wasm",
+      "bytes": 499935
+    },
+    {
+      "file": "draco\\draco_decoder.wasm",
+      "bytes": 192420
+    },
+    {
+      "file": "media\\BW61769-loop.wav",
+      "bytes": 176684
+    },
+    {
+      "file": "media\\11.jpg",
+      "bytes": 175932
+    },
+    {
+      "file": "media\\10.jpg",
+      "bytes": 175629
+    }
+  ],
+  "warnings": [],
+  "errors": []
+}

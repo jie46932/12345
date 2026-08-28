@@ -1,108 +1,35 @@
 // LoginScreen.jsx
 // 毛玻璃背景 + neumorphism 按钮，与场景 UI 风格完全一致
-// 验证逻辑走 /api/login，绝不在前端写死账密
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+// 验证逻辑走后端 API，绝不在前端写死账密
+import { useRef, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { storePersistentAuthToken } from '../utils/authStorage';
 import { trackError, trackOperation } from '../utils/telemetry';
+import { mediaUrl } from '../utils/assetUrl';
+import { loginWithPassword } from '../utils/loginApi';
 
-function makeLoginToken() {
-  return `wx_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function MockQrPattern({ token }) {
-  const cells = useMemo(() => {
-    const seed = Array.from(token || '').reduce((total, char) => total + char.charCodeAt(0), 0);
-    return Array.from({ length: 121 }, (_, index) => {
-      const row = Math.floor(index / 11);
-      const col = index % 11;
-      const inFinder =
-        (row < 3 && col < 3) ||
-        (row < 3 && col > 7) ||
-        (row > 7 && col < 3);
-      if (inFinder) return true;
-      return ((index * 17 + seed + row * col) % 5) < 2;
-    });
-  }, [token]);
-
-  return (
-    <div className="wechat-qr is-mock" aria-label="开发模拟二维码">
-      {cells.map((active, index) => (
-        <span className={active ? 'is-dark' : ''} key={`${token}-${index}`} />
-      ))}
-    </div>
-  );
-}
+const DESKTOP_BG = mediaUrl('10.jpg');
+const MOBILE_BG = mediaUrl('11.jpg');
 
 export default function LoginScreen({ visible, onSuccess }) {
-  const [loginMode, setLoginMode] = useState('wechat');
+  const [loginMode, setLoginMode] = useState('sms');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]   = useState('');
   const [pressed, setPressed] = useState(false);
-  const [wechatSession, setWechatSession] = useState(null);
-  const [wechatStatus, setWechatStatus] = useState('正在获取微信二维码');
-  const [wechatError, setWechatError] = useState('');
+  const [smsForm, setSmsForm] = useState({ phone: '', code: '' });
+  const [smsSent, setSmsSent] = useState(false);
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsVerifying, setSmsVerifying] = useState(false);
+  const [smsError, setSmsError] = useState('');
   const btnRef = useRef(null);
 
-  const showMockScan = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('dev') === '1' || params.get('mockWechat') === '1' || import.meta.env.DEV;
-  }, []);
-
-  const finishWechatLogin = useCallback((user) => {
-    trackOperation('login_succeeded', { method: 'wechat', mock: user?.source === 'wechat_mock' });
-    storePersistentAuthToken('v3d_token', 'he_furniture_wechat_token');
-    if (user) {
-      localStorage.setItem('he_furniture_wechat_user', JSON.stringify(user));
-    }
+  const finishLogin = (token, method) => {
+    storePersistentAuthToken('v3d_token', token);
+    trackOperation('login_succeeded', { method });
     onSuccess?.();
-  }, [onSuccess]);
-
-  const createWechatSession = useCallback(async () => {
-    setWechatError('');
-    setWechatStatus('正在获取微信二维码');
-    try {
-      const response = await fetch('/api/wechat-login/session', { method: 'POST' });
-      const result = await response.json();
-      if (!response.ok || !result?.success) {
-        throw new Error(result?.message || '微信登录服务未配置');
-      }
-      setWechatSession(result.session);
-      setWechatStatus(result.session?.mock ? '开发模拟扫码' : '等待微信扫码');
-      trackOperation('wechat_login_started', { mock: !!result.session?.mock });
-    } catch (requestError) {
-      const token = makeLoginToken();
-      setWechatSession(showMockScan ? { token, mock: true } : null);
-      setWechatStatus(showMockScan ? '开发模拟扫码' : '微信登录服务未配置');
-      setWechatError(String(requestError?.message || requestError));
-      trackError('wechat_login_session_failed', requestError, { mockFallback: showMockScan });
-    }
-  }, [showMockScan]);
-
-  useEffect(() => {
-    if (!visible || loginMode !== 'wechat' || wechatSession) return undefined;
-    const timer = window.setTimeout(createWechatSession, 0);
-    return () => window.clearTimeout(timer);
-  }, [createWechatSession, loginMode, visible, wechatSession]);
-
-  useEffect(() => {
-    if (!visible || loginMode !== 'wechat' || !wechatSession?.token) return undefined;
-    const timer = window.setInterval(async () => {
-      try {
-        const response = await fetch(`/api/wechat-login/status?token=${encodeURIComponent(wechatSession.token)}`);
-        const result = await response.json();
-        if (result?.success && result?.user) {
-          setWechatStatus('登录成功');
-          finishWechatLogin(result.user);
-        }
-      } catch {
-        // 轮询失败不打断二维码显示。
-      }
-    }, 1600);
-    return () => window.clearInterval(timer);
-  }, [finishWechatLogin, loginMode, visible, wechatSession]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -112,18 +39,11 @@ export default function LoginScreen({ visible, onSuccess }) {
     setError('');
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
+      const data = await loginWithPassword(fetch, username, password);
 
       if (data.success) {
-        // 新设备首次登录后长期保留，同设备下次免输入账号密码。
-        storePersistentAuthToken('v3d_token', data.token);
-        trackOperation('login_succeeded', { method: 'password' });
-        onSuccess?.();
+        // 交付模式采用页面内存登录态；刷新、清缓存或重新打开后需要重新登录。
+        finishLogin(data.token, 'password');
       } else {
         trackOperation('login_failed', { method: 'password', reason: 'invalid_credentials' });
         setError(data.message || '账号或密码错误');
@@ -136,22 +56,53 @@ export default function LoginScreen({ visible, onSuccess }) {
     }
   };
 
-  const simulateWechatScan = async () => {
-    if (!wechatSession?.token) return;
-    setWechatStatus('微信确认中');
+  const sendSmsCode = async () => {
+    if (smsSending) return;
+
+    setSmsSending(true);
+    setSmsError('');
     try {
-      const response = await fetch('/api/wechat-login/mock-confirm', {
+      const response = await fetch('/api/sms-login/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: wechatSession.token }),
+        body: JSON.stringify({ phone: smsForm.phone }),
       });
       const result = await response.json();
-      if (result?.success && result?.user) {
-        finishWechatLogin(result.user);
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.message || '验证码发送失败');
       }
-    } catch {
-      trackOperation('wechat_login_failed', { method: 'mock_scan' });
-      setWechatError('模拟扫码失败，请刷新二维码');
+      setSmsSent(true);
+      trackOperation('sms_login_code_sent', { method: 'sms' });
+    } catch (requestError) {
+      setSmsError(String(requestError?.message || requestError));
+      trackError('sms_login_send_failed', requestError, { method: 'sms' });
+    } finally {
+      setSmsSending(false);
+    }
+  };
+
+  const handleSmsVerify = async (event) => {
+    event.preventDefault();
+    if (smsVerifying) return;
+
+    setSmsVerifying(true);
+    setSmsError('');
+    try {
+      const response = await fetch('/api/sms-login/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(smsForm),
+      });
+      const result = await response.json();
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.message || '短信验证失败');
+      }
+      finishLogin(result.token, 'sms');
+    } catch (requestError) {
+      setSmsError(String(requestError?.message || requestError));
+      trackError('sms_login_verify_failed', requestError, { method: 'sms' });
+    } finally {
+      setSmsVerifying(false);
     }
   };
 
@@ -186,13 +137,13 @@ export default function LoginScreen({ visible, onSuccess }) {
         <div className="login-switch" role="tablist" aria-label="登录方式">
           <button
             type="button"
-            className={loginMode === 'wechat' ? 'active' : ''}
+            className={loginMode === 'sms' ? 'active' : ''}
             onClick={() => {
-              trackOperation('login_method_selected', { method: 'wechat' });
-              setLoginMode('wechat');
+              trackOperation('login_method_selected', { method: 'sms' });
+              setLoginMode('sms');
             }}
           >
-            微信扫码登录
+            短信验证码登录
           </button>
           <button
             type="button"
@@ -206,34 +157,45 @@ export default function LoginScreen({ visible, onSuccess }) {
           </button>
         </div>
 
-        {loginMode === 'wechat' ? (
-          <div className="wechat-login-panel">
-            <div className="wechat-login-head">
-              <strong>微信扫码登录</strong>
-              <span>{wechatStatus}</span>
-            </div>
-
-            {wechatSession?.qrImageUrl && (
-              <img className="wechat-qr-image" src={wechatSession.qrImageUrl} alt="微信扫码登录二维码" />
-            )}
-            {!wechatSession?.qrImageUrl && wechatSession?.mock && <MockQrPattern token={wechatSession.token} />}
-            {!wechatSession?.qrImageUrl && !wechatSession?.mock && (
-              <div className="wechat-unconfigured">
-                <strong>未配置微信登录</strong>
-                <span>需要后端接入微信开放平台或公众号扫码授权后生成二维码。</span>
+        {loginMode === 'sms' ? (
+          <form className="sms-verify-form" onSubmit={handleSmsVerify} autoComplete="off">
+            <div className="field">
+              <label htmlFor="visitor-phone">手机号</label>
+              <div className="input-wrap">
+                <input
+                  id="visitor-phone"
+                  type="tel"
+                  value={smsForm.phone}
+                  onChange={e => setSmsForm(form => ({ ...form, phone: e.target.value }))}
+                  placeholder="请输入手机号"
+                  autoComplete="tel"
+                  required
+                />
               </div>
-            )}
-
-            <p className="wechat-hint">请使用手机微信扫描二维码，授权后进入项目场景</p>
-            {wechatError && <p className="error-msg">{wechatError}</p>}
-
-            <div className={`wechat-actions${showMockScan ? '' : ' is-single'}`}>
-              <button type="button" onClick={createWechatSession}>刷新二维码</button>
-              {showMockScan && (
-                <button type="button" onClick={simulateWechatScan}>模拟扫码</button>
-              )}
             </div>
-          </div>
+            <div className="field sms-code-field">
+              <label htmlFor="visitor-sms-code">短信验证码</label>
+              <div className="input-wrap">
+                <input
+                  id="visitor-sms-code"
+                  type="text"
+                  inputMode="numeric"
+                  value={smsForm.code}
+                  onChange={e => setSmsForm(form => ({ ...form, code: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                  placeholder="请输入 6 位验证码"
+                  autoComplete="one-time-code"
+                  required
+                />
+                <button type="button" className="sms-send-btn" onClick={sendSmsCode} disabled={smsSending || !smsForm.phone.trim()}>
+                  {smsSending ? '发送中' : smsSent ? '重新发送' : '获取验证码'}
+                </button>
+              </div>
+            </div>
+            {smsError && <p className="error-msg">{smsError}</p>}
+            <button type="submit" className="btn-neu" disabled={smsVerifying || !smsSent}>
+              {smsVerifying ? <span className="spinner" /> : '验证并进入'}
+            </button>
+          </form>
         ) : (
           <form onSubmit={handleSubmit} autoComplete="off">
             {/* 用户名 */}
@@ -321,7 +283,7 @@ const Overlay = styled.div`
     aspect-ratio: 16 / 9;
     min-height: 100%;
     min-width: calc(100vh * 16 / 9);
-    background-image: url('/media/10.jpg');
+    background-image: url('${DESKTOP_BG}');
     background-repeat: no-repeat;
     background-size: 100% 100%;
     background-position: center;
@@ -367,7 +329,7 @@ const Overlay = styled.div`
 
   @media (max-width: 768px) {
     .bg-tile {
-      background-image: url('/media/11.jpg');
+      background-image: url('${MOBILE_BG}');
       width: 100%;
       height: 100%;
       min-width: 100%;
@@ -391,7 +353,7 @@ const Overlay = styled.div`
     min-width: 100%;
     min-height: 100%;
     aspect-ratio: auto;
-    background-image: url('/media/11.jpg') !important;
+    background-image: url('${MOBILE_BG}') !important;
     background-size: cover !important;
     background-position: center !important;
   }
@@ -481,124 +443,6 @@ const Card = styled.div`
       0 6px 16px rgba(0, 0, 0, 0.2);
   }
 
-  .wechat-login-panel {
-    display: grid;
-    gap: 14px;
-  }
-
-  .wechat-login-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    color: rgba(255, 255, 255, 0.84);
-  }
-
-  .wechat-login-head strong {
-    font-size: 16px;
-    letter-spacing: 0.05em;
-  }
-
-  .wechat-login-head span {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.52);
-  }
-
-  .wechat-qr,
-  .wechat-qr-image,
-  .wechat-unconfigured {
-    width: 206px;
-    height: 206px;
-    margin: 0 auto;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.38);
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.75),
-      0 12px 34px rgba(0,0,0,0.28);
-  }
-
-  .wechat-qr {
-    display: grid;
-    grid-template-columns: repeat(11, 1fr);
-    gap: 4px;
-    padding: 16px;
-  }
-
-  .wechat-qr span {
-    border-radius: 2px;
-    background: #eaf0f4;
-  }
-
-  .wechat-qr span.is-dark {
-    background: #172535;
-  }
-
-  .wechat-qr-image {
-    object-fit: contain;
-    padding: 10px;
-  }
-
-  .wechat-unconfigured {
-    display: grid;
-    place-items: center;
-    gap: 8px;
-    padding: 18px;
-    text-align: center;
-    box-sizing: border-box;
-  }
-
-  .wechat-unconfigured strong {
-    color: #1f2f3d;
-    font-size: 15px;
-  }
-
-  .wechat-unconfigured span {
-    color: #637789;
-    font-size: 12px;
-    line-height: 1.45;
-  }
-
-  .wechat-hint {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.56);
-    font-size: 12px;
-    text-align: center;
-    letter-spacing: 0.03em;
-  }
-
-  .wechat-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .wechat-actions.is-single {
-    grid-template-columns: 1fr;
-  }
-
-  .wechat-actions button {
-    height: 40px;
-    border-radius: 13px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(204, 208, 212, 0.84);
-    color: rgba(40,40,40,0.78);
-    cursor: pointer;
-    pointer-events: auto;
-    font-family: inherit;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    box-shadow:
-      inset 0 -2px 4px rgba(0,0,0,0.18),
-      inset 0 2px 4px rgba(255,255,255,0.5),
-      0 4px 12px rgba(0,0,0,0.2);
-  }
-
-  .wechat-actions button:last-child:not(:first-child) {
-    background: rgba(38, 132, 86, 0.9);
-    color: #fff;
-  }
-
   /* ── 输入组 ── */
   .field {
     margin-bottom: 20px;
@@ -615,6 +459,7 @@ const Card = styled.div`
   }
 
   .input-wrap {
+    position: relative;
     border-radius: 14px;
     /* 凹陷质感 */
     background: rgba(160, 170, 180, 0.18);
@@ -648,6 +493,36 @@ const Card = styled.div`
     &::placeholder {
       color: rgba(255, 255, 255, 0.3);
     }
+  }
+
+  .sms-code-field .input-wrap input {
+    padding-right: 116px;
+  }
+
+  .sms-send-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 11px;
+    background: rgba(204, 208, 212, 0.88);
+    color: rgba(40,40,40,0.82);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    box-shadow:
+      inset 0 -2px 4px rgba(0,0,0,0.16),
+      inset 0 2px 4px rgba(255,255,255,0.45);
+  }
+
+  .sms-send-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
   }
 
   /* ── 错误提示 ── */

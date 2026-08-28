@@ -6,9 +6,25 @@
  */
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
+import { XR, useXR } from '@react-three/xr';
 import SceneContent from './SceneContent';
+import ARSceneContent from './ARSceneContent';
 import Effects from './Effects';
 import useStore from '../store/useStore';
+import { productXRStore } from '../xr/productXRStore';
+
+function SceneModeContent() {
+  const xrMode = useXR((state) => state.mode);
+  if (xrMode === 'immersive-ar') {
+    return <ARSceneContent />;
+  }
+  return (
+    <>
+      <SceneContent />
+      <Effects />
+    </>
+  );
+}
 
 export default function Scene({ style, rendererLabel = 'webgl', rendererMessage = '' }) {
   return (
@@ -23,6 +39,7 @@ export default function Scene({ style, rendererLabel = 'webgl', rendererMessage 
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.0,
           outputColorSpace: THREE.SRGBColorSpace,
+          xrCompatible: true,
         }}
         style={{ width: '100%', height: '100%' }}
         onCreated={({ gl, scene }) => {
@@ -38,8 +55,9 @@ export default function Scene({ style, rendererLabel = 'webgl', rendererMessage 
           useStore.getState().clearSelection();
         }}
       >
-        <SceneContent />
-        <Effects />
+        <XR store={productXRStore}>
+          <SceneModeContent />
+        </XR>
       </Canvas>
     </div>
   );

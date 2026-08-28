@@ -11,6 +11,8 @@
 import { useEffect, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { S8SExtension } from '../utils/S8SExtension';
 import { trackModelError, trackPerformance } from '../utils/telemetry';
 
@@ -24,6 +26,11 @@ function createKTX2Loader(renderer) {
   return new KTX2Loader()
     .setTranscoderPath(transcoderPath)
     .detectSupport(renderer);
+}
+
+function createDRACOLoader() {
+  const decoderPath = new URL('./draco/', window.location.href).href;
+  return new DRACOLoader().setDecoderPath(decoderPath);
 }
 
 /**
@@ -52,6 +59,10 @@ export function useModel(url, options = {}) {
       const ktx2 = createKTX2Loader(renderer);
       loader.setKTX2Loader(ktx2);
     }
+
+    const draco = createDRACOLoader();
+    loader.setDRACOLoader(draco);
+    loader.setMeshoptDecoder(MeshoptDecoder);
 
     console.log('[useModel] Loading:', url);
     window.dispatchEvent(new CustomEvent('viewer-model-phase', {
@@ -120,6 +131,7 @@ export function useModel(url, options = {}) {
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
+      draco.dispose();
     };
   }, [url, renderer, onProgress]);
 

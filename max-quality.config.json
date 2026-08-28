@@ -1,0 +1,7 @@
+{
+  "projectId": "12345",
+  "sourceGltf": "media/12345-draco.gltf",
+  "expectedFrameRate": 30,
+  "expectedAnimationRange": [0, 400],
+  "durationToleranceSeconds": 0.05
+}

@@ -1,0 +1,20 @@
+{
+  "projectId": "12345",
+  "distDir": "dist",
+  "gltfFiles": ["media/12345-draco.gltf"],
+  "maxDistMB": 182,
+  "maxJavaScriptMB": 2.1,
+  "maxGltfBinMB": 136,
+  "textureWarnPixels": 512,
+  "textureFailPixels": 4096,
+  "maxVideoMB": 100,
+  "runtimeBaseline": {
+    "drawCalls": null,
+    "triangles": null,
+    "geometries": null,
+    "textures": null,
+    "growthPercent": 15,
+    "sceneReadyWarnSeconds": 20,
+    "sceneReadyFailSeconds": 45
+  }
+}

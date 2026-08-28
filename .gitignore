@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist_prev/
+dist_temp/
 .env
 .trash/
 test-results/
@@ -7,6 +9,19 @@ test-results/
 *.bak
 *.bak2
 *.log
+*.zip
+*.7z
+*.rar
+*.psd
+*.blend
+*.fbx
+*.obj
+*.ma
+*.mb
+*.key
+*.pem
+*.crt
+*.local
 *.colorfix
 *副本*
 vite-*.log
@@ -16,8 +31,13 @@ environment.hdr
 assets/
 _archive/
 backups/
+_recycle/
+release-electron/
+.understand-anything/intermediate/
+.understand-anything/diff-overlay.json
+.understand-anything/tmp/
+media/12345-ar.previous.usdz
 
-# 12345 只保留 Viewer；后台/Electron/Supabase 在 F:\houtai 推进。
+# 12345 只保留 Viewer；后台/Supabase 在 F:\houtai 推进。
 src/saas/
-electron/
 supabase/

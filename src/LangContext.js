@@ -102,7 +102,7 @@ export const T = {
     view: 'VIEW',
     solo: 'SOLO',
     orbit: 'ORBIT',
-    subBrand: 'SMART DESK',
+    subBrand: 'HEIGHT-ADJ DESK',
     viewBackground: 'BG',
     video: 'VIDEO',
     cartTitle: 'Cart',

@@ -1,0 +1,3382 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "29e759625b17d40b411bd98d9765ad38a45bdc72",
+  "generatedAt": "2026-06-22T05:00:31.559Z",
+  "files": {
+    ".env.example": {
+      "filePath": ".env.example",
+      "contentHash": "c05597a52995882da9e490839c4493e2d60be06c95b95afa727d3ad54b4783d6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": true
+    },
+    ".gitattributes": {
+      "filePath": ".gitattributes",
+      "contentHash": "cffa78e2fcfb3d7d46e296805e3289dc34c273921d1b03890432455654029a9a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 7,
+      "hasStructuralAnalysis": false
+    },
+    ".understand-anything/.understandignore": {
+      "filePath": ".understand-anything/.understandignore",
+      "contentHash": "2631fb7e9568f43f94577e88ea7f1d856a0403d068d27e804c8446631e8cf74a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 70,
+      "hasStructuralAnalysis": false
+    },
+    "api/get-scene.js": {
+      "filePath": "api/get-scene.js",
+      "contentHash": "35f454b83628206f3970b5d7a029281ef78bb258722e05afc0ef78a86f5b0063",
+      "functions": [
+        {
+          "name": "handler",
+          "params": [
+            "req",
+            "res"
+          ],
+          "exported": true,
+          "lineCount": 23
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "handler"
+      ],
+      "totalLines": 26,
+      "hasStructuralAnalysis": true
+    },
+    "api/login.js": {
+      "filePath": "api/login.js",
+      "contentHash": "b67ec2f679227f89d83b345deb2dc5c1c39f4f3de3c5b10915f9bd5973fdec4a",
+      "functions": [
+        {
+          "name": "handler",
+          "params": [
+            "req",
+            "res"
+          ],
+          "exported": true,
+          "lineCount": 22
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "handler"
+      ],
+      "totalLines": 25,
+      "hasStructuralAnalysis": true
+    },
+    "DESIGN.md": {
+      "filePath": "DESIGN.md",
+      "contentHash": "767b525af941f59b2e8d15e328cfae0d3fe0f6fb26e99d77ff3c9c599e88ecff",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 507,
+      "hasStructuralAnalysis": true
+    },
+    "eslint.config.js": {
+      "filePath": "eslint.config.js",
+      "contentHash": "57559c3299ff42dffe7eec2ae1a0056f24b41878f9074eda80a59409b596ce15",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@eslint/js",
+          "specifiers": [
+            "js"
+          ]
+        },
+        {
+          "source": "globals",
+          "specifiers": [
+            "globals"
+          ]
+        },
+        {
+          "source": "eslint-plugin-react-hooks",
+          "specifiers": [
+            "reactHooks"
+          ]
+        },
+        {
+          "source": "eslint-plugin-react-refresh",
+          "specifiers": [
+            "reactRefresh"
+          ]
+        },
+        {
+          "source": "eslint/config",
+          "specifiers": [
+            "defineConfig",
+            "globalIgnores"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 49,
+      "hasStructuralAnalysis": true
+    },
+    "index.dev.html": {
+      "filePath": "index.dev.html",
+      "contentHash": "c1be2861184a4e71f00292b7569026a050d7246ceac46b8c03238673196777a6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 14,
+      "hasStructuralAnalysis": false
+    },
+    "index.html": {
+      "filePath": "index.html",
+      "contentHash": "84a73fda990cce5dbfde15099bc561c3c1c3dcc192a2ca6f3dea1823a02ba99c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 14,
+      "hasStructuralAnalysis": false
+    },
+    "media/12345-verge3d-20260620.gltf": {
+      "filePath": "media/12345-verge3d-20260620.gltf",
+      "contentHash": "48c2cac07c9397965dee4a7301724106144c10c2ab3b22fb3c44f2656443f84e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": false
+    },
+    "media/12345.gltf": {
+      "filePath": "media/12345.gltf",
+      "contentHash": "920360e8d5724090563f2a463b7dee76096d1e5e49f22e05d5eac4c3e241356a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": false
+    },
+    "package.json": {
+      "filePath": "package.json",
+      "contentHash": "df8afdfe7bcd44869e88e7027ab50b5d59861e7ff0bc27ec3e01ef817df55939",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 51,
+      "hasStructuralAnalysis": true
+    },
+    "postcss.config.js": {
+      "filePath": "postcss.config.js",
+      "contentHash": "2be44627595905b5069208e7fd7d931026f8b65f31ef5a06132ed3b6e927149e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 6,
+      "hasStructuralAnalysis": true
+    },
+    "public/basis_transcoder/basis_transcoder.js": {
+      "filePath": "public/basis_transcoder/basis_transcoder.js",
+      "contentHash": "48a0ef319a28bf0224ee88ded34f74eaf97c175bba9eb18b47fb9720510ad6c4",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "public/basis_transcoder/basis_transcoder.wasm": {
+      "filePath": "public/basis_transcoder/basis_transcoder.wasm",
+      "contentHash": "913e5991207778476cefc23cf7bbb927228bda0f52bf9016248b5e7092a5bd21",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 4989,
+      "hasStructuralAnalysis": false
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "c67c8a8cfeba8faac3c591950d44ca04bd478441866ab386f08bc8812a341834",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 105,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/copy-build-assets.cjs": {
+      "filePath": "scripts/copy-build-assets.cjs",
+      "contentHash": "1a0022294ca5c39fd332bf0c29c8ccc862920f0d4e23a517eeab38aaf1cec275",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 15,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/copy-vercel-assets.cjs": {
+      "filePath": "scripts/copy-vercel-assets.cjs",
+      "contentHash": "a4221d9197ee3811696cdabb52f01f9d212677ddbbb9d14a5576c8a265debc7b",
+      "functions": [
+        {
+          "name": "copyRecursive",
+          "params": [
+            "src",
+            "dst"
+          ],
+          "exported": false,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 24,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/inspect-gltf.cjs": {
+      "filePath": "scripts/inspect-gltf.cjs",
+      "contentHash": "094a9795b2fb245d1f42bee395fe7e44fab1d94ed86e82edf1da773ddf659468",
+      "functions": [
+        {
+          "name": "readJson",
+          "params": [
+            "filePath"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "countArray",
+          "params": [
+            "json",
+            "key"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "collectExtensions",
+          "params": [
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "collectExternalResources",
+          "params": [
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 32
+        },
+        {
+          "name": "countExtensionUsage",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 121,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/start-debug-chrome.ps1": {
+      "filePath": "scripts/start-debug-chrome.ps1",
+      "contentHash": "98360a628110e699828390cc5bdde93d3310c84325bcc61d01e4f70c38d99ba4",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 58,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/verify-chrome-cdp.ps1": {
+      "filePath": "scripts/verify-chrome-cdp.ps1",
+      "contentHash": "be2d68eb558b3f32ae8bd47ee45ca5b174ecbbf6b341f7ee9d0e3df32c80a448",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 238,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/viewer-events.sql": {
+      "filePath": "scripts/viewer-events.sql",
+      "contentHash": "5fc716f616512738f413c334866c1d56c12a1960b4f8a7feab54969fd4eb8e6e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 53,
+      "hasStructuralAnalysis": true
+    },
+    "src/App.css": {
+      "filePath": "src/App.css",
+      "contentHash": "8987bac16fee19ccf3b22097653267407f20fa3c535a7621b758d4160d5c1357",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2184,
+      "hasStructuralAnalysis": false
+    },
+    "src/App.jsx": {
+      "filePath": "src/App.jsx",
+      "contentHash": "6d61edeb27aa6b9b625b2d92ab9e6125fffcaa6f7ab73eb78ac0734b7356ddff",
+      "functions": [
+        {
+          "name": "getConfiguredOrigins",
+          "params": [
+            "envValue"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "isAllowedMessageOrigin",
+          "params": [
+            "origin"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "getParentTargetOrigin",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "postViewerEvent",
+          "params": [
+            "type",
+            "payload"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "getProjectConfigId",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "getProjectConfigReadUrl",
+          "params": [],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "normalizeRemoteProjectConfig",
+          "params": [
+            "data"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "loadRemoteProjectConfig",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "splitAnnotationText",
+          "params": [
+            "text"
+          ],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "applyProjectAnnotationsToFeatureStyles",
+          "params": [
+            "annotations"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "BackendMovedNotice",
+          "params": [],
+          "exported": false,
+          "lineCount": 44
+        },
+        {
+          "name": "applyUIScale",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "isDynamicBackgroundMode",
+          "params": [
+            "mode"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "ConfiguratorApp",
+          "params": [],
+          "exported": false,
+          "lineCount": 439
+        },
+        {
+          "name": "App",
+          "params": [],
+          "exported": true,
+          "lineCount": 20
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "lazy",
+            "Suspense",
+            "useEffect",
+            "useRef",
+            "useState"
+          ]
+        },
+        {
+          "source": "./App.css",
+          "specifiers": []
+        },
+        {
+          "source": "./components/Scene",
+          "specifiers": [
+            "Scene"
+          ]
+        },
+        {
+          "source": "./components/SceneWebGPU",
+          "specifiers": [
+            "SceneWebGPU"
+          ]
+        },
+        {
+          "source": "./components/DynamicBackground",
+          "specifiers": [
+            "DynamicBackground"
+          ]
+        },
+        {
+          "source": "./components/Header",
+          "specifiers": [
+            "Header"
+          ]
+        },
+        {
+          "source": "./components/ControlBar",
+          "specifiers": [
+            "ControlBar"
+          ]
+        },
+        {
+          "source": "./components/LoadingScreen",
+          "specifiers": [
+            "LoadingScreen"
+          ]
+        },
+        {
+          "source": "./components/LoginScreen",
+          "specifiers": [
+            "LoginScreen"
+          ]
+        },
+        {
+          "source": "./components/DimensionAnnotation",
+          "specifiers": [
+            "DimensionAnnotation"
+          ]
+        },
+        {
+          "source": "./components/FeatureAnnotationPin",
+          "specifiers": [
+            "FeatureAnnotationPin"
+          ]
+        },
+        {
+          "source": "./components/MobileControlDrawer",
+          "specifiers": [
+            "MobileControlDrawer"
+          ]
+        },
+        {
+          "source": "./components/ProductStudioBackground",
+          "specifiers": [
+            "ProductStudioBackground"
+          ]
+        },
+        {
+          "source": "./components/ProjectConfigBackground",
+          "specifiers": [
+            "ProjectConfigBackground"
+          ]
+        },
+        {
+          "source": "./LangContext",
+          "specifiers": [
+            "LangContext"
+          ]
+        },
+        {
+          "source": "./store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        },
+        {
+          "source": "./utils/authStorage",
+          "specifiers": [
+            "getStoredAuthToken"
+          ]
+        },
+        {
+          "source": "./utils/telemetry",
+          "specifiers": [
+            "installTelemetryListeners",
+            "trackError",
+            "trackOperation",
+            "trackPerformance"
+          ]
+        }
+      ],
+      "exports": [
+        "App"
+      ],
+      "totalLines": 676,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/BgPanel.jsx": {
+      "filePath": "src/components/BgPanel.jsx",
+      "contentHash": "d4acba329a41ec8ad565c41b63b4eec6d48340419926a7ecc1524163c5a5ad46",
+      "functions": [
+        {
+          "name": "applyToBg",
+          "params": [
+            "params"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "BgPanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 140
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useEffect",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "BgPanel"
+      ],
+      "totalLines": 177,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/CartModal.jsx": {
+      "filePath": "src/components/CartModal.jsx",
+      "contentHash": "91df70a26da02eeaa907626caee09a6aa9d8b773a0950f713556cb796b3b8cbf",
+      "functions": [
+        {
+          "name": "CartModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 181
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "useLang",
+            "T"
+          ]
+        },
+        {
+          "source": "../data/products",
+          "specifiers": [
+            "MATERIALS",
+            "ACCESSORY_INFO",
+            "BASE_PRICE"
+          ]
+        }
+      ],
+      "exports": [
+        "CartModal"
+      ],
+      "totalLines": 194,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ContactModal.jsx": {
+      "filePath": "src/components/ContactModal.jsx",
+      "contentHash": "eb5cc72ac1bbaa394b5da48a8daa3c5659da6c36302b0c9e421eaab702191a69",
+      "functions": [
+        {
+          "name": "resolveAssetUrl",
+          "params": [
+            "asset"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "ContactModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 181
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "useLang",
+            "T"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "ContactModal"
+      ],
+      "totalLines": 204,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ControlBar.jsx": {
+      "filePath": "src/components/ControlBar.jsx",
+      "contentHash": "65f1ab602a7826b0aa87335cc3190b9748f17beddf4ef91ed047f0f8e37d9071",
+      "functions": [
+        {
+          "name": "NeuBtn",
+          "params": [],
+          "exported": false,
+          "lineCount": 24
+        },
+        {
+          "name": "ControlBar",
+          "params": [],
+          "exported": true,
+          "lineCount": 966
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useCallback",
+            "useRef",
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "./GalleryModal",
+          "specifiers": [
+            "GalleryModal"
+          ]
+        },
+        {
+          "source": "./VideoModal",
+          "specifiers": [
+            "VideoModal"
+          ]
+        },
+        {
+          "source": "./CartModal",
+          "specifiers": [
+            "CartModal"
+          ]
+        },
+        {
+          "source": "./ContactModal",
+          "specifiers": [
+            "ContactModal"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "useLang",
+            "T"
+          ]
+        },
+        {
+          "source": "../data/products",
+          "specifiers": [
+            "MATERIALS"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        },
+        {
+          "source": "../utils/telemetry",
+          "specifiers": [
+            "trackOperation"
+          ]
+        }
+      ],
+      "exports": [
+        "ControlBar"
+      ],
+      "totalLines": 1120,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/DimensionAnnotation.jsx": {
+      "filePath": "src/components/DimensionAnnotation.jsx",
+      "contentHash": "338ea24dc180a0a15877c60b89e928d605a83f99923b6aeb9403cb52aea08f99",
+      "functions": [
+        {
+          "name": "isTablePart",
+          "params": [
+            "name"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "setDimensionGroupOpacity",
+          "params": [
+            "group",
+            "opacity"
+          ],
+          "exported": false,
+          "lineCount": 18
+        },
+        {
+          "name": "DimensionAnnotation",
+          "params": [],
+          "exported": true,
+          "lineCount": 351
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "DimensionAnnotation"
+      ],
+      "totalLines": 408,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/DynamicBackground.jsx": {
+      "filePath": "src/components/DynamicBackground.jsx",
+      "contentHash": "25c9e51ed7a7d322691fa07276122da24c7fb38b08eea706f8999e277b13a37a",
+      "functions": [
+        {
+          "name": "fitCanvas",
+          "params": [
+            "canvas"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "drawSoftField",
+          "params": [
+            "ctx",
+            "width",
+            "height",
+            "time"
+          ],
+          "exported": false,
+          "lineCount": 56
+        },
+        {
+          "name": "DynamicBackground",
+          "params": [],
+          "exported": true,
+          "lineCount": 21
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef"
+          ]
+        }
+      ],
+      "exports": [
+        "DynamicBackground"
+      ],
+      "totalLines": 94,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/Effects.jsx": {
+      "filePath": "src/components/Effects.jsx",
+      "contentHash": "d053c69efd4b8249c5a0bed2ee93afcfcfb04bf3f4a688ca4fb39fb93ba3e596",
+      "functions": [
+        {
+          "name": "thicknessToResScale",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "thicknessToStrength",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "glowToKernel",
+          "params": [
+            "g"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "periodToSpeed",
+          "params": [
+            "p"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "Effects",
+          "params": [],
+          "exported": true,
+          "lineCount": 43
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useMemo"
+          ]
+        },
+        {
+          "source": "@react-three/fiber",
+          "specifiers": [
+            "useThree"
+          ]
+        },
+        {
+          "source": "@react-three/postprocessing",
+          "specifiers": [
+            "EffectComposer",
+            "Outline",
+            "Bloom"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        },
+        {
+          "source": "postprocessing",
+          "specifiers": [
+            "BlendFunction",
+            "KernelSize"
+          ]
+        }
+      ],
+      "exports": [
+        "Effects"
+      ],
+      "totalLines": 95,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/FeatureAnnotation.jsx": {
+      "filePath": "src/components/FeatureAnnotation.jsx",
+      "contentHash": "1568cdc2cf7711c2be7f56d5c8a85999bada4779f7d733443d511b19281d28c3",
+      "functions": [
+        {
+          "name": "FeatureAnnotation",
+          "params": [],
+          "exported": true,
+          "lineCount": 255
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef"
+          ]
+        }
+      ],
+      "exports": [
+        "FeatureAnnotation"
+      ],
+      "totalLines": 339,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/FeatureAnnotationGizmo.jsx": {
+      "filePath": "src/components/FeatureAnnotationGizmo.jsx",
+      "contentHash": "16a98eecddb6c3ca9959d59019694063cb6fd061a9891eae0c4b5afb210460f9",
+      "functions": [
+        {
+          "name": "FeatureAnnotationGizmo",
+          "params": [],
+          "exported": true,
+          "lineCount": 325
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useCallback",
+            "useEffect"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "FeatureAnnotationGizmo"
+      ],
+      "totalLines": 351,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/FeatureAnnotationPin.jsx": {
+      "filePath": "src/components/FeatureAnnotationPin.jsx",
+      "contentHash": "1aa4d9c1995393b6bba524fe5d71a31e45f5ac0963c60d2e795ffe5b0e34b76c",
+      "functions": [
+        {
+          "name": "getConfiguredLines",
+          "params": [
+            "annotation",
+            "fallbackLines"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "FeatureAnnotationPin",
+          "params": [],
+          "exported": true,
+          "lineCount": 290
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect",
+            "useRef",
+            "useContext"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Tag"
+          ]
+        },
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "LangContext"
+          ]
+        }
+      ],
+      "exports": [
+        "FeatureAnnotationPin"
+      ],
+      "totalLines": 338,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/FeaturePanel.jsx": {
+      "filePath": "src/components/FeaturePanel.jsx",
+      "contentHash": "22b651fb3f268182165badb4ed5969fba157bdc0e3ab385427e7ca678c432cda",
+      "functions": [
+        {
+          "name": "FeaturePanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 251
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useCallback"
+          ]
+        }
+      ],
+      "exports": [
+        "FeaturePanel"
+      ],
+      "totalLines": 292,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/FullscreenToggle.jsx": {
+      "filePath": "src/components/FullscreenToggle.jsx",
+      "contentHash": "89ab90cf38361a3441b90eb9df8b49d6872c846264cac5c45cb798097640c8be",
+      "functions": [
+        {
+          "name": "isMobileDevice",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "FullscreenToggle",
+          "params": [],
+          "exported": true,
+          "lineCount": 85
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled"
+          ]
+        }
+      ],
+      "exports": [
+        "FullscreenToggle"
+      ],
+      "totalLines": 194,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/GalleryModal.jsx": {
+      "filePath": "src/components/GalleryModal.jsx",
+      "contentHash": "44fc009669ce68fb561db365553d27c61b4e58187516f5b58d5ab2d8e9668045",
+      "functions": [
+        {
+          "name": "CometCard",
+          "params": [],
+          "exported": false,
+          "lineCount": 54
+        },
+        {
+          "name": "resolveAssetUrl",
+          "params": [
+            "asset"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "buildGalleryItems",
+          "params": [
+            "projectConfig"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "preloadImages",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "GalleryModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 261
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useEffect",
+            "useMemo",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "useLang",
+            "T"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "GalleryModal"
+      ],
+      "totalLines": 391,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/Header.jsx": {
+      "filePath": "src/components/Header.jsx",
+      "contentHash": "d8a2d3bda5c5d9174f433e211764937efd5fe10dc5f9ecf5e06584f046344141",
+      "functions": [
+        {
+          "name": "NavBtn",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "Header",
+          "params": [],
+          "exported": true,
+          "lineCount": 119
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled"
+          ]
+        },
+        {
+          "source": "./LangToggle",
+          "specifiers": [
+            "LangToggle"
+          ]
+        },
+        {
+          "source": "./LangSwitch",
+          "specifiers": [
+            "LangSwitch"
+          ]
+        },
+        {
+          "source": "./FullscreenToggle",
+          "specifiers": [
+            "FullscreenToggle"
+          ]
+        },
+        {
+          "source": "./MusicToggle",
+          "specifiers": [
+            "MusicToggle"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "useLang",
+            "T"
+          ]
+        }
+      ],
+      "exports": [
+        "Header"
+      ],
+      "totalLines": 341,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/HeaderPanel.jsx": {
+      "filePath": "src/components/HeaderPanel.jsx",
+      "contentHash": "d9e58d536b3ebaf688903b89bd93b500d1a7d0342739f63b3a58da9f2894ec67",
+      "functions": [
+        {
+          "name": "letterKey",
+          "params": [
+            "ch",
+            "i"
+          ],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "HeaderPanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 154
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "T"
+          ]
+        }
+      ],
+      "exports": [
+        "HeaderPanel"
+      ],
+      "totalLines": 190,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/HeightTrack.jsx": {
+      "filePath": "src/components/HeightTrack.jsx",
+      "contentHash": "4ccd81508c288e9e743cbd2fcb288e91b8478ee4c0c98ad2d887ae894b82e5b4",
+      "functions": [
+        {
+          "name": "HeightTrack",
+          "params": [],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "HeightTrack"
+      ],
+      "totalLines": 11,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/LangSwitch.jsx": {
+      "filePath": "src/components/LangSwitch.jsx",
+      "contentHash": "633f59e805b737727a3e21df62e771f5cb2c5c62563b04b466e8cbe76a33e7c2",
+      "functions": [
+        {
+          "name": "LangSwitch",
+          "params": [],
+          "exported": true,
+          "lineCount": 20
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled"
+          ]
+        }
+      ],
+      "exports": [
+        "LangSwitch"
+      ],
+      "totalLines": 118,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/LangToggle.jsx": {
+      "filePath": "src/components/LangToggle.jsx",
+      "contentHash": "3438fb883849bd66ecb6a99c9c26ad0679b08ce7b63849f40eb409ed8d84cd91",
+      "functions": [
+        {
+          "name": "LangToggle",
+          "params": [],
+          "exported": true,
+          "lineCount": 44
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled"
+          ]
+        }
+      ],
+      "exports": [
+        "LangToggle"
+      ],
+      "totalLines": 139,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/LedPanel.jsx": {
+      "filePath": "src/components/LedPanel.jsx",
+      "contentHash": "3f92ba8e34b8a621782f10421cb5340eaf547d2a1dc28db28f73f28a5637cf88",
+      "functions": [
+        {
+          "name": "LedPanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 310
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "LedPanel"
+      ],
+      "totalLines": 336,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/LoadingScreen.jsx": {
+      "filePath": "src/components/LoadingScreen.jsx",
+      "contentHash": "9bf6eba86e31fda68f0bc7b713cc99d8e978cd198c6fcf1f009e2cd33f3cfc01",
+      "functions": [
+        {
+          "name": "LoadingScreen",
+          "params": [],
+          "exported": true,
+          "lineCount": 43
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled"
+          ]
+        }
+      ],
+      "exports": [
+        "LoadingScreen"
+      ],
+      "totalLines": 289,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/LoginScreen.jsx": {
+      "filePath": "src/components/LoginScreen.jsx",
+      "contentHash": "29c35657b0659c7dda4bd124d824e6e3fc64db3d8cca6224fc2c091c9560e2a7",
+      "functions": [
+        {
+          "name": "makeLoginToken",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "MockQrPattern",
+          "params": [],
+          "exported": false,
+          "lineCount": 23
+        },
+        {
+          "name": "LoginScreen",
+          "params": [],
+          "exported": true,
+          "lineCount": 259
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useCallback",
+            "useEffect",
+            "useMemo",
+            "useRef",
+            "useState"
+          ]
+        },
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled",
+            "keyframes"
+          ]
+        },
+        {
+          "source": "../utils/authStorage",
+          "specifiers": [
+            "storePersistentAuthToken"
+          ]
+        },
+        {
+          "source": "../utils/telemetry",
+          "specifiers": [
+            "trackError",
+            "trackOperation"
+          ]
+        }
+      ],
+      "exports": [
+        "LoginScreen"
+      ],
+      "totalLines": 721,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/MaterialPanel.jsx": {
+      "filePath": "src/components/MaterialPanel.jsx",
+      "contentHash": "eb1b9cfd1889ce92ae456aa10a176d3cd01bef89a7aad983886916fa8ce64d94",
+      "functions": [
+        {
+          "name": "collectMaterials",
+          "params": [
+            "scene"
+          ],
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "groupByName",
+          "params": [
+            "entries"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "MaterialPanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 485
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useEffect",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        },
+        {
+          "source": "../data/materialDefaults",
+          "specifiers": [
+            "DEFAULTS"
+          ]
+        }
+      ],
+      "exports": [
+        "MaterialPanel",
+        "DEFAULTS"
+      ],
+      "totalLines": 566,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/MobileControlDrawer.jsx": {
+      "filePath": "src/components/MobileControlDrawer.jsx",
+      "contentHash": "64872f00d1579673a3f2b40893e0cb9da2bd861e01cb628e76ffb1984153bfe0",
+      "functions": [
+        {
+          "name": "MobileControlDrawer",
+          "params": [],
+          "exported": true,
+          "lineCount": 187
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled"
+          ]
+        },
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "useLang",
+            "T"
+          ]
+        },
+        {
+          "source": "../data/products",
+          "specifiers": [
+            "MATERIALS"
+          ]
+        },
+        {
+          "source": "./GalleryModal",
+          "specifiers": [
+            "GalleryModal"
+          ]
+        },
+        {
+          "source": "./CartModal",
+          "specifiers": [
+            "CartModal"
+          ]
+        }
+      ],
+      "exports": [
+        "MobileControlDrawer"
+      ],
+      "totalLines": 429,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/MusicToggle.jsx": {
+      "filePath": "src/components/MusicToggle.jsx",
+      "contentHash": "e9bafc266d14eece6e9a1bade011b1d734c14391055f82822ed272f74c9204ae",
+      "functions": [
+        {
+          "name": "resolveMusicSource",
+          "params": [
+            "asset"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "MusicToggle",
+          "params": [],
+          "exported": true,
+          "lineCount": 141
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef"
+          ]
+        },
+        {
+          "source": "styled-components",
+          "specifiers": [
+            "styled"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "MusicToggle"
+      ],
+      "totalLines": 247,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/OutlinePanel.jsx": {
+      "filePath": "src/components/OutlinePanel.jsx",
+      "contentHash": "3c699cce996cc7f0401cae11bb5d4df493b30bbdea5ee3a95e000c7e6b05c53a",
+      "functions": [
+        {
+          "name": "OutlinePanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 175
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useRef",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore",
+            "DEFAULT_OUTLINE"
+          ]
+        }
+      ],
+      "exports": [
+        "OutlinePanel"
+      ],
+      "totalLines": 192,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ProductStudioBackground.jsx": {
+      "filePath": "src/components/ProductStudioBackground.jsx",
+      "contentHash": "fdd713dd4ce58c86dcc90a48a037b2051b5ec33be25502cb52bed43d06832a22",
+      "functions": [
+        {
+          "name": "ProductStudioBackground",
+          "params": [],
+          "exported": true,
+          "lineCount": 33
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "ProductStudioBackground"
+      ],
+      "totalLines": 36,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ProductStudioBgPanel.jsx": {
+      "filePath": "src/components/ProductStudioBgPanel.jsx",
+      "contentHash": "e0fa698986bfd339a367532742e4a7b40198ccf895fd2c3bb046ce99fe7431b5",
+      "functions": [
+        {
+          "name": "ProductStudioBgPanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 106
+        },
+        {
+          "name": "ColorControl",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "RangeControl",
+          "params": [],
+          "exported": false,
+          "lineCount": 20
+        },
+        {
+          "name": "buttonStyle",
+          "params": [
+            "primary"
+          ],
+          "exported": false,
+          "lineCount": 16
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useCallback",
+            "useRef",
+            "useState"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore",
+            "DEFAULT_STUDIO_BG"
+          ]
+        }
+      ],
+      "exports": [
+        "ProductStudioBgPanel"
+      ],
+      "totalLines": 189,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ProjectConfigBackground.jsx": {
+      "filePath": "src/components/ProjectConfigBackground.jsx",
+      "contentHash": "b127217da057783ae48d9c04194e958d03f0a53bf50f3cd2c3ce909db24416bc",
+      "functions": [
+        {
+          "name": "resolveAssetUrl",
+          "params": [
+            "asset"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "ProjectConfigBackground",
+          "params": [],
+          "exported": true,
+          "lineCount": 50
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "ProjectConfigBackground"
+      ],
+      "totalLines": 58,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/Scene.jsx": {
+      "filePath": "src/components/Scene.jsx",
+      "contentHash": "70c3bc5266edd6faf199720565d67f5fa8301a3e56ac15317c1c179251bd3377",
+      "functions": [
+        {
+          "name": "Scene",
+          "params": [],
+          "exported": true,
+          "lineCount": 34
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "@react-three/fiber",
+          "specifiers": [
+            "Canvas"
+          ]
+        },
+        {
+          "source": "./SceneContent",
+          "specifiers": [
+            "SceneContent"
+          ]
+        },
+        {
+          "source": "./Effects",
+          "specifiers": [
+            "Effects"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "Scene"
+      ],
+      "totalLines": 47,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/SceneContent.jsx": {
+      "filePath": "src/components/SceneContent.jsx",
+      "contentHash": "18d6e67daa540cbd87d988c41cfb976ac633e801bc0caf1f9c113f48d9603707",
+      "functions": [
+        {
+          "name": "drawLed",
+          "params": [
+            "canvas",
+            "cm"
+          ],
+          "exported": false,
+          "lineCount": 58
+        },
+        {
+          "name": "applyDummyT",
+          "params": [
+            "scene",
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "getLiftClipDuration",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "SceneContent",
+          "params": [],
+          "exported": true,
+          "lineCount": 1051
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useRef",
+            "useCallback"
+          ]
+        },
+        {
+          "source": "@react-three/fiber",
+          "specifiers": [
+            "useThree",
+            "useFrame"
+          ]
+        },
+        {
+          "source": "@react-three/drei",
+          "specifiers": [
+            "OrbitControls"
+          ]
+        },
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "three/examples/jsm/loaders/HDRLoader.js",
+          "specifiers": [
+            "HDRLoader"
+          ]
+        },
+        {
+          "source": "three/examples/jsm/lights/RectAreaLightUniformsLib.js",
+          "specifiers": [
+            "RectAreaLightUniformsLib"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        },
+        {
+          "source": "../hooks/useModel",
+          "specifiers": [
+            "useModel"
+          ]
+        },
+        {
+          "source": "../data/materialDefaults",
+          "specifiers": [
+            "materialDefaults"
+          ]
+        }
+      ],
+      "exports": [
+        "SceneContent"
+      ],
+      "totalLines": 1214,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/SceneWebGPU.jsx": {
+      "filePath": "src/components/SceneWebGPU.jsx",
+      "contentHash": "f21e5ab2df4e1a63f6d643a032c8bd7fffbcd77bab3776e78c9b07901afc9688",
+      "functions": [
+        {
+          "name": "markRenderer",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "getInitialFallbackReason",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "FallbackNotice",
+          "params": [],
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "SceneWebGPU",
+          "params": [],
+          "exported": true,
+          "lineCount": 85
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useMemo",
+            "useState"
+          ]
+        },
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "@react-three/fiber",
+          "specifiers": [
+            "Canvas"
+          ]
+        },
+        {
+          "source": "./Scene",
+          "specifiers": [
+            "Scene"
+          ]
+        },
+        {
+          "source": "./SceneContent",
+          "specifiers": [
+            "SceneContent"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "SceneWebGPU"
+      ],
+      "totalLines": 140,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/Sidebar.jsx": {
+      "filePath": "src/components/Sidebar.jsx",
+      "contentHash": "369818a6b10f3e20b275e23165d5874f6c3f3128a58fdb2b0920bbcec2936ca3",
+      "functions": [
+        {
+          "name": "Sidebar",
+          "params": [],
+          "exported": true,
+          "lineCount": 179
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        }
+      ],
+      "exports": [
+        "Sidebar"
+      ],
+      "totalLines": 182,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ui/button.jsx": {
+      "filePath": "src/components/ui/button.jsx",
+      "contentHash": "89cebb09bb9d9846d4d9889c547c5820d7e1890cd20332454c57b738cc7a591b",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "* as React"
+          ]
+        },
+        {
+          "source": "@radix-ui/react-slot",
+          "specifiers": [
+            "Slot"
+          ]
+        },
+        {
+          "source": "class-variance-authority",
+          "specifiers": [
+            "cva"
+          ]
+        },
+        {
+          "source": "../../lib/utils",
+          "specifiers": [
+            "cn"
+          ]
+        }
+      ],
+      "exports": [
+        "Button",
+        "buttonVariants"
+      ],
+      "totalLines": 42,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/VideoModal.jsx": {
+      "filePath": "src/components/VideoModal.jsx",
+      "contentHash": "b65ebec4c6601a4e89b488ec7ee76b8339f77fb4a418a8ebf310616ffca497e9",
+      "functions": [
+        {
+          "name": "resolveAssetUrl",
+          "params": [
+            "asset"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "VideoModal",
+          "params": [],
+          "exported": true,
+          "lineCount": 81
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "../LangContext",
+          "specifiers": [
+            "useLang",
+            "T"
+          ]
+        },
+        {
+          "source": "../store/useStore",
+          "specifiers": [
+            "useStore"
+          ]
+        }
+      ],
+      "exports": [
+        "VideoModal"
+      ],
+      "totalLines": 90,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ViewCube.jsx": {
+      "filePath": "src/components/ViewCube.jsx",
+      "contentHash": "0c75fc129062484dea13df24ed4f5703990ccdb55dd2b7b087c35d27cfa9d3c1",
+      "functions": [
+        {
+          "name": "ViewCube",
+          "params": [],
+          "exported": false,
+          "lineCount": 26
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "React"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 31,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ViewSlider.jsx": {
+      "filePath": "src/components/ViewSlider.jsx",
+      "contentHash": "68c87f7dac3e3a6a453ede2ed2b7c53e577981190dd80aa998d7f78c59469483",
+      "functions": [
+        {
+          "name": "ViewSlider",
+          "params": [],
+          "exported": false,
+          "lineCount": 171
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "React",
+            "useState"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 177,
+      "hasStructuralAnalysis": true
+    },
+    "src/components/ViewSwitcher.jsx": {
+      "filePath": "src/components/ViewSwitcher.jsx",
+      "contentHash": "83260579b236a72c1516918959f45f14bcef0a3577cd450ba2487fa0f3a513eb",
+      "functions": [
+        {
+          "name": "ViewSwitcher",
+          "params": [],
+          "exported": true,
+          "lineCount": 26
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "ViewSwitcher"
+      ],
+      "totalLines": 27,
+      "hasStructuralAnalysis": true
+    },
+    "src/ControlPanel.jsx": {
+      "filePath": "src/ControlPanel.jsx",
+      "contentHash": "1fca3ae3e7337af193fe05876d4f8f3f7af10b755d2d8873b3bfe2a59c358b74",
+      "functions": [
+        {
+          "name": "ControlPanel",
+          "params": [],
+          "exported": true,
+          "lineCount": 38
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState",
+            "useEffect"
+          ]
+        }
+      ],
+      "exports": [
+        "ControlPanel"
+      ],
+      "totalLines": 41,
+      "hasStructuralAnalysis": true
+    },
+    "src/data/materialDefaults.js": {
+      "filePath": "src/data/materialDefaults.js",
+      "contentHash": "1db0ce410ea33270acc4a15f17e0896736459549a007a2390f087d06bd5545b4",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "MATERIAL_DEFAULTS"
+      ],
+      "totalLines": 190,
+      "hasStructuralAnalysis": true
+    },
+    "src/data/products.js": {
+      "filePath": "src/data/products.js",
+      "contentHash": "8de140e4548597cb807ba16fe135df8360660bac34010ebbe9aa82b93b3aaeea",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "MATERIALS",
+        "ACCESSORY_INFO",
+        "BASE_PRICE"
+      ],
+      "totalLines": 17,
+      "hasStructuralAnalysis": true
+    },
+    "src/hooks/useModel.js": {
+      "filePath": "src/hooks/useModel.js",
+      "contentHash": "6d3b0cfa8a5a5218db1a7627cedee86cca705dc92b13230379b990f13a4d343f",
+      "functions": [
+        {
+          "name": "createKTX2Loader",
+          "params": [
+            "renderer"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "useModel",
+          "params": [
+            "url"
+          ],
+          "exported": true,
+          "lineCount": 92
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useEffect",
+            "useState"
+          ]
+        },
+        {
+          "source": "three/examples/jsm/loaders/GLTFLoader.js",
+          "specifiers": [
+            "GLTFLoader"
+          ]
+        },
+        {
+          "source": "three/examples/jsm/loaders/KTX2Loader.js",
+          "specifiers": [
+            "KTX2Loader"
+          ]
+        },
+        {
+          "source": "../utils/S8SExtension",
+          "specifiers": [
+            "S8SExtension"
+          ]
+        },
+        {
+          "source": "../utils/telemetry",
+          "specifiers": [
+            "trackModelError",
+            "trackPerformance"
+          ]
+        }
+      ],
+      "exports": [
+        "useModel"
+      ],
+      "totalLines": 128,
+      "hasStructuralAnalysis": true
+    },
+    "src/index.css": {
+      "filePath": "src/index.css",
+      "contentHash": "e431350cb6cc54543948af02ec7dc42f7dfff6fff4532594ea79986b8627baaf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 124,
+      "hasStructuralAnalysis": false
+    },
+    "src/LangContext.js": {
+      "filePath": "src/LangContext.js",
+      "contentHash": "b332893c7c9e47b655ab25bae4c208cd749f5ce0401bca31918704fa7c45ab3a",
+      "functions": [
+        {
+          "name": "useLang",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "createContext",
+            "useContext"
+          ]
+        }
+      ],
+      "exports": [
+        "LangContext",
+        "useLang",
+        "T"
+      ],
+      "totalLines": 140,
+      "hasStructuralAnalysis": true
+    },
+    "src/layouts/ConfiguratorLayout_v2.jsx": {
+      "filePath": "src/layouts/ConfiguratorLayout_v2.jsx",
+      "contentHash": "46224cce386deaf25e90dbacee5cc505cf8e652fc99bd1bc11bcd1b3e77477fd",
+      "functions": [
+        {
+          "name": "ConfiguratorLayout",
+          "params": [],
+          "exported": true,
+          "lineCount": 297
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@ant-design/icons",
+          "specifiers": [
+            "BgColorsOutlined",
+            "ColumnHeightOutlined",
+            "ToolOutlined",
+            "ScanOutlined",
+            "ShoppingCartOutlined"
+          ]
+        }
+      ],
+      "exports": [
+        "ConfiguratorLayout"
+      ],
+      "totalLines": 311,
+      "hasStructuralAnalysis": true
+    },
+    "src/layouts/ConfiguratorLayout.jsx": {
+      "filePath": "src/layouts/ConfiguratorLayout.jsx",
+      "contentHash": "c5ada02dc923928e66c72062e8e77aafa54d07c5e6bdcf977478ddf24416be25",
+      "functions": [
+        {
+          "name": "ConfiguratorLayout",
+          "params": [],
+          "exported": true,
+          "lineCount": 297
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "useState"
+          ]
+        },
+        {
+          "source": "@ant-design/icons",
+          "specifiers": [
+            "AppstoreOutlined",
+            "ColumnHeightOutlined",
+            "GiftOutlined",
+            "ScanOutlined",
+            "ShoppingCartOutlined"
+          ]
+        }
+      ],
+      "exports": [
+        "ConfiguratorLayout"
+      ],
+      "totalLines": 311,
+      "hasStructuralAnalysis": true
+    },
+    "src/lib/utils.js": {
+      "filePath": "src/lib/utils.js",
+      "contentHash": "ba252326d87fbe9144ec41063847d1a50c161c65c8134b1c12c909d1cc2eae5a",
+      "functions": [
+        {
+          "name": "cn",
+          "params": [
+            "...inputs"
+          ],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "clsx",
+          "specifiers": [
+            "clsx"
+          ]
+        },
+        {
+          "source": "tailwind-merge",
+          "specifiers": [
+            "twMerge"
+          ]
+        }
+      ],
+      "exports": [
+        "cn"
+      ],
+      "totalLines": 7,
+      "hasStructuralAnalysis": true
+    },
+    "src/main.jsx": {
+      "filePath": "src/main.jsx",
+      "contentHash": "752637c1cc2feca25f4f57888bb35357b42c6574166e7853373d7e5888846f4e",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react-dom/client",
+          "specifiers": [
+            "createRoot"
+          ]
+        },
+        {
+          "source": "./index.css",
+          "specifiers": []
+        },
+        {
+          "source": "./App.jsx",
+          "specifiers": [
+            "App"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 6,
+      "hasStructuralAnalysis": true
+    },
+    "src/SlotLayout.jsx": {
+      "filePath": "src/SlotLayout.jsx",
+      "contentHash": "8a96dbfcc242132f81641d73c13503861703b3bc36f1c0eab960a5fd89a57abe",
+      "functions": [
+        {
+          "name": "SlotLayout",
+          "params": [],
+          "exported": true,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "SlotLayout"
+      ],
+      "totalLines": 14,
+      "hasStructuralAnalysis": true
+    },
+    "src/slots.js": {
+      "filePath": "src/slots.js",
+      "contentHash": "fcb0a376c34411c7985aea9345577a9e604710948535e423e746472b99454685",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "SLOTS",
+        "DEFAULT_LAYOUT"
+      ],
+      "totalLines": 13,
+      "hasStructuralAnalysis": true
+    },
+    "src/store/useStore.js": {
+      "filePath": "src/store/useStore.js",
+      "contentHash": "5c3a100642c9b69f084807da1b17753963a756cc05d0ff03c5e2a2cc39f0af6b",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "zustand",
+          "specifiers": [
+            "create"
+          ]
+        }
+      ],
+      "exports": [
+        "DEFAULT_OUTLINE",
+        "DEFAULT_LED",
+        "DEFAULT_BG",
+        "DEFAULT_STUDIO_BG",
+        "DEFAULT_DIM",
+        "DEFAULT_PROJECT_CONFIG"
+      ],
+      "totalLines": 182,
+      "hasStructuralAnalysis": true
+    },
+    "src/table.css": {
+      "filePath": "src/table.css",
+      "contentHash": "e9e1bb1bb057ca7952efbd6f635eb5c95f4244fd73c860d06696ff42e80352ed",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1702,
+      "hasStructuralAnalysis": false
+    },
+    "src/utils/authStorage.js": {
+      "filePath": "src/utils/authStorage.js",
+      "contentHash": "b1808e7c90ca75c83fc1649d37ad91bf7b8301eeaa884e42f56aba686c5b5631",
+      "functions": [
+        {
+          "name": "getStoredAuthToken",
+          "params": [
+            "key"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "storePersistentAuthToken",
+          "params": [
+            "key",
+            "token"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "clearStoredAuthToken",
+          "params": [
+            "key"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "getCookie",
+          "params": [
+            "key"
+          ],
+          "exported": false,
+          "lineCount": 7
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "getStoredAuthToken",
+        "storePersistentAuthToken",
+        "clearStoredAuthToken"
+      ],
+      "totalLines": 30,
+      "hasStructuralAnalysis": true
+    },
+    "src/utils/PhysicalMXShaderPatcher.js": {
+      "filePath": "src/utils/PhysicalMXShaderPatcher.js",
+      "contentHash": "9407348ae5d0e8231da83dcd1a4991c6dc1e78c6d16521dcbd719177c34be777",
+      "functions": [
+        {
+          "name": "replaceGLSLFunction",
+          "params": [
+            "source",
+            "funcName",
+            "replacement"
+          ],
+          "exported": false,
+          "lineCount": 25
+        },
+        {
+          "name": "applyMTMaxIBL",
+          "params": [
+            "material"
+          ],
+          "exported": true,
+          "lineCount": 22
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "applyMTMaxIBL"
+      ],
+      "totalLines": 124,
+      "hasStructuralAnalysis": true
+    },
+    "src/utils/S8SExtension.js": {
+      "filePath": "src/utils/S8SExtension.js",
+      "contentHash": "e9e829e4013e7910f51d29e4bc5960dc33c03b77a17b4a4f052a7a6cd0c024e6",
+      "functions": [
+        {
+          "name": "collectAllS8STextureIndices",
+          "params": [
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 36
+        },
+        {
+          "name": "applyTextureParams",
+          "params": [
+            "texture",
+            "texDef",
+            "idx",
+            "ext"
+          ],
+          "exported": false,
+          "lineCount": 19
+        },
+        {
+          "name": "applyNodeProps",
+          "params": [
+            "_scene"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "applyNodePropsToScene",
+          "params": [
+            "scene",
+            "nodePropsByName"
+          ],
+          "exported": false,
+          "lineCount": 25
+        },
+        {
+          "name": "applyAnimationSettings",
+          "params": [
+            "animations",
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 26
+        },
+        {
+          "name": "collectNodeProps",
+          "params": [
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "collectCameraData",
+          "params": [
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 34
+        },
+        {
+          "name": "collectLightsData",
+          "params": [
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 32
+        },
+        {
+          "name": "collectSceneData",
+          "params": [
+            "json"
+          ],
+          "exported": false,
+          "lineCount": 17
+        },
+        {
+          "name": "getS8SCameraData",
+          "params": [
+            "gltfResult"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "getS8SLightsData",
+          "params": [
+            "gltfResult"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "getS8SSceneData",
+          "params": [
+            "gltfResult"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "getS8SData",
+          "params": [
+            "gltfResult"
+          ],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "S8SExtension",
+          "methods": [
+            "constructor",
+            "afterRoot"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 181
+        }
+      ],
+      "imports": [
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "./S8SMaterialLoader",
+          "specifiers": [
+            "createMaterialsFromS8S"
+          ]
+        }
+      ],
+      "exports": [
+        "S8SExtension",
+        "getS8SCameraData",
+        "getS8SLightsData",
+        "getS8SSceneData",
+        "getS8SData"
+      ],
+      "totalLines": 511,
+      "hasStructuralAnalysis": true
+    },
+    "src/utils/S8SMaterialLoader.js": {
+      "filePath": "src/utils/S8SMaterialLoader.js",
+      "contentHash": "fe4ca54fea38ab0f3f1837fde92036268183e1cc5935e33d13e9f56695ec61c1",
+      "functions": [
+        {
+          "name": "findBitmapEdge",
+          "params": [
+            "ng",
+            "physIdx",
+            "slots"
+          ],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "readScalar",
+          "params": [
+            "inputs",
+            "slot"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "readColorRgba",
+          "params": [
+            "inputs",
+            "slot"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "linearToSRGB",
+          "params": [
+            "c"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "rgbaToHex",
+          "params": [
+            "rgba"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "applyBitmapOutputTransform",
+          "params": [
+            "texture",
+            "outputProps",
+            "colorSpace"
+          ],
+          "exported": false,
+          "lineCount": 37
+        },
+        {
+          "name": "hasBitmapOutputTransform",
+          "params": [
+            "outputProps"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "createMaterialsFromS8S",
+          "params": [
+            "gltfJson",
+            "textureResolver"
+          ],
+          "exported": true,
+          "lineCount": 333
+        },
+        {
+          "name": "getS8SInput",
+          "params": [
+            "mat",
+            "inputIndex"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "setS8SInput",
+          "params": [
+            "mat",
+            "inputIndex",
+            "value"
+          ],
+          "exported": true,
+          "lineCount": 15
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "./v3d-loader",
+          "specifiers": [
+            "NodeGraphResolver"
+          ]
+        },
+        {
+          "source": "./PhysicalMXShaderPatcher",
+          "specifiers": [
+            "applyMTMaxIBL"
+          ]
+        }
+      ],
+      "exports": [
+        "createMaterialsFromS8S",
+        "getS8SInput",
+        "setS8SInput"
+      ],
+      "totalLines": 562,
+      "hasStructuralAnalysis": true
+    },
+    "src/utils/telemetry.js": {
+      "filePath": "src/utils/telemetry.js",
+      "contentHash": "7e870790bfcc69c9622469e42584bbaf5fa64ba8e08aa0c235829861033a1246",
+      "functions": [
+        {
+          "name": "telemetryEnabled",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "getSupabaseClient",
+          "params": [],
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "createSessionId",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "getTelemetrySessionId",
+          "params": [],
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "getRouteParams",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "getPageUrl",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "getWebglRenderer",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "getDeviceInfo",
+          "params": [],
+          "exported": false,
+          "lineCount": 19
+        },
+        {
+          "name": "safeString",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "sanitizeValue",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 26
+        },
+        {
+          "name": "normalizeError",
+          "params": [
+            "error"
+          ],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "buildEvent",
+          "params": [
+            "eventType",
+            "eventName",
+            "severity"
+          ],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "readQueue",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "writeQueue",
+          "params": [
+            "items"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "enqueueEvent",
+          "params": [
+            "event"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "insertEvent",
+          "params": [
+            "event"
+          ],
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "flushTelemetryQueue",
+          "params": [],
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "trackOperation",
+          "params": [
+            "eventName"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "trackError",
+          "params": [
+            "eventName",
+            "error"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "trackModelError",
+          "params": [
+            "eventName",
+            "error"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "trackResourceError",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "trackPerformance",
+          "params": [
+            "eventName"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "installTelemetryListeners",
+          "params": [],
+          "exported": true,
+          "lineCount": 42
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@supabase/supabase-js",
+          "specifiers": [
+            "createClient"
+          ]
+        }
+      ],
+      "exports": [
+        "getTelemetrySessionId",
+        "flushTelemetryQueue",
+        "trackOperation",
+        "trackError",
+        "trackModelError",
+        "trackResourceError",
+        "trackPerformance",
+        "installTelemetryListeners"
+      ],
+      "totalLines": 285,
+      "hasStructuralAnalysis": true
+    },
+    "src/utils/v3d-loader.ts": {
+      "filePath": "src/utils/v3d-loader.ts",
+      "contentHash": "266690017a622bc7357169ef53935e9e4985f80857c5e8480eead33d03580506",
+      "functions": [
+        {
+          "name": "useVerge3DGLTF",
+          "params": [
+            "url"
+          ],
+          "returnType": "UseVerge3DGLTFResult",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "applyV3DSceneSettings",
+          "params": [
+            "gl",
+            "scene",
+            "settings"
+          ],
+          "returnType": "void",
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "inspectV3DExtensions",
+          "params": [
+            "gltf"
+          ],
+          "exported": true,
+          "lineCount": 35
+        }
+      ],
+      "classes": [
+        {
+          "name": "NodeGraphResolver",
+          "methods": [
+            "constructor",
+            "findBSDFIndex",
+            "findBSDF",
+            "resolveTextureIndex",
+            "resolveSourceNode",
+            "_traceNode",
+            "_trace",
+            "_getTextureIndex"
+          ],
+          "properties": [
+            "nodes",
+            "incoming"
+          ],
+          "exported": true,
+          "lineCount": 97
+        },
+        {
+          "name": "V3DMaterialsPlugin",
+          "methods": [
+            "constructor",
+            "getMaterialType",
+            "extendMaterialParams",
+            "_ext"
+          ],
+          "properties": [
+            "name",
+            "parser"
+          ],
+          "exported": false,
+          "lineCount": 145
+        },
+        {
+          "name": "V3DObjectPlugin",
+          "methods": [
+            "constructor",
+            "afterRoot"
+          ],
+          "properties": [
+            "name",
+            "parser"
+          ],
+          "exported": false,
+          "lineCount": 34
+        },
+        {
+          "name": "V3DScenePlugin",
+          "methods": [
+            "constructor",
+            "afterRoot"
+          ],
+          "properties": [
+            "name",
+            "parser"
+          ],
+          "exported": false,
+          "lineCount": 18
+        },
+        {
+          "name": "V3DStubPlugin",
+          "methods": [
+            "constructor"
+          ],
+          "properties": [
+            "name"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "Verge3DGLTFLoader",
+          "methods": [
+            "constructor"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 11
+        }
+      ],
+      "imports": [
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "three",
+          "specifiers": [
+            "SRGBColorSpace",
+            "LinearSRGBColorSpace"
+          ]
+        },
+        {
+          "source": "three/examples/jsm/loaders/GLTFLoader.js",
+          "specifiers": [
+            "GLTFLoader",
+            "GLTF"
+          ]
+        },
+        {
+          "source": "@react-three/fiber",
+          "specifiers": [
+            "useLoader"
+          ]
+        }
+      ],
+      "exports": [
+        "NodeGraphResolver",
+        "Verge3DGLTFLoader",
+        "useVerge3DGLTF",
+        "applyV3DSceneSettings",
+        "inspectV3DExtensions"
+      ],
+      "totalLines": 636,
+      "hasStructuralAnalysis": true
+    },
+    "tailwind.config.js": {
+      "filePath": "tailwind.config.js",
+      "contentHash": "64c2587a4cb181f8a45f040965da4eb5d0185f4bae3a8a2e3899ec8e493a0ae8",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 20,
+      "hasStructuralAnalysis": true
+    },
+    "vercel.json": {
+      "filePath": "vercel.json",
+      "contentHash": "b3053607e07bfac51c4f5d9258645ba8a53ea9336064cac591d18eb028d13d34",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 9,
+      "hasStructuralAnalysis": true
+    },
+    "vite.config.js": {
+      "filePath": "vite.config.js",
+      "contentHash": "aef0fa3357eccee31735f17263cb97cc19d9575dd0bd4db017f26d488d8ea7f8",
+      "functions": [
+        {
+          "name": "createMockWechatUser",
+          "params": [],
+          "exported": false,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "vite",
+          "specifiers": [
+            "defineConfig"
+          ]
+        },
+        {
+          "source": "@vitejs/plugin-react",
+          "specifiers": [
+            "react"
+          ]
+        },
+        {
+          "source": "tailwindcss",
+          "specifiers": [
+            "tailwindcss"
+          ]
+        },
+        {
+          "source": "fs",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "path",
+          "specifiers": [
+            "path"
+          ]
+        },
+        {
+          "source": "url",
+          "specifiers": [
+            "fileURLToPath"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 466,
+      "hasStructuralAnalysis": true
+    }
+  }
+}

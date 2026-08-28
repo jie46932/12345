@@ -3,13 +3,14 @@
 import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import useStore from '../store/useStore';
+import { mediaUrl } from '../utils/assetUrl';
 
-const DEFAULT_MUSIC_SRC = '/media/Rob Simonsen - Blue_cut.mp3';
+const DEFAULT_MUSIC_SRC = mediaUrl('Rob Simonsen - Blue_cut.mp3');
 const FADE_DURATION = 2; // 秒
 
 function resolveMusicSource(asset) {
-  if (typeof asset === 'string') return asset;
-  return asset?.url || asset?.path || DEFAULT_MUSIC_SRC;
+  if (typeof asset === 'string') return mediaUrl(asset);
+  return mediaUrl(asset?.url || asset?.path || DEFAULT_MUSIC_SRC);
 }
 
 export default function MusicToggle({ checked, onChange, ready = false }) {

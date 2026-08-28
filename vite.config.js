@@ -8,7 +8,49 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const wechatLoginSessions = new Map()
-const writeApisEnabled = process.env.VITE_ENABLE_WRITE_APIS === '1'
+const useLocalWechatMock = process.env.VITE_USE_LOCAL_WECHAT_MOCK === '1'
+const remoteWechatApiOrigin = process.env.VITE_REMOTE_WECHAT_API_ORIGIN || 'https://gsdmsj.cn'
+
+function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    req.on('data', chunk => chunks.push(chunk))
+    req.on('end', () => resolve(Buffer.concat(chunks)))
+    req.on('error', reject)
+  })
+}
+
+async function proxyRemoteApi(req, res, targetOrigin) {
+  try {
+    const body = req.method === 'GET' || req.method === 'HEAD'
+      ? undefined
+      : await readRequestBody(req)
+    const headers = { ...req.headers }
+    delete headers.host
+    delete headers.connection
+    delete headers['content-length']
+
+    const upstream = await fetch(new URL(req.url, targetOrigin), {
+      method: req.method,
+      headers,
+      body,
+      redirect: 'manual',
+    })
+
+    res.statusCode = upstream.status
+    upstream.headers.forEach((value, key) => {
+      if (key.toLowerCase() !== 'content-encoding') res.setHeader(key, value)
+    })
+    res.end(Buffer.from(await upstream.arrayBuffer()))
+  } catch (error) {
+    res.setHeader('Content-Type', 'application/json')
+    res.statusCode = 502
+    res.end(JSON.stringify({
+      success: false,
+      message: `远程微信登录服务连接失败：${error.message}`,
+    }))
+  }
+}
 
 function createMockWechatUser() {
   return {
@@ -35,6 +77,19 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = req.url.split('?')[0]
+
+          if (!useLocalWechatMock && (
+            url === '/api/wechat-login/session' ||
+            url === '/api/wechat-login/status' ||
+            url === '/api/wechat-login/callback' ||
+            url === '/api/wechat-sms/send' ||
+            url === '/api/wechat-sms/verify' ||
+            url === '/api/sms-login/send' ||
+            url === '/api/sms-login/verify'
+          )) {
+            proxyRemoteApi(req, res, remoteWechatApiOrigin)
+            return
+          }
 
           // 本地 /api/login mock
           if (url === '/api/login' && req.method === 'POST') {
@@ -135,59 +190,6 @@ export default defineConfig({
               res.statusCode = 401
               res.end(JSON.stringify({ success: false, message: '无效的访问凭证' }))
             }
-            return
-          }
-
-          if (url.startsWith('/api/write-') && !writeApisEnabled) {
-            res.setHeader('Content-Type', 'application/json')
-            res.statusCode = 403
-            res.end(JSON.stringify({
-              success: false,
-              message: '本地调参写入接口未启用。设置 VITE_ENABLE_WRITE_APIS=1 后仅在本机开发环境使用。',
-            }))
-            return
-          }
-
-          // /api/write-header-text：写入 LangContext.js 的 subBrand + Header.jsx 的 BRAND/DELAY
-          if (url === '/api/write-header-text' && req.method === 'POST') {
-            let body = ''
-            req.on('data', chunk => { body += chunk })
-            req.on('end', () => {
-              try {
-                const { subBrandZh, subBrandEn, brandText, delay } = JSON.parse(body)
-                // 1. 写入 LangContext.js
-                const langPath = path.resolve(__dirname, 'src/LangContext.js')
-                let langSrc = fs.readFileSync(langPath, 'utf-8')
-                if (subBrandZh) {
-                  langSrc = langSrc.replace(/(zh:\s*\{[^}]*subBrand:\s*')[^']*(')/s, `$1${subBrandZh}$2`)
-                }
-                if (subBrandEn) {
-                  // en block 的 subBrand（第二个匹配）
-                  const zhIdx = langSrc.indexOf("zh:");
-                  const enIdx = langSrc.indexOf("en:");
-                  const before = langSrc.slice(0, enIdx)
-                  const after = langSrc.slice(enIdx)
-                  const replaced = after.replace(/(subBrand:\s*')[^']*(')/, `$1${subBrandEn}$2`)
-                  langSrc = before + replaced
-                }
-                fs.writeFileSync(langPath, langSrc, 'utf-8')
-
-                // 2. 写入 Header.jsx
-                const headerPath = path.resolve(__dirname, 'src/components/Header.jsx')
-                let headerSrc = fs.readFileSync(headerPath, 'utf-8')
-                if (brandText) headerSrc = headerSrc.replace(/const BRAND = '[^']*'/, `const BRAND = '${brandText.replace(/'/g, "\\'")}'`)
-                if (delay) headerSrc = headerSrc.replace(/const DELAY = \d+/, `const DELAY = ${delay}`)
-                fs.writeFileSync(headerPath, headerSrc, 'utf-8')
-
-                res.setHeader('Content-Type', 'application/json')
-                res.statusCode = 200
-                res.end(JSON.stringify({ success: true }))
-              } catch (e) {
-                res.setHeader('Content-Type', 'application/json')
-                res.statusCode = 500
-                res.end(JSON.stringify({ success: false, message: e.message }))
-              }
-            })
             return
           }
 
@@ -424,6 +426,7 @@ export default defineConfig({
               const ext = path.extname(filePath)
               const mimeMap = {
                 '.gltf': 'model/gltf+json',
+                '.usdz': 'model/vnd.usdz+zip',
                 '.bin': 'application/octet-stream',
                 '.png': 'image/png',
                 '.jpg': 'image/jpeg',
@@ -452,7 +455,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    emptyOutDir: false,
+    emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),
       output: {

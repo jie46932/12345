@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { mediaUrl } from '../utils/assetUrl';
 
 export default function Sidebar({ height, material, onMaterialChange, price, monitorAddon, onMonitorAddonChange }) {
   const [openAccordion, setOpenAccordion] = useState('material');
@@ -7,9 +8,9 @@ export default function Sidebar({ height, material, onMaterialChange, price, mon
   const heightLabel = height === 68 ? '最低' : height === 75 ? '坐姿' : height === 94 ? '标准' : height === 110 ? '站姿' : '最高';
 
   const materials = [
-    { id: 'light', name: '浅胡桃木', price: 0, image: '/media/Wood03_512_BaseColor.png' },
-    { id: 'oak', name: '原木白橡', price: 0, image: '/media/Wood06_512_BaseColor.png' },
-    { id: 'dark', name: '黑胡桃木', price: 0, image: '/media/Wood07_512_BaseColor.png' }
+    { id: 'light', name: '浅胡桃木', price: 0, image: mediaUrl('Wood03_512_BaseColor.png') },
+    { id: 'oak', name: '原木白橡', price: 0, image: mediaUrl('Wood06_512_BaseColor.png') },
+    { id: 'dark', name: '黑胡桃木', price: 0, image: mediaUrl('Wood07_512_BaseColor.png') }
   ];
 
   return (

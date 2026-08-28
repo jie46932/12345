@@ -1,41 +1,57 @@
 import styled from 'styled-components';
+import { mediaUrl } from '../utils/assetUrl';
 
 const BRAND = 'HE FURNITURE';
+const DESKTOP_BG = mediaUrl('10.jpg');
+const MOBILE_BG = mediaUrl('11.jpg');
 
-export default function LoadingScreen({ progress, message = '正在下载模型', error = '', visible }) {
+export default function LoadingScreen({
+  progress,
+  message = '正在下载模型',
+  error = '',
+  visible,
+  variant = 'full',
+}) {
   if (!visible) return null;
 
+  const isSceneVariant = variant === 'scene';
   const isMobile = typeof window !== 'undefined'
     && (window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(window.navigator?.userAgent || ''));
   const roundedProgress = Math.round(progress);
   const displayProgress = roundedProgress === 92 ? 93 : roundedProgress;
 
   return (
-    <StyledWrapper className={`${visible ? 'ls-show' : 'ls-hide'}${isMobile ? ' is-mobile-loading' : ''}`}>
-      {/* 拼铺背景图 */}
+    <StyledWrapper
+      className={`${visible ? 'ls-show' : 'ls-hide'}${isMobile ? ' is-mobile-loading' : ''}${isSceneVariant ? ' scene-loading' : ''}`}
+    >
+      {/* 拼铺背景图：登录页与登录后的模型加载页保持同一背景 */}
       <div className="bg-tile" />
 
       {/* 左上角品牌名 */}
-      <div className="brand-loader">
-        {BRAND.split('').map((ch, i) => (
-          <span
-            key={i}
-            className="brand-letter"
-            style={ch === ' ' ? { width: '0.4em', display: 'inline-block' } : {}}
-          >
-            {ch === ' ' ? '\u00a0' : ch}
-          </span>
-        ))}
-      </div>
+      {!isSceneVariant && (
+        <div className="brand-loader">
+          {BRAND.split('').map((ch, i) => (
+            <span
+              key={i}
+              className="brand-letter"
+              style={ch === ' ' ? { width: '0.4em', display: 'inline-block' } : {}}
+            >
+              {ch === ' ' ? '\u00a0' : ch}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* 中央 spinner + 进度数字 */}
       <div className="center-wrap">
         <div className="spinner-ring">
           <span className="progress-text">{displayProgress}%</span>
         </div>
-        <div className={`loading-stage${error ? ' is-error' : ''}`}>
-          {message}
-        </div>
+        {!isSceneVariant && (
+          <div className={`loading-stage${error ? ' is-error' : ''}`}>
+            {message}
+          </div>
+        )}
         {error && (
           <div className="loading-error">
             {error}
@@ -65,6 +81,11 @@ const StyledWrapper = styled.div`
     pointer-events: none;
   }
 
+  &.scene-loading {
+    background: transparent;
+    pointer-events: none;
+  }
+
   /* 背景图强制 16:9，居中铺满，不留黑边 */
   .bg-tile {
     position: absolute;
@@ -76,7 +97,7 @@ const StyledWrapper = styled.div`
     /* 若宽度不够撑满高度，则改用高度为基准 */
     min-height: 100%;
     min-width: calc(100vh * 16 / 9);
-    background-image: url('/media/10.jpg');
+    background-image: url('${DESKTOP_BG}');
     background-repeat: no-repeat;
     background-size: 100% 100%;
     background-position: center;
@@ -208,6 +229,25 @@ const StyledWrapper = styled.div`
     word-break: break-word;
   }
 
+  &.scene-loading .center-wrap {
+    bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+    gap: 8px;
+  }
+
+  &.scene-loading .spinner-ring {
+    width: 76px;
+    height: 76px;
+    background: rgba(229, 235, 240, 0.78);
+    filter: blur(0.6px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  &.scene-loading .progress-text {
+    font-size: 15px;
+    color: rgba(18, 24, 30, 0.78);
+  }
+
   @keyframes rotate {
     100% { transform: rotate(1turn); }
   }
@@ -223,7 +263,7 @@ const StyledWrapper = styled.div`
       min-width: 100%;
       min-height: 100%;
       aspect-ratio: auto;
-      background-image: url('/media/11.jpg');
+      background-image: url('${MOBILE_BG}');
       background-size: cover;
       background-position: center;
     }
@@ -269,7 +309,7 @@ const StyledWrapper = styled.div`
     min-width: 100%;
     min-height: 100%;
     aspect-ratio: auto;
-    background-image: url('/media/11.jpg') !important;
+    background-image: url('${MOBILE_BG}') !important;
     background-size: cover !important;
     background-position: center !important;
   }
@@ -280,5 +320,18 @@ const StyledWrapper = styled.div`
     height: 30px;
     transform: scale(0.46) !important;
     transform-origin: 0 0;
+  }
+
+  &.is-mobile-loading .loading-stage {
+    display: none;
+  }
+
+  &.scene-loading.is-mobile-loading .center-wrap {
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  &.scene-loading.is-mobile-loading .spinner-ring {
+    width: 68px;
+    height: 68px;
   }
 `;

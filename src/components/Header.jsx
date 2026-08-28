@@ -7,7 +7,6 @@ import LangToggle from './LangToggle';
 import LangSwitch from './LangSwitch';
 import FullscreenToggle from './FullscreenToggle';
 import MusicToggle from './MusicToggle';
-import { useLang, T } from '../LangContext';
 
 function NavBtn({ children }) {
   return (
@@ -18,15 +17,15 @@ function NavBtn({ children }) {
 }
 
 const BRAND = 'HE FURNITURE';
+const SUB_BRAND = '智能升降桌';
 const DELAY = 100; // ms per letter
 
-// 初始化逐字母偏移（供 HeaderPanel 读写）
+// 初始化逐字母偏移
 if (typeof window !== 'undefined' && !window.__letterOffsets) {
   window.__letterOffsets = [];
 }
 
 export default function Header({ onToggleLight, lightOn, lampVisible = true, lang, onLangChange, musicReady = false, authed = false }) {
-  const t = T[lang];
   const [navExpanded, setNavExpanded] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
 
@@ -73,7 +72,7 @@ export default function Header({ onToggleLight, lightOn, lampVisible = true, lan
             {(() => {
               const offsets = window.__letterOffsets || [];
               let li = 0;
-              return t.subBrand.split('').map((ch, i) => {
+              return SUB_BRAND.split('').map((ch, i) => {
                 const letterIdx = ch === ' ' ? -1 : li++;
                 const baseDelay = (BRAND.length + (letterIdx >= 0 ? letterIdx : i)) * DELAY;
                 const offset = offsets[i] || 0;

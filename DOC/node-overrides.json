@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "projectId": "12345",
+  "projectName": "12345 智能升降桌 3D 配置器",
+  "runtime": "r3f",
+  "assetExport": "3ds Max + Verge3D glTF",
+  "urls": {
+    "dev": "http://127.0.0.1:5173/index.dev.html",
+    "viewer": "https://hefurniture.gsdmsj.cn",
+    "iframeViewer": "https://hefurniture.gsdmsj.cn/?bypass=1&viewer=1",
+    "admin": "https://admin.gsdmsj.cn"
+  },
+  "debugGlobals": [
+    "window.__threeScene",
+    "window.__threeRenderer",
+    "window.__threeCamera",
+    "window.__orbitControls",
+    "window.__lastProjectConfig"
+  ],
+  "deployment": {
+    "publishSource": "dist/*",
+    "serverCurrent": "/srv/www/projects/12345/current",
+    "serverReleases": "/srv/releases/12345",
+    "forbidden": [
+      "DOC",
+      "source",
+      ".max",
+      ".env",
+      ".git",
+      "node_modules",
+      "temp archives"
+    ]
+  },
+  "validation": {
+    "apiHealth": "https://hefurniture.gsdmsj.cn/api/login",
+    "browserEvidence": [
+      "DOM",
+      "console",
+      "resource-list",
+      "runtime-globals"
+    ],
+    "noScreenshotOnly": true,
+    "expectedV3dRuntime": "undefined"
+  },
+  "recordsPath": "DOC/records/",
+  "companyDocRoot": "F:\\company-knowledge-base\\web3d-nodes"
+}

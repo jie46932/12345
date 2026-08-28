@@ -11,7 +11,11 @@ export default function handler(req, res) {
     ? authHeader.slice(7)
     : req.query?.token;
 
-  const validToken = process.env.ACCESS_TOKEN || 'he_furniture_v3d_access';
+  const validToken = process.env.ACCESS_TOKEN;
+
+  if (!validToken) {
+    return res.status(500).json({ success: false, message: 'Scene service is not configured' });
+  }
 
   if (!token || token !== validToken) {
     return res.status(401).json({ success: false, message: '无效的访问凭证' });

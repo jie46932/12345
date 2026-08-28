@@ -72,7 +72,7 @@ function collectAllS8STextureIndices(json) {
   const filtered = [...needed].filter((texIdx) => {
     const tex = json.textures?.[texIdx];
     if (!tex) return true;
-    const src = tex.source;
+    const src = tex.source ?? tex.extensions?.S8S_v3d_texture?.source ?? tex.extensions?.KHR_texture_basisu?.source;
     if (src == null) return true;
     const img = images[src];
     if (!img?.uri) return true;

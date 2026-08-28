@@ -1,42 +1,69 @@
 {
-  "name": "react-table-v2",
+  "name": "he-furniture-12345-viewer",
   "private": true,
   "version": "0.0.0",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite --open /index.dev.html",
     "dev:viewer": "vite --host 127.0.0.1 --port 5173 --open /index.dev.html",
-    "build": "vite build && node scripts/copy-vercel-assets.cjs && node scripts/copy-build-assets.cjs",
-    "build:vercel": "vite build && node scripts/copy-vercel-assets.cjs",
-    "check:gltf": "node scripts/inspect-gltf.cjs media/12345-verge3d-20260620.gltf",
+    "build": "npm run build:ar-ios && vite build && node scripts/copy-vercel-assets.cjs && node scripts/copy-build-assets.cjs && node scripts/gzip-dist-assets.cjs",
+    "build:ar-ios": "node scripts/build-usdz.mjs",
+    "build:vercel": "npm run build:ar-ios && vite build && node scripts/copy-vercel-assets.cjs",
+    "deploy:server": "powershell -ExecutionPolicy Bypass -File scripts/deploy-server.ps1",
+    "upload:oss": "node scripts/upload-media-to-oss.cjs",
+    "check:max": "node scripts/check-max-report.cjs",
+    "scan:max": "node scripts/scan-max-scene.cjs",
+    "compare:gltf": "node scripts/compare-max-gltf.cjs media/12345-draco.gltf",
+    "check:gltf": "node scripts/inspect-gltf.cjs media/12345-draco.gltf",
+    "check:budget": "node scripts/check-performance-budget.cjs",
+    "check:security": "node scripts/check-security.cjs",
+    "rename-assets": "node scripts/rename-assets.cjs",
+    "predeploy:safe": "npm run build && npm run rename-assets -- --entry dist/media/12345-draco.gltf --prefix=12345_v1 && npm run check:gltf -- dist/media/12345_v1.gltf && npm run check:security",
     "lint": "eslint src --ext .js,.jsx",
-    "preview": "vite preview"
+    "test": "node --test tests/*.test.mjs",
+    "quality:ci": "npm run check:doc && npm run check:spec && npm run lint && npm test && npm run check:gltf && npm run build && npm run check:security && npm run check:budget",
+    "quality:release": "npm run quality:ci && npm run check:max && npm run compare:gltf && npm run check:gltf && npm run check:security && npm run check:budget",
+    "verify:browser": "node scripts/verify-browser.mjs",
+    "verify:server": "powershell -ExecutionPolicy Bypass -File scripts/verify-server.ps1",
+    "verify:release": "npm run verify:server && npm run verify:browser",
+    "release:safe": "powershell -ExecutionPolicy Bypass -File scripts/release-safe.ps1",
+    "rollback:server": "powershell -ExecutionPolicy Bypass -File scripts/rollback-server.ps1",
+    "preview": "vite preview",
+    "check:doc": "node scripts/verify-doc-structure.cjs",
+    "check:spec": "node scripts/check-spec-structure.cjs",
+    "electron:dev": "npm run build && node scripts/prune-electron-dist.cjs && electron electron/main.cjs",
+    "electron:pack": "npm run build && node scripts/prune-electron-dist.cjs && electron-builder --win portable",
+    "electron:release": "npm test && npm run check:security && npm run electron:pack"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.1.1",
-    "@radix-ui/react-slot": "^1.2.4",
+    "@8thwall/engine-binary": "^1.0.0",
+    "@8thwall/landing-page": "^1.0.0",
+    "@8thwall/xrextras": "^1.0.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
+    "@react-three/xr": "^6.6.30",
     "@supabase/supabase-js": "^2.108.2",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "^3.15.0",
     "lucide-react": "^1.7.0",
+    "ogl": "^1.0.11",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "styled-components": "^6.3.12",
-    "tailwind-merge": "^3.5.0",
     "three": "^0.184.0",
-    "unicornstudio-react": "^2.1.9",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@gltf-transform/cli": "^4.4.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.27",
+    "electron": "^42.5.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
@@ -46,5 +73,29 @@
     "tailwindcss": "^3.4.19",
     "vite": "^8.0.1",
     "ws": "^8.21.0"
+  },
+  "build": {
+    "appId": "cn.gsdmsj.viewer.12345",
+    "productName": "12345 智能升降桌",
+    "directories": {
+      "output": "release-electron"
+    },
+    "asar": false,
+    "electronLanguages": [
+      "zh-CN",
+      "en-US"
+    ],
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json",
+      "favicon.svg",
+      "!node_modules/**"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
   }
 }

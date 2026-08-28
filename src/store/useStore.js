@@ -3,6 +3,7 @@
  * 替代所有 window 全局变量的 R3F 版本
  */
 import { create } from 'zustand';
+import { mediaUrl } from '../utils/assetUrl';
 
 const DEFAULT_OUTLINE = {
   enabled: true,
@@ -17,8 +18,8 @@ const DEFAULT_LED = {
   unitColor: '#ffffff',
   bgColor: '#050505',
   glowBlur: 5,
-  textSize: 0.8,
-  textX: 0.45,
+  textSize: 0.6,
+  textX: 0.51,
   textY: 0.76,
   emissiveIntensity: 0.5,
   unit: 'cm',
@@ -42,6 +43,20 @@ const DEFAULT_BG = {
   opacity: 1.0,
 };
 
+const DEFAULT_SCENE_BG = {
+  backgroundColor: '#0a0a0b',
+  raysOrigin: 'top-center',
+  raysColor: '#b8d5f5',
+  raysSpeed: 0.55,
+  lightSpread: 1.1,
+  rayLength: 2.1,
+  pulsating: false,
+  fadeDistance: 1.15,
+  saturation: 1.18,
+  noiseAmount: 0,
+  distortion: 0.035,
+};
+
 const DEFAULT_STUDIO_BG = {
   baseColor: '#2d62b9',
   highlightOpacity: 0.92,
@@ -51,14 +66,14 @@ const DEFAULT_STUDIO_BG = {
 
 const DEFAULT_PROJECT_CONFIG = {
   annotations: [],
-  galleryImages: ['/media/4.jpg', '/media/5.jpg', '/media/6.jpg', '/media/7.jpg', '/media/8.jpg', '/media/9.jpg'],
+  galleryImages: [mediaUrl('4.jpg'), mediaUrl('5.jpg'), mediaUrl('6.jpg'), mediaUrl('7.jpg'), mediaUrl('8.jpg'), mediaUrl('9.jpg')],
   video: '',
-  backgroundMusic: '/media/Rob Simonsen - Blue_cut.mp3',
+  backgroundMusic: mediaUrl('Rob Simonsen - Blue_cut.mp3'),
   consultation: {
     buttonLabel: '',
     modalTitle: '',
     modalSubtitle: '',
-    qrImage: '/media/wechat-qr.jpg',
+    qrImage: mediaUrl('wechat-qr.jpg'),
     name: '沈杰',
     title: '',
     phone: '18684747357',
@@ -96,14 +111,17 @@ const useStore = create((set) => ({
   background: { ...DEFAULT_BG },
   setBackground: (partial) =>
     set((s) => ({ background: { ...s.background, ...partial } })),
+  sceneBackground: { ...DEFAULT_SCENE_BG },
+  setSceneBackground: (partial) =>
+    set((s) => ({ sceneBackground: { ...s.sceneBackground, ...partial } })),
 
-  // ── 背景模式：dynamic=本地动态背景，solidStudio=产品棚拍纯色背景 ─────
-  backgroundMode: 'dynamic',
+  // ── 背景模式：sceneDefault=静态场景默认背景，solidStudio=产品棚拍纯色背景 ─────
+  backgroundMode: 'sceneDefault',
   setBackgroundMode: (mode) =>
-    set({ backgroundMode: mode === 'solidStudio' ? 'solidStudio' : 'dynamic' }),
+    set({ backgroundMode: mode === 'solidStudio' ? 'solidStudio' : 'sceneDefault' }),
   toggleBackgroundMode: () =>
     set((s) => ({
-      backgroundMode: s.backgroundMode === 'solidStudio' ? 'dynamic' : 'solidStudio',
+      backgroundMode: s.backgroundMode === 'solidStudio' ? 'sceneDefault' : 'solidStudio',
     })),
   studioBackground: { ...DEFAULT_STUDIO_BG },
   setStudioBackground: (partial) =>
@@ -164,6 +182,7 @@ const useStore = create((set) => ({
   getOutlineDefaults: () => ({ ...DEFAULT_OUTLINE }),
   getLedDefaults: () => ({ ...DEFAULT_LED }),
   getBgDefaults: () => ({ ...DEFAULT_BG }),
+  getSceneBgDefaults: () => ({ ...DEFAULT_SCENE_BG }),
   getStudioBgDefaults: () => ({ ...DEFAULT_STUDIO_BG }),
   getProjectConfigDefaults: () => ({ ...DEFAULT_PROJECT_CONFIG }),
 }));
@@ -172,6 +191,7 @@ export {
   DEFAULT_OUTLINE,
   DEFAULT_LED,
   DEFAULT_BG,
+  DEFAULT_SCENE_BG,
   DEFAULT_STUDIO_BG,
   DEFAULT_DIM,
   DEFAULT_PROJECT_CONFIG,

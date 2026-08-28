@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useLang, T } from '../LangContext';
 import useStore from '../store/useStore';
+import { mediaUrl } from '../utils/assetUrl';
 
 const CONTACT_INFO = {
-  qrSrc: '/media/wechat-qr.jpg',
+  qrSrc: mediaUrl('wechat-qr.jpg'),
   name: '沈杰',
   phone: '18684747357',
   wechat: 'SaveSimply',
@@ -14,8 +15,8 @@ const CONTACT_INFO = {
 const QR_IMAGE_RATIO = '592 / 754';
 
 function resolveAssetUrl(asset) {
-  if (typeof asset === 'string') return asset;
-  return asset?.url || asset?.path || CONTACT_INFO.qrSrc;
+  if (typeof asset === 'string') return mediaUrl(asset);
+  return mediaUrl(asset?.url || asset?.path || CONTACT_INFO.qrSrc);
 }
 
 export default function ContactModal({ open, onClose }) {
@@ -39,7 +40,7 @@ export default function ContactModal({ open, onClose }) {
       }
     }
   }
-  const qrSrc = resolveAssetUrl((configuredContact || contactInfo).qrImage || CONTACT_INFO.qrSrc);
+  const qrSrc = resolveAssetUrl(CONTACT_INFO.qrSrc);
 
   useEffect(() => {
     if (!open) return;
@@ -129,6 +130,8 @@ export default function ContactModal({ open, onClose }) {
           borderRadius: 18,
           background: 'rgba(255,255,255,0.32)',
           border: '1px solid rgba(255,255,255,0.46)',
+          WebkitTouchCallout: 'default',
+          userSelect: 'auto',
         }}>
           <div
             className="contact-qr-image-wrap"
@@ -139,6 +142,8 @@ export default function ContactModal({ open, onClose }) {
               overflow: 'hidden',
               background: '#fff',
               boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
+              WebkitTouchCallout: 'default',
+              userSelect: 'auto',
             }}
           >
             <img
@@ -149,8 +154,19 @@ export default function ContactModal({ open, onClose }) {
                 height: '100%',
                 objectFit: 'contain',
                 display: 'block',
+                WebkitTouchCallout: 'default',
+                userSelect: 'auto',
+                pointerEvents: 'auto',
               }}
             />
+          </div>
+          <div style={{
+            fontSize: 13,
+            color: 'rgba(0,0,0,0.58)',
+            letterSpacing: '0.04em',
+            textAlign: 'center',
+          }}>
+            {lang === 'en' ? 'Long press to identify WeChat QR code' : '长按识别二维码添加微信'}
           </div>
         </div>
 

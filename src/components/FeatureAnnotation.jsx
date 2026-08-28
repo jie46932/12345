@@ -68,7 +68,7 @@ const FEATURE_ANNOTATIONS = [
   },
 ];
 
-// 气泡样式（颜色/字号/加粗/背景）- 由 FeatureAnnotationGizmo 写入，勿手动编辑
+// 气泡样式（颜色/字号/加粗/背景）
 const FEATURE_STYLES = [
   { color0: '#ffffff', color1: '#c8c8c8', size0: 18, size1: 18, bold0: true, bold1: true, bgColor: '#000000', bgAlpha: 0.62, bgPadX: 20 },
   { color0: '#ffffff', color1: '#c8c8c8', size0: 18, size1: 18, bold0: true, bold1: true, bgColor: '#000000', bgAlpha: 0.62, bgPadX: 20 },
