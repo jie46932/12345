@@ -59,7 +59,10 @@ const IDLE_AUTO_ROTATE_SPEED = 0.3675;
 const DESK_LAMP_AREA_LIGHT_INTENSITY = 14;
 const DESK_LAMP_AREA_LIGHT_WIDTH = 16;
 const DESK_LAMP_AREA_LIGHT_HEIGHT = 0.7;
-const PRODUCT_MODEL_URL = mediaUrl('12345-draco.gltf');
+const PRODUCT_MODEL_URL = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).get('arDebug') === '1'
+  ? mediaUrl('optimized/draco-transform/12345-draco.gltf')
+  : mediaUrl('12345-draco.gltf');
 
 // ── 伸缩 Dummy 数据 ───────────────────────────────────────────
 const DUMMIES = [
@@ -576,7 +579,9 @@ export default function SceneContent({
     }
 
     // ── HDR 环境贴图 ────────────────────────────────────────────
-    {
+    if (new URLSearchParams(window.location.search).get('arDebug') === '1') {
+      document.documentElement.dataset.viewerEnvReady = 'skipped-ar-debug';
+    } else {
       new HDRLoader().load(mediaUrl('22.hdr'), (hdrTexture) => {
         hdrTexture.wrapS = THREE.RepeatWrapping;
         hdrTexture.wrapT = THREE.ClampToEdgeWrapping;

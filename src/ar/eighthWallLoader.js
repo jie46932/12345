@@ -48,13 +48,26 @@ function loadScript(src, attrs = {}) {
   });
 }
 
-async function loadScriptWithFallback(localSrc, cdnSrc, attrs) {
+async function canLoadLocalRuntimeScript(src) {
   try {
-    await loadScript(localSrc, attrs);
-  } catch (localError) {
-    console.warn('[8thwall] local runtime unavailable, using CDN fallback', localError);
-    await loadScript(cdnSrc, attrs);
+    const response = await fetch(src, { method: 'HEAD', cache: 'no-store' });
+    const contentType = response.headers.get('content-type') || '';
+    return response.ok && /(?:javascript|ecmascript)/i.test(contentType);
+  } catch {
+    return false;
   }
+}
+
+async function loadScriptWithFallback(localSrc, cdnSrc, attrs) {
+  if (await canLoadLocalRuntimeScript(localSrc)) {
+    try {
+      await loadScript(localSrc, attrs);
+      return;
+    } catch (localError) {
+      console.warn('[8thwall] local runtime failed, using CDN fallback', localError);
+    }
+  }
+  await loadScript(cdnSrc, attrs);
 }
 
 export async function loadEighthWallRuntime() {
@@ -67,11 +80,6 @@ export async function loadEighthWallRuntime() {
   await waitForGlobal('XRExtras', 'xrextrasloaded');
 
   await loadScriptWithFallback(
-    EIGHTH_WALL_LOCAL_SCRIPT_PATHS.landingPage,
-    EIGHTH_WALL_CDN_SCRIPT_PATHS.landingPage,
-  );
-
-  await loadScriptWithFallback(
     EIGHTH_WALL_LOCAL_SCRIPT_PATHS.xr,
     EIGHTH_WALL_CDN_SCRIPT_PATHS.xr,
     { async: '', 'data-preload-chunks': 'slam' },
@@ -81,6 +89,5 @@ export async function loadEighthWallRuntime() {
   return {
     XR8: window.XR8,
     XRExtras: window.XRExtras,
-    LandingPage: window.LandingPage,
   };
 }

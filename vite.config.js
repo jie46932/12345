@@ -396,8 +396,8 @@ export default defineConfig({
           }
 
           // /api/write-material-defaults：写入 materialDefaults.js 的 MATERIAL_DEFAULTS
-          if (url === '/api/write-material-defaults' && req.method === 'POST') {
-            let body = ''
+	          if (url === '/api/write-material-defaults' && req.method === 'POST') {
+	            let body = ''
             req.on('data', chunk => { body += chunk })
             req.on('end', () => {
               try {
@@ -416,14 +416,87 @@ export default defineConfig({
                 res.end(JSON.stringify({ success: false, message: e.message }))
               }
             })
-            return
-          }
+	            return
+	          }
 
-          // 开发模式提供 /media/ 下的资源
-          if (url.startsWith('/media/')) {
+	          if (url === '/__ar-state' && req.method === 'POST') {
+	            let body = ''
+	            req.on('data', chunk => { body += chunk })
+	            req.on('end', () => {
+	              try {
+	                const payload = JSON.parse(body || '{}')
+	                const data = payload.dataset || {}
+	                const summary = {
+	                  href: payload.href || '',
+	                  mode: data.viewerARMode,
+	                  provider: data.viewerARProvider,
+	                  launch: data.viewerARLaunchState,
+	                  overlay: data.viewerAROverlayActive,
+	                  plane: data.viewerARPlaneReady,
+	                  reticle: data.viewerARReticleReady,
+	                  placed: data.viewerARPlaced,
+	                  flow: data.viewerARFlowState,
+	                  control: data.viewerARControlMode,
+	                  dragging: data.viewerARDragging,
+	                  floorGrid: data.viewerARFloorGridVisible,
+	                  tapToPlace: data.viewerARTapToPlaceVisible,
+	                  selection: data.viewerARSelectionVisible,
+	                  rotationRing: data.viewerARRotationRingVisible,
+	                  moveX: data.viewerARLastMoveX,
+	                  moveZ: data.viewerARLastMoveZ,
+	                  rotate: data.viewerARLastRotateRadians,
+	                  resetCount: data.viewerARResetCount,
+	                  cameraFeed: data.viewerARCameraFeedReady,
+	                  cameraTexture: data.viewerARCameraTextureReady,
+	                  nativeVideo: data.viewerARNativeCameraVideoReady,
+	                  nativeVideoW: data.viewerARNativeCameraVideoWidth,
+	                  nativeVideoH: data.viewerARNativeCameraVideoHeight,
+	                  nativeVideoLuma: data.viewerARNativeCameraVideoLumaMean,
+	                  nativeVideoError: data.viewerARNativeCameraVideoError,
+	                  cameraDirection: data.viewerARCameraDirectionRequested,
+	                  pixelArray: data.viewerARCameraPixelArrayReady,
+	                  pixelArrayModule: data.viewerARCameraPixelArrayModuleAdded,
+	                  pixelLength: data.viewerARCameraPixelArrayLength,
+	                  pixelMin: data.viewerARCameraPixelMin,
+	                  pixelMax: data.viewerARCameraPixelMax,
+	                  blackFrame: data.viewerARCameraBlackFrameSuspected,
+	                  lumaMean: data.viewerARCameraLumaMean,
+	                  lumaVariance: data.viewerARCameraLumaVariance,
+	                  nonBlackFrames: data.viewerARCameraNonBlackFrameCount,
+	                  surfaceHitSeen: data.viewerARSurfaceHitSeen,
+	                  surfaceQualified: data.viewerARSurfaceQualified,
+	                  hitCount: data.viewerARHitCount,
+	                  hitType: data.viewerARHitType,
+	                  trackingStatus: data.viewerARTrackingStatus,
+	                  trackingReason: data.viewerARTrackingReason,
+	                  modelReady: data.viewerARModelReady,
+	                  modelVisible: data.viewerARModelVisible,
+	                  modelMeshes: data.viewerARModelMeshCount,
+	                  modelScreenX: data.viewerARModelScreenX,
+	                  modelScreenY: data.viewerARModelScreenY,
+	                  reticleScreenX: data.viewerARReticleScreenX,
+	                  reticleScreenY: data.viewerARReticleScreenY,
+	                  canvasW: data.viewerARCanvasWidth,
+	                  canvasH: data.viewerARCanvasHeight,
+	                  rendererTransparent: data.viewerARThreeRendererTransparent,
+	                  pipeline: data.viewerARPipelineVersion,
+	                }
+	                console.log(`[ar-state] ${JSON.stringify(summary)}`)
+	              } catch (e) {
+	                console.warn('[ar-state] invalid payload', e?.message || e)
+	              }
+	              res.statusCode = 204
+	              res.end()
+	            })
+	            return
+	          }
+
+	          // 开发模式提供 /media/ 下的资源
+	          if (url.startsWith('/media/')) {
             const filePath = path.resolve(__dirname, url.slice(1))
             if (fs.existsSync(filePath)) {
               const ext = path.extname(filePath)
+              const stat = fs.statSync(filePath)
               const mimeMap = {
                 '.gltf': 'model/gltf+json',
                 '.usdz': 'model/vnd.usdz+zip',
@@ -432,6 +505,14 @@ export default defineConfig({
                 '.jpg': 'image/jpeg',
               }
               res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream')
+              res.setHeader('Content-Length', String(stat.size))
+              res.setHeader('Accept-Ranges', 'bytes')
+              res.setHeader('Cache-Control', 'no-store')
+              if (req.method === 'HEAD') {
+                res.statusCode = 200
+                res.end()
+                return
+              }
               fs.createReadStream(filePath).pipe(res)
               return
             }
@@ -447,12 +528,13 @@ export default defineConfig({
       plugins: [tailwindcss],
     },
   },
-  server: {
-    fs: {
-      allow: ['.'],
-    },
-    open: '/',
-  },
+	  server: {
+	    fs: {
+	      allow: ['.'],
+	    },
+	    allowedHosts: ['.serveousercontent.com', '.lhr.life', '.trycloudflare.com'],
+	    open: '/',
+	  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

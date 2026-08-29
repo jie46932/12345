@@ -54,6 +54,11 @@ function detectDevicePlatform() {
   };
 }
 
+function isLocalSecureException() {
+  if (typeof window === 'undefined') return false;
+  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+}
+
 export async function detectARPlatform() {
   const platformInfo = detectDevicePlatform();
   const immersiveARSupported = platformInfo.platform === 'android' ? await isProductARSupported() : false;
@@ -101,6 +106,14 @@ export async function launchProductAR() {
   document.documentElement.dataset.viewerARLaunchState = 'starting';
 
   if (isEighthWallMobilePlatform(deviceInfo.platform)) {
+    if (!deviceInfo.secure && !isLocalSecureException()) {
+      const error = new Error('真实 AR 相机放置需要 HTTPS 页面，请用 HTTPS 打开当前项目页后再点 AR 按钮');
+      error.platformInfo = deviceInfo;
+      error.code = 'ar_insecure_context';
+      document.documentElement.dataset.viewerARProvider = EIGHTH_WALL_PROVIDER;
+      document.documentElement.dataset.viewerARLaunchState = 'insecure-context';
+      throw error;
+    }
     const platformInfo = await detectARPlatform();
     document.documentElement.dataset.viewerARProvider = EIGHTH_WALL_PROVIDER;
     document.documentElement.dataset.viewerARLaunchState = 'opening-8th-wall';

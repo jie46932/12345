@@ -1024,11 +1024,17 @@ function ConfiguratorApp({ viewer }) {
   // ── 渲染 ──────────────────────────────────────────────────────
   const heightT = (currentHeight - 68) / 52;
   const arOverlayActive = arActive || eighthWallARActive;
+  const arDebugMode = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('arDebug') === '1';
+  const showARRecoveryEntry = authed && !!loadError && !arOverlayActive;
+  const showARDebugEntry = authed && arDebugMode && !arOverlayActive;
   useEffect(() => {
     document.documentElement.dataset.devPanelsEnabled = DEV_PANELS_ENABLED ? 'true' : 'false';
     document.documentElement.dataset.sceneUiReady = sceneUiReady ? 'true' : 'false';
     document.documentElement.dataset.viewerAROverlayActive = arOverlayActive ? 'true' : 'false';
-  }, [arOverlayActive, sceneUiReady]);
+    document.documentElement.dataset.viewerARRecoveryEntryVisible = showARRecoveryEntry ? 'true' : 'false';
+    document.documentElement.dataset.viewerARDebugEntryVisible = showARDebugEntry ? 'true' : 'false';
+  }, [arOverlayActive, sceneUiReady, showARDebugEntry, showARRecoveryEntry]);
 
   return (
     <LangContext.Provider value={lang}>
@@ -1047,6 +1053,82 @@ function ConfiguratorApp({ viewer }) {
           visible={authed && loadingVisible && !sceneReady}
           variant="scene"
         />
+
+        {showARRecoveryEntry && (
+          <div
+            data-testid="ar-recovery-entry"
+            style={{
+              position: 'fixed',
+              left: '50%',
+              bottom: 'calc(178px + env(safe-area-inset-bottom, 0px))',
+              transform: 'translateX(-50%)',
+              zIndex: 10020,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'auto',
+            }}
+          >
+            <button
+              type="button"
+              aria-label="AR 预览"
+              onClick={handleEnterAR}
+              style={{
+                minWidth: 156,
+                height: 56,
+                padding: '0 28px',
+                borderRadius: 18,
+                color: '#ffffff',
+                background: 'linear-gradient(135deg, #242833 0%, #111827 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.42)',
+                boxShadow: '0 18px 42px rgba(0, 0, 0, 0.32)',
+                fontSize: 20,
+                fontWeight: 800,
+                letterSpacing: 0,
+              }}
+            >
+              AR 预览
+            </button>
+          </div>
+        )}
+
+        {showARDebugEntry && (
+          <div
+            data-testid="ar-debug-entry"
+            style={{
+              position: 'fixed',
+              left: '50%',
+              bottom: 'calc(28px + env(safe-area-inset-bottom, 0px))',
+              transform: 'translateX(-50%)',
+              zIndex: 10030,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'auto',
+            }}
+          >
+            <button
+              type="button"
+              aria-label="AR 预览"
+              onClick={handleEnterAR}
+              style={{
+                minWidth: 168,
+                height: 58,
+                padding: '0 30px',
+                borderRadius: 18,
+                color: '#ffffff',
+                background: 'linear-gradient(135deg, #0f172a 0%, #1f2937 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.46)',
+                boxShadow: '0 18px 42px rgba(0, 0, 0, 0.34)',
+                fontSize: 20,
+                fontWeight: 800,
+                letterSpacing: 0,
+              }}
+            >
+              AR 预览
+            </button>
+          </div>
+        )}
 
         {authed && (
           <>
@@ -1205,8 +1287,5 @@ export default function App() {
 
   return <ConfiguratorApp viewer={viewer} />;
 }
-
-
-
 
 
