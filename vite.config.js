@@ -440,15 +440,26 @@ export default defineConfig({
 	                  dragging: data.viewerARDragging,
 	                  floorGrid: data.viewerARFloorGridVisible,
 	                  tapToPlace: data.viewerARTapToPlaceVisible,
+	                  placementHitReady: data.viewerARPlacementHitReady,
+	                  placementHitType: data.viewerARPlacementHitType,
 	                  selection: data.viewerARSelectionVisible,
 	                  rotationRing: data.viewerARRotationRingVisible,
+	                  controlsBoundToModel: data.viewerARControlsBoundToModel,
+	                  controlVisualsType: data.viewerARControlVisualsType,
+	                  controlWorldX: data.viewerARControlWorldX,
+	                  controlWorldY: data.viewerARControlWorldY,
+	                  controlWorldZ: data.viewerARControlWorldZ,
+	                  scaleLocked: data.viewerARScaleLocked,
+	                  modelScaleX: data.viewerARModelScaleX,
 	                  moveX: data.viewerARLastMoveX,
 	                  moveZ: data.viewerARLastMoveZ,
 	                  rotate: data.viewerARLastRotateRadians,
 	                  resetCount: data.viewerARResetCount,
 	                  cameraFeed: data.viewerARCameraFeedReady,
+	                  frameCount: data.viewerARCameraFrameCount,
 	                  cameraTexture: data.viewerARCameraTextureReady,
 	                  nativeVideo: data.viewerARNativeCameraVideoReady,
+	                  nativeVideoVisible: data.viewerARNativeCameraVideoVisible,
 	                  nativeVideoW: data.viewerARNativeCameraVideoWidth,
 	                  nativeVideoH: data.viewerARNativeCameraVideoHeight,
 	                  nativeVideoLuma: data.viewerARNativeCameraVideoLumaMean,
@@ -463,6 +474,7 @@ export default defineConfig({
 	                  lumaMean: data.viewerARCameraLumaMean,
 	                  lumaVariance: data.viewerARCameraLumaVariance,
 	                  nonBlackFrames: data.viewerARCameraNonBlackFrameCount,
+	                  anyHitSeen: data.viewerARAnyHitSeen,
 	                  surfaceHitSeen: data.viewerARSurfaceHitSeen,
 	                  surfaceQualified: data.viewerARSurfaceQualified,
 	                  hitCount: data.viewerARHitCount,
@@ -470,7 +482,9 @@ export default defineConfig({
 	                  trackingStatus: data.viewerARTrackingStatus,
 	                  trackingReason: data.viewerARTrackingReason,
 	                  modelReady: data.viewerARModelReady,
+	                  modelSource: data.viewerARModelSource,
 	                  modelVisible: data.viewerARModelVisible,
+	                  modelError: data.viewerARModelError,
 	                  modelMeshes: data.viewerARModelMeshCount,
 	                  modelScreenX: data.viewerARModelScreenX,
 	                  modelScreenY: data.viewerARModelScreenY,
@@ -479,9 +493,15 @@ export default defineConfig({
 	                  canvasW: data.viewerARCanvasWidth,
 	                  canvasH: data.viewerARCanvasHeight,
 	                  rendererTransparent: data.viewerARThreeRendererTransparent,
+	                  projectionSynced: data.viewerARProjectionSynced,
 	                  pipeline: data.viewerARPipelineVersion,
 	                }
 	                console.log(`[ar-state] ${JSON.stringify(summary)}`)
+	                try {
+	                  fs.writeFileSync('/tmp/12345-ar-latest.json', `${JSON.stringify(summary, null, 2)}\n`)
+	                } catch {
+	                  // Keep telemetry best-effort so AR runtime logging never breaks the dev server.
+	                }
 	              } catch (e) {
 	                console.warn('[ar-state] invalid payload', e?.message || e)
 	              }

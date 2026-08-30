@@ -13,6 +13,8 @@ import {
 } from '../ar/eighthWallConfig';
 
 const MODEL_URL = mediaUrl('optimized/draco-transform/12345-draco.gltf');
+const AR_MODEL_MODE = 'cube';
+const AR_TEST_CUBE_SIZE_METERS = 0.35;
 const SURFACE_HIT_TYPES = ['DETECTED_SURFACE', 'ESTIMATED_SURFACE', 'FEATURE_POINT'];
 const HIT_TYPE_PRIORITY = {
   DETECTED_SURFACE: 0,
@@ -37,7 +39,7 @@ const CAMERA_PIXEL_MIN_LUMA = 10;
 const CAMERA_PIXEL_MIN_VARIANCE = 6;
 const CAMERA_PIXEL_READY_FRAMES = 3;
 const CAMERA_PIXEL_BLACK_FRAMES = 18;
-const AR_PIPELINE_VERSION = '20260829-surface-projected-marker-model-root';
+const AR_PIPELINE_VERSION = '20260829-official-pipeline-no-clear';
 const VIDEO_FRAME_READY_FRAMES = 3;
 const NATIVE_VIDEO_FALLBACK_DELAY_MS = 4500;
 
@@ -59,6 +61,8 @@ function setInitialDatasets() {
   setARData('viewerARMoveControlsVisible', 'false');
   setARData('viewerARRotateControlsVisible', 'false');
   setARData('viewerARPlacementRequiresReticle', 'true');
+  setARData('viewerARPlacementHitReady', 'false');
+  setARData('viewerARPlacementHitType', '');
   setARData('viewerARPlacementMarkerVisible', 'false');
   setARData('viewerAROverlayActive', 'true');
   setARData('viewerARFloorGridVisible', 'false');
@@ -79,9 +83,12 @@ function setInitialDatasets() {
   setARData('viewerARCameraNonBlackFrameCount', '0');
   setARData('viewerARCameraTextureReady', 'false');
   setARData('viewerARCameraBlackFrameSuspected', 'false');
+  setARData('viewerARAnyHitSeen', 'false');
   setARData('viewerARSurfaceHitSeen', 'false');
   setARData('viewerARModelReady', 'false');
+  setARData('viewerARModelSource', 'pending');
   setARData('viewerARModelVisible', 'false');
+  setARData('viewerARModelError', '');
   setARData('viewerARModelMeshCount', '0');
   setARData('viewerARModelScreenX', '');
   setARData('viewerARModelScreenY', '');
@@ -99,7 +106,9 @@ function setInitialDatasets() {
   setARData('viewerARCameraPixelMin', '0');
   setARData('viewerARCameraPixelMax', '0');
   setARData('viewerARThreeRendererTransparent', 'false');
+  setARData('viewerARProjectionSynced', 'false');
   setARData('viewerARNativeCameraVideoReady', 'false');
+  setARData('viewerARNativeCameraVideoVisible', 'false');
   setARData('viewerARNativeCameraVideoWidth', '0');
   setARData('viewerARNativeCameraVideoHeight', '0');
   setARData('viewerARNativeCameraVideoLumaMean', '0');
@@ -109,6 +118,23 @@ function setInitialDatasets() {
 function isARDebugTelemetryEnabled() {
   try {
     return new URLSearchParams(window.location.search).get('arDebug') === '1';
+  } catch {
+    return false;
+  }
+}
+
+function isFeaturePointPlacementEnabled() {
+  try {
+    return new URLSearchParams(window.location.search).get('arAllowFeaturePoint') === '1';
+  } catch {
+    return false;
+  }
+}
+
+function isDebugAutoPlaceEnabled() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('arDebug') === '1' && params.get('arAutoPlace') === '1';
   } catch {
     return false;
   }
@@ -239,6 +265,55 @@ function prepareModel(sourceScene) {
   return placementRoot;
 }
 
+function createARTestCubeModel() {
+  const placementRoot = new THREE.Group();
+  placementRoot.name = 'eighth_wall_test_cube_placement_root';
+
+  const geometry = new THREE.BoxGeometry(
+    AR_TEST_CUBE_SIZE_METERS,
+    AR_TEST_CUBE_SIZE_METERS,
+    AR_TEST_CUBE_SIZE_METERS,
+  );
+  const material = new THREE.MeshStandardMaterial({
+    color: AR_ACCENT,
+    emissive: 0x0c5660,
+    emissiveIntensity: 0.35,
+    roughness: 0.48,
+    metalness: 0.08,
+  });
+  const cube = new THREE.Mesh(geometry, material);
+  cube.name = 'eighth_wall_test_cube';
+  cube.position.y = AR_TEST_CUBE_SIZE_METERS / 2;
+  cube.castShadow = true;
+  cube.receiveShadow = true;
+
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geometry),
+    new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.95,
+    }),
+  );
+  edges.name = 'eighth_wall_test_cube_edges';
+  edges.position.copy(cube.position);
+
+  placementRoot.add(cube, edges);
+  placementRoot.visible = false;
+  placementRoot.userData.lockedScale = 1;
+  placementRoot.userData.lockedY = 0;
+  placementRoot.userData.modelScale = 1;
+  placementRoot.userData.sourceSize = new THREE.Vector3(
+    AR_TEST_CUBE_SIZE_METERS,
+    AR_TEST_CUBE_SIZE_METERS,
+    AR_TEST_CUBE_SIZE_METERS,
+  );
+  placementRoot.traverse((object) => {
+    object.frustumCulled = false;
+  });
+  return placementRoot;
+}
+
 function applyLockedTransform(model) {
   if (!model) return;
   const lockedScale = Number(model.userData.lockedScale) || EIGHTH_WALL_MODEL_WIDTH_METERS;
@@ -284,6 +359,12 @@ function setFloorGridVisible(floorGrid, visible) {
 
 function isSurfaceHit(hit) {
   return hit?.type === 'DETECTED_SURFACE' || hit?.type === 'ESTIMATED_SURFACE';
+}
+
+function isPlacementHit(hit) {
+  if (!hit?.position) return false;
+  if (isSurfaceHit(hit)) return true;
+  return hit.type === 'FEATURE_POINT' && isFeaturePointPlacementEnabled();
 }
 
 function getClientPointFromWorld(camera, worldPosition) {
@@ -514,11 +595,13 @@ function makeCameraHealthModule({
   };
 }
 
-function markCameraFeedReadyFromSurfaceHit({
+function markCameraFeedReadyFromTrackingEvidence({
+  surfaceQualified,
   cameraFeedReadyRef,
   setCameraIssue,
 }) {
-  setARData('viewerARSurfaceHitSeen', 'true');
+  setARData('viewerARAnyHitSeen', 'true');
+  if (surfaceQualified) setARData('viewerARSurfaceHitSeen', 'true');
   if (cameraFeedReadyRef.current) {
     setCameraIssue(false);
     setARData('viewerARCameraBlackFrameSuspected', 'false');
@@ -542,6 +625,7 @@ function installGestureHandlers({
   setTapToPlaceVisible,
   modelReadyRef,
   cameraIssueRef,
+  nativeVideoRef,
   syncModelScreenData,
 }) {
   const pointers = new Map();
@@ -564,17 +648,21 @@ function installGestureHandlers({
 
     const model = modelRef.current;
     const hit = getScreenHit(XR8, element, clientX, clientY) || latestHitRef.current || getCenterHit(XR8);
-    if (!isSurfaceHit(hit)) {
-      setStatusText('继续移动手机，等待识别真实平面');
+    if (!isPlacementHit(hit)) {
+      setStatusText('移动手机扫描地面或桌面');
       return;
     }
-    if (!model || !hit || !reticleRef.current?.visible || !copyHitToObject(hit, model)) {
+    if (!model || !hit || !copyHitToObject(hit, model)) {
       setStatusText('移动手机扫描地面或桌面');
       return;
     }
 
     model.visible = true;
     setARData('viewerARModelVisible', 'true');
+    if (nativeVideoRef?.current) {
+      nativeVideoRef.current.style.opacity = '0';
+      setARData('viewerARNativeCameraVideoVisible', 'false');
+    }
     applyLockedTransform(model);
     syncModelScreenData(model);
     reticleRef.current.visible = false;
@@ -587,6 +675,8 @@ function installGestureHandlers({
     setSelectionVisible(selectionRef.current, true);
     setARControlMode(EIGHTH_WALL_CONTROL_MOVE);
     setARData('viewerARPlaced', 'true');
+    setARData('viewerARPlacementHitReady', 'true');
+    setARData('viewerARPlacementHitType', hit.type || 'unknown');
     setARData('viewerARFlowState', FLOW_PLACED);
     setARData('viewerARLastMoveX', String(model.position.x));
     setARData('viewerARLastMoveZ', String(model.position.z));
@@ -772,12 +862,13 @@ export default function EighthWallARExperience({ onClose, onError }) {
 
   const setPlacementMarkerScreenFromHit = (hit) => {
     const point = getClientPointFromWorld(cameraRef.current, hit?.position);
-    if (!point) return;
+    if (!point) return false;
     const x = THREE.MathUtils.clamp((point.x / Math.max(1, window.innerWidth)) * 100, 12, 88);
     const y = THREE.MathUtils.clamp((point.y / Math.max(1, window.innerHeight)) * 100, 24, 82);
     setPlacementMarkerScreen({ x, y });
     setARData('viewerARReticleScreenX', x.toFixed(2));
     setARData('viewerARReticleScreenY', y.toFixed(2));
+    return true;
   };
 
   const syncModelScreenData = (model) => {
@@ -886,12 +977,15 @@ export default function EighthWallARExperience({ onClose, onError }) {
     if (model) model.visible = false;
     placedRef.current = false;
     setSelectionVisible(selectionRef.current, false);
-    setFloorGridVisible(floorGridRef.current, Boolean(latestHitRef.current));
-    setARControlMode(EIGHTH_WALL_CONTROL_IDLE);
-    setARFlowState(latestHitRef.current ? FLOW_READY_TO_PLACE : FLOW_SCANNING);
-    setPlacementMarkerVisible(Boolean(latestHitRef.current));
-    setTapToPlaceVisible(Boolean(latestHitRef.current));
-    setARData('viewerARPlaced', 'false');
+	    const placementReady = isPlacementHit(latestHitRef.current);
+	    setFloorGridVisible(floorGridRef.current, placementReady);
+	    setARControlMode(EIGHTH_WALL_CONTROL_IDLE);
+	    setARFlowState(placementReady ? FLOW_READY_TO_PLACE : FLOW_SCANNING);
+	    setPlacementMarkerVisible(placementReady);
+	    setTapToPlaceVisible(placementReady);
+	    setARData('viewerARPlaced', 'false');
+	    setARData('viewerARPlacementHitReady', placementReady ? 'true' : 'false');
+	    setARData('viewerARPlacementHitType', placementReady ? (latestHitRef.current?.type || 'unknown') : '');
     setARData('viewerARDragging', 'false');
     setARData('viewerARLastMoveX', '');
     setARData('viewerARLastMoveZ', '');
@@ -901,22 +995,8 @@ export default function EighthWallARExperience({ onClose, onError }) {
       setARData('viewerARResetCount', String(next));
       return next;
     });
-    setStatusText(latestHitRef.current ? '点击摆放点放置模型' : '移动手机扫描地面或桌面');
+	    setStatusText(placementReady ? '点击放置' : '移动手机扫描地面或桌面');
   };
-
-  useEffect(() => {
-    if (!isARDebugTelemetryEnabled()) return undefined;
-    const showPlacementGuide = () => {
-      if (flowStateRef.current === FLOW_PLACED) return;
-      setARFlowState(FLOW_READY_TO_PLACE);
-      setPlacementMarkerVisible(true);
-      setTapToPlaceVisible(true);
-      setFloorGridVisible(floorGridRef.current, true);
-      setStatusText('点击摆放点放置模型');
-    };
-    window.addEventListener('viewer-ar-debug-show-placement-guide', showPlacementGuide);
-    return () => window.removeEventListener('viewer-ar-debug-show-placement-guide', showPlacementGuide);
-  }, []);
 
   useEffect(() => {
 	    let cancelled = false;
@@ -933,9 +1013,10 @@ export default function EighthWallARExperience({ onClose, onError }) {
       setCameraIssue(value);
     };
 
-    const markCameraReadyFromHit = () => {
+    const markCameraReadyFromHit = (surfaceQualified) => {
       cameraEvidenceSeen = true;
-      markCameraFeedReadyFromSurfaceHit({
+      markCameraFeedReadyFromTrackingEvidence({
+        surfaceQualified,
         cameraFeedReadyRef,
         setCameraIssue: setCameraIssueState,
         setStatusText,
@@ -958,11 +1039,13 @@ export default function EighthWallARExperience({ onClose, onError }) {
         setTapToPlaceVisible(false);
         setARControlMode(EIGHTH_WALL_CONTROL_IDLE);
 	        setCameraIssue(false);
-        const startNativeCameraVideo = async () => {
-          const video = nativeVideoRef.current;
-          if (!video || !navigator.mediaDevices?.getUserMedia || nativeVideoStream) return;
-          try {
-            nativeVideoStream = await navigator.mediaDevices.getUserMedia({
+	        const startNativeCameraVideo = async () => {
+	          const video = nativeVideoRef.current;
+	          if (!video || !navigator.mediaDevices?.getUserMedia || nativeVideoStream) return;
+	          try {
+	            video.style.opacity = '1';
+	            setARData('viewerARNativeCameraVideoVisible', 'true');
+	            nativeVideoStream = await navigator.mediaDevices.getUserMedia({
               audio: false,
               video: {
                 facingMode: { ideal: 'environment' },
@@ -1019,17 +1102,54 @@ export default function EighthWallARExperience({ onClose, onError }) {
           disableWorldTracking: false,
           scale: 'absolute',
         });
-        XR8.Threejs.configure?.({
-          renderCameraTexture: true,
-        });
+
+        const debugAutoPlaceAtHit = (hit) => {
+          if (!isDebugAutoPlaceEnabled() || placedRef.current || !modelReadyRef.current || !isPlacementHit(hit)) return false;
+          const model = modelRef.current;
+          if (!model || !copyHitToObject(hit, model)) return false;
+          model.visible = true;
+          setARData('viewerARModelVisible', 'true');
+          if (nativeVideoRef.current) {
+            nativeVideoRef.current.style.opacity = '0';
+            setARData('viewerARNativeCameraVideoVisible', 'false');
+          }
+          applyLockedTransform(model);
+          syncModelScreenData(model);
+          if (reticleRef.current) reticleRef.current.visible = false;
+          setFloorGridVisible(floorGridRef.current, false);
+          placedRef.current = true;
+          setARFlowState(FLOW_PLACED);
+          setPlacementMarkerVisible(false);
+          setTapToPlaceVisible(false);
+          syncSelectionVisuals(model, selectionRef.current);
+          setSelectionVisible(selectionRef.current, true);
+          setARControlMode(EIGHTH_WALL_CONTROL_MOVE);
+          setARData('viewerARPlaced', 'true');
+          setARData('viewerARPlacementHitReady', 'true');
+          setARData('viewerARPlacementHitType', hit.type || 'unknown');
+          setARData('viewerARLastMoveX', String(model.position.x));
+          setARData('viewerARLastMoveZ', String(model.position.z));
+          setStatusText('拖动调整位置，切换旋转调整朝向');
+          return true;
+        };
 
         const appModule = {
-          name: 'he-furniture-placement-controls',
-          onStart: () => {
-            const { scene, camera, renderer, cameraTexture } = XR8.Threejs.xrScene();
+	          name: 'he-furniture-placement-controls',
+	          onStart: () => {
+	            setARData('viewerARLaunchState', 'started');
+	            const { scene, camera, renderer, cameraTexture } = XR8.Threejs.xrScene();
             cameraRef.current = camera;
             camera.near = 0.01;
             camera.far = 100;
+            try {
+              XR8.XrController.updateCameraProjectionMatrix?.({
+                origin: camera.position,
+                facing: camera.quaternion,
+              });
+              setARData('viewerARProjectionSynced', 'true');
+            } catch (error) {
+              setARData('viewerARProjectionSynced', `failed:${error?.message || 'unknown'}`);
+            }
             if (cameraTexture) {
               setARData('viewerARCameraTextureReady', 'true');
             } else {
@@ -1037,8 +1157,8 @@ export default function EighthWallARExperience({ onClose, onError }) {
             }
             scene.background = null;
             renderer.setClearColor(0x000000, 0);
-            renderer.autoClear = true;
-            renderer.autoClearColor = true;
+            renderer.autoClear = false;
+            renderer.autoClearColor = false;
             renderer.autoClearDepth = true;
             renderer.autoClearStencil = false;
             renderer.shadowMap.enabled = true;
@@ -1063,35 +1183,45 @@ export default function EighthWallARExperience({ onClose, onError }) {
             scene.add(selection);
             selectionRef.current = selection;
 
-            const loader = new GLTFLoader();
-            const draco = new DRACOLoader();
-            draco.setDecoderPath('/draco/');
-            loader.setDRACOLoader(draco);
-            loader.load(
-              MODEL_URL,
-              (gltf) => {
-                if (cancelled) return;
-                const model = prepareModel(gltf.scene);
-                model.visible = false;
-                scene.add(model);
-                modelRef.current = model;
-                modelReadyRef.current = true;
-                setARData('viewerARModelReady', 'true');
-                let meshCount = 0;
-                model.traverse((object) => {
-                  if (object.isMesh) meshCount += 1;
-                });
-                setARData('viewerARModelMeshCount', String(meshCount));
-                setARData('viewerARModelVisible', model.visible ? 'true' : 'false');
-                if (canUpdateScanStatus()) setStatusText('移动手机扫描地面或桌面');
-              },
-              undefined,
-              (error) => {
-                setARData('viewerARLaunchState', 'failed');
-                setStatusText('模型加载失败');
-                onError?.(error);
-              },
-            );
+            const mountModel = (model, source) => {
+              if (cancelled) return;
+              model.visible = false;
+              scene.add(model);
+              modelRef.current = model;
+              modelReadyRef.current = true;
+              setARData('viewerARModelReady', 'true');
+              setARData('viewerARModelSource', source);
+              setARData('viewerARModelError', '');
+              let meshCount = 0;
+              model.traverse((object) => {
+                if (object.isMesh) meshCount += 1;
+              });
+              setARData('viewerARModelMeshCount', String(meshCount));
+              setARData('viewerARModelVisible', model.visible ? 'true' : 'false');
+              if (canUpdateScanStatus()) setStatusText('移动手机扫描地面或桌面');
+            };
+
+            if (AR_MODEL_MODE === 'cube') {
+              mountModel(createARTestCubeModel(), 'test-cube');
+            } else {
+              const loader = new GLTFLoader();
+              const draco = new DRACOLoader();
+              draco.setDecoderPath('/draco/');
+              loader.setDRACOLoader(draco);
+              loader.load(
+                MODEL_URL,
+                (gltf) => {
+                  mountModel(prepareModel(gltf.scene), 'gltf-draco');
+                },
+                undefined,
+                (error) => {
+                  setARData('viewerARLaunchState', 'failed');
+                  setARData('viewerARModelError', error?.message || String(error));
+                  setStatusText('模型加载失败');
+                  onError?.(error);
+                },
+              );
+            }
 
             cleanupRef.current = installGestureHandlers({
               element: touchLayerRef.current,
@@ -1108,10 +1238,11 @@ export default function EighthWallARExperience({ onClose, onError }) {
               setARFlowState,
               setPlacementMarkerVisible,
               setTapToPlaceVisible,
-              modelReadyRef,
-              cameraIssueRef,
-              syncModelScreenData,
-            });
+	              modelReadyRef,
+	              cameraIssueRef,
+	              nativeVideoRef,
+	              syncModelScreenData,
+	            });
           },
           onUpdate: () => {
             if (placedRef.current) {
@@ -1123,36 +1254,44 @@ export default function EighthWallARExperience({ onClose, onError }) {
             if (!reticle) return;
             const hit = getCenterHit(XR8);
             latestHitRef.current = hit;
-            const hasHit = Boolean(hit);
-            const surfaceQualified = isSurfaceHit(hit);
-            setARData('viewerARPlaneReady', surfaceQualified ? 'true' : 'false');
-            setARData('viewerARSurfaceQualified', surfaceQualified ? 'true' : 'false');
-            setARData('viewerARReticleReady', hasHit ? 'true' : 'false');
-            reticle.visible = hasHit;
-            setPlacementMarkerVisible(hasHit);
-            setTapToPlaceVisible(surfaceQualified && modelReadyRef.current);
-            setFloorGridVisible(floorGridRef.current, hasHit);
-            if (hasHit) {
-              setPlacementMarkerScreenFromHit(hit);
-              markCameraReadyFromHit();
-              copyHitToObject(hit, reticle);
-              copyHitToObject(hit, floorGridRef.current);
-              reticle.scale.setScalar(1 + Math.sin(Date.now() * 0.006) * 0.055);
-              setARFlowState(surfaceQualified ? FLOW_READY_TO_PLACE : FLOW_SCANNING);
-              if (!surfaceQualified) {
-                setStatusText('继续移动手机，等待识别真实平面');
-              } else if (modelReadyRef.current) {
-                setStatusText('点击摆放点放置模型');
-              } else {
-                setStatusText('正在加载模型');
-              }
+	            const hasHit = Boolean(hit);
+	            const surfaceQualified = isSurfaceHit(hit);
+	            const placementReady = isPlacementHit(hit);
+	            setARData('viewerARPlaneReady', surfaceQualified ? 'true' : 'false');
+	            setARData('viewerARSurfaceQualified', surfaceQualified ? 'true' : 'false');
+	            setARData('viewerARPlacementHitReady', placementReady ? 'true' : 'false');
+	            setARData('viewerARPlacementHitType', placementReady ? (hit.type || 'unknown') : '');
+	            setARData('viewerARReticleReady', placementReady ? 'true' : 'false');
+	            reticle.visible = placementReady;
+	            setTapToPlaceVisible(placementReady && modelReadyRef.current);
+	            setFloorGridVisible(floorGridRef.current, placementReady);
+	            if (hasHit) {
+	              const markerPositioned = placementReady && setPlacementMarkerScreenFromHit(hit);
+	              setPlacementMarkerVisible(Boolean(markerPositioned));
+	              markCameraReadyFromHit(surfaceQualified);
+	              if (placementReady) {
+	                copyHitToObject(hit, reticle);
+	                copyHitToObject(hit, floorGridRef.current);
+	                if (debugAutoPlaceAtHit(hit)) return;
+	              }
+	              reticle.scale.setScalar(1 + Math.sin(Date.now() * 0.006) * 0.055);
+	              setARFlowState(placementReady ? FLOW_READY_TO_PLACE : FLOW_SCANNING);
+	              if (!placementReady) {
+	                setStatusText('移动手机扫描地面或桌面');
+	              } else if (modelReadyRef.current) {
+	                setStatusText(surfaceQualified ? '点击放置' : '已找到参考点，点击放置');
+	              } else {
+	                setStatusText('正在加载模型');
+	              }
             } else if (!cameraIssueRef.current && modelReadyRef.current) {
               setARFlowState(FLOW_SCANNING);
               setPlacementMarkerVisible(false);
-              setTapToPlaceVisible(false);
-              setFloorGridVisible(floorGridRef.current, false);
-              setStatusText('移动手机扫描地面或桌面');
-            }
+	              setTapToPlaceVisible(false);
+	              setFloorGridVisible(floorGridRef.current, false);
+	              setARData('viewerARPlacementHitReady', 'false');
+	              setARData('viewerARPlacementHitType', '');
+	              setStatusText('移动手机扫描地面或桌面');
+	            }
           },
         };
 
@@ -1169,13 +1308,13 @@ export default function EighthWallARExperience({ onClose, onError }) {
         });
 
         XR8.addCameraPipelineModules([
-          XR8.XrController.pipelineModule(),
           XR8.GlTextureRenderer.pipelineModule(),
-          cameraPixelArrayModule,
           XR8.Threejs.pipelineModule(),
+          XR8.XrController.pipelineModule(),
           XRExtras.FullWindowCanvas.pipelineModule(),
           XRExtras.Loading.pipelineModule(),
           XRExtras.RuntimeError.pipelineModule(),
+          cameraPixelArrayModule,
           cameraHealthModule,
           appModule,
         ].filter(Boolean));
@@ -1184,8 +1323,8 @@ export default function EighthWallARExperience({ onClose, onError }) {
           canvas: canvasRef.current,
           ...getBackCameraRunOptions(XR8),
         };
-        setARData('viewerARCameraPixelArrayModuleAdded', cameraPixelArrayModule ? 'true' : 'false');
-        XR8.run(runOptions);
+	        setARData('viewerARCameraPixelArrayModuleAdded', cameraPixelArrayModule ? 'true' : 'false');
+	        XR8.run(runOptions);
         window.setTimeout(() => {
           if (cancelled || cameraFeedReadyRef.current || latestHitRef.current) return;
           startNativeCameraVideo();

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>8th Wall Web: Manipulate</title>
+
+    <script crossorigin="anonymous" src="/external/scripts/8frame-1.5.0.min.js"></script>
+    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js"></script>
+    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@8thwall/landing-page@1/dist/landing-page.js"></script>
+    <script crossorigin="anonymous" async src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" data-preload-chunks="slam"></script>
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        color: #fff;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        touch-action: none;
+      }
+
+      .ar-close,
+      .ar-reset {
+        position: fixed;
+        top: calc(36px + env(safe-area-inset-top));
+        z-index: 20;
+        width: 58px;
+        height: 58px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.72);
+        color: #fff;
+        font-size: 40px;
+        line-height: 1;
+        display: grid;
+        place-items: center;
+      }
+
+      .ar-close {
+        left: 24px;
+      }
+
+      .ar-reset {
+        right: 24px;
+      }
+
+      .ar-status {
+        position: fixed;
+        left: 50%;
+        bottom: calc(118px + env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        z-index: 20;
+        width: min(78vw, 560px);
+        min-height: 74px;
+        display: grid;
+        place-items: center;
+        gap: 6px;
+        padding: 14px 18px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 8px;
+        background: rgba(22, 24, 28, 0.88);
+        text-align: center;
+      }
+
+      .ar-status strong {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .ar-status span {
+        font-size: clamp(18px, 4.4vw, 26px);
+        line-height: 1.2;
+        font-weight: 800;
+      }
+
+      .move-arrows {
+        position: fixed;
+        left: var(--ar-model-screen-x, 50%);
+        top: var(--ar-model-screen-y, 50%);
+        z-index: 19;
+        width: min(72vw, 330px);
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+        opacity: 0.42;
+        pointer-events: none;
+        display: none;
+      }
+
+      .move-arrows span {
+        position: absolute;
+        width: 72px;
+        height: 64px;
+        display: grid;
+        place-items: center;
+        color: rgba(20, 245, 255, 0.95);
+        font-size: 48px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.38);
+      }
+
+      .move-arrows small {
+        position: absolute;
+        top: 45px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .arrow-up { left: 50%; top: 0; transform: translateX(-50%); }
+      .arrow-down { left: 50%; bottom: 0; transform: translateX(-50%); }
+      .arrow-left { left: 0; top: 50%; transform: translateY(-50%); }
+      .arrow-right { right: 0; top: 50%; transform: translateY(-50%); }
+
+      .rotation-ring {
+        position: fixed;
+        left: var(--ar-model-screen-x, 50%);
+        top: var(--ar-model-screen-y, 56%);
+        z-index: 18;
+        width: min(72vw, 340px);
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+        border: 14px solid rgba(20, 245, 255, 0.78);
+        border-left-color: transparent;
+        border-right-color: transparent;
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+        display: none;
+      }
+
+      html[data-viewer-a-r-two-finger-rotating="true"] .rotation-ring {
+        opacity: 0.76;
+      }
+
+      .ar-control-bar {
+        position: fixed;
+        left: 50%;
+        bottom: calc(22px + env(safe-area-inset-bottom));
+        z-index: 22;
+        width: min(92vw, 560px);
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(16, 18, 22, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transform: translateX(-50%);
+      }
+
+      .ar-control-button {
+        min-width: 0;
+        height: 48px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 22px;
+        font-weight: 800;
+        touch-action: none;
+      }
+
+      .ar-control-button small {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        line-height: 1;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .ar-control-button:active {
+        background: rgba(20, 245, 255, 0.72);
+        color: #061013;
+      }
+    </style>
+  </head>
+
+  <body>
+    <button class="ar-close" type="button" aria-label="返回" onclick="history.back()">←</button>
+    <button class="ar-reset" type="button" aria-label="重置" onclick="location.reload()">↻</button>
+
+    <div class="move-arrows" aria-hidden="true">
+      <span class="arrow-up">↑<small>前</small></span>
+      <span class="arrow-left">←<small>左</small></span>
+      <span class="arrow-right">→<small>右</small></span>
+      <span class="arrow-down">↓<small>后</small></span>
+    </div>
+    <div class="rotation-ring" aria-hidden="true"></div>
+    <div class="ar-status">
+      <strong>AR 预览</strong>
+      <span id="status-text">单指拖动移动，双指旋转方向</span>
+    </div>
+    <div class="ar-control-bar" aria-label="AR 位移与旋转控制">
+      <button class="ar-control-button" type="button" data-control-type="move" data-direction="front">↑<small>前</small></button>
+      <button class="ar-control-button" type="button" data-control-type="move" data-direction="back">↓<small>后</small></button>
+      <button class="ar-control-button" type="button" data-control-type="move" data-direction="left">←<small>左</small></button>
+      <button class="ar-control-button" type="button" data-control-type="move" data-direction="right">→<small>右</small></button>
+      <button class="ar-control-button" type="button" data-control-type="rotate" data-direction="left">↶<small>旋转</small></button>
+      <button class="ar-control-button" type="button" data-control-type="rotate" data-direction="right">↷<small>旋转</small></button>
+    </div>
+
+    <a-scene
+      xrextras-gesture-detector
+      landing-page
+      xrextras-loading
+      xrextras-runtime-error
+      renderer="colorManagement: true"
+      xrweb="allowedDevices: any">
+
+      <a-assets>
+        <a-asset-item id="arModelAsset" src="/mainModel-ar-ios11.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera
+        id="camera"
+        position="0 8 8"
+        raycaster="objects: .cantap"
+        cursor="fuse: false; rayOrigin: mouse;">
+      </a-camera>
+
+      <a-entity
+        light="
+          type: directional;
+          intensity: 0.8;
+          castShadow: true;
+          shadowMapHeight:2048;
+          shadowMapWidth:2048;
+          shadowCameraTop: 10;
+          target: #model;"
+        xrextras-attach="target: model; offset: 1 15 3;"
+        shadow>
+      </a-entity>
+
+      <a-light type="ambient" intensity="0.7"></a-light>
+
+      <a-entity
+        id="model"
+        gltf-model="#arModelAsset"
+        class="cantap"
+        xrextras-hold-drag
+        xrextras-two-finger-rotate
+        scale="3 3 3"
+        shadow="receive: false">
+      </a-entity>
+
+      <a-plane
+        id="ground"
+        rotation="-90 0 0"
+        width="1000"
+        height="1000"
+        material="shader: shadow"
+        shadow>
+      </a-plane>
+    </a-scene>
+
+    <script>
+      const setARData = (name, value) => {
+        document.documentElement.dataset[name] = String(value)
+      }
+
+      const isDebug = () => new URLSearchParams(location.search).get('arDebug') === '1'
+      const postState = () => {
+        if (!isDebug()) return
+        fetch('/__ar-state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            href: location.href,
+            timestamp: Date.now(),
+            dataset: { ...document.documentElement.dataset },
+          }),
+          keepalive: true,
+        }).catch(() => {})
+      }
+
+      ;[
+        ['viewerARProvider', '8th-wall-aframe-official-manipulate'],
+        ['viewerARLaunchState', 'starting'],
+        ['viewerARMode', 'active'],
+        ['viewerAROverlayActive', 'true'],
+        ['viewerARCameraPipelineStarted', 'false'],
+        ['viewerARCameraFeedReady', 'false'],
+        ['viewerARCameraTextureReady', 'false'],
+        ['viewerARCameraFrameCount', '0'],
+        ['viewerARCameraBlackFrameSuspected', 'false'],
+        ['viewerARModelReady', 'false'],
+        ['viewerARModelSource', 'mainModel-ar-ios11.glb'],
+        ['viewerARModelVisible', 'false'],
+        ['viewerARModelError', ''],
+        ['viewerARModelMeshCount', '0'],
+        ['viewerARPlaced', 'true'],
+        ['viewerARControlMode', 'move'],
+        ['viewerARScaleLocked', 'true'],
+        ['viewerARDragging', 'false'],
+        ['viewerARTwoFingerRotating', 'false'],
+        ['viewerARRotationRingVisible', 'false'],
+        ['viewerARControlsBoundToModel', 'false'],
+        ['viewerARControlVisualsType', 'bottom-ui'],
+        ['viewerARControlButtonsVisible', 'true'],
+        ['viewerARHudFollowsModel', 'false'],
+        ['viewerARLastMoveX', ''],
+        ['viewerARLastMoveZ', ''],
+        ['viewerARLastRotateRadians', '0'],
+        ['viewerARPipelineVersion', 'official-aframe-manipulate-in-12345-20260830'],
+        ['viewerARRuntimeError', ''],
+      ].forEach(([name, value]) => setARData(name, value))
+
+      const updateModelState = () => {
+        const model = document.getElementById('model')
+        if (!model?.object3D) return
+        model.object3D.scale.set(3, 3, 3)
+        const { position, rotation, visible } = model.object3D
+        setARData('viewerARModelVisible', visible ? 'true' : 'false')
+        setARData('viewerARLastMoveX', position.x.toFixed(4))
+        setARData('viewerARLastMoveZ', position.z.toFixed(4))
+        setARData('viewerARLastRotateRadians', rotation.y.toFixed(4))
+        setARData('viewerARScaleLocked', 'true')
+        setARData('viewerARModelScaleX', model.object3D.scale.x.toFixed(4))
+        setARData('viewerARHudFollowsModel', 'false')
+      }
+
+      window.addEventListener('error', event => {
+        setARData('viewerARRuntimeError', event.message || 'window-error')
+      })
+      window.addEventListener('unhandledrejection', event => {
+        setARData('viewerARRuntimeError', event.reason?.message || String(event.reason || 'unhandled-rejection'))
+      })
+
+      window.addEventListener('touchstart', event => {
+        const count = event.touches?.length || 0
+        setARData('viewerARDragging', count === 1 ? 'true' : 'false')
+        setARData('viewerARTwoFingerRotating', count >= 2 ? 'true' : 'false')
+        setARData('viewerARControlMode', count >= 2 ? 'rotate' : 'move')
+        setARData('viewerARRotationRingVisible', count >= 2 ? 'true' : 'false')
+        updateModelState()
+      }, { passive: true })
+
+      window.addEventListener('touchmove', event => {
+        updateModelState()
+      }, { passive: true })
+      window.addEventListener('touchend', event => {
+        const count = event.touches?.length || 0
+        setARData('viewerARDragging', count === 1 ? 'true' : 'false')
+        setARData('viewerARTwoFingerRotating', count >= 2 ? 'true' : 'false')
+        setARData('viewerARControlMode', count >= 2 ? 'rotate' : 'move')
+        setARData('viewerARRotationRingVisible', count >= 2 ? 'true' : 'false')
+        updateModelState()
+      }, { passive: true })
+
+      const scene = document.querySelector('a-scene')
+      const model = document.getElementById('model')
+      scene.addEventListener('loaded', () => {
+        setARData('viewerARLaunchState', 'started')
+        setARData('viewerARCameraPipelineStarted', 'true')
+      })
+      model.addEventListener('model-loaded', () => {
+        let meshCount = 0
+        model.object3D.traverse(object => {
+          if (object.isMesh) meshCount += 1
+        })
+        setARData('viewerARModelReady', 'true')
+        setARData('viewerARModelError', '')
+        setARData('viewerARModelMeshCount', String(meshCount))
+        updateModelState()
+      })
+      model.addEventListener('model-error', event => {
+        setARData('viewerARModelReady', 'false')
+        setARData('viewerARModelError', event?.detail?.src || 'model-error')
+      })
+
+      AFRAME.registerComponent('official-manipulate-telemetry', {
+        tick() {
+          const next = Number(document.documentElement.dataset.viewerARCameraFrameCount || 0) + 1
+          setARData('viewerARCameraFrameCount', String(next))
+          if (window.XR8) {
+            setARData('viewerARCameraFeedReady', 'true')
+            setARData('viewerARCameraTextureReady', 'true')
+            setARData('viewerARCameraBlackFrameSuspected', 'false')
+          }
+          updateModelState()
+        }
+      })
+      scene.setAttribute('official-manipulate-telemetry', '')
+
+      const moveStep = 0.08
+      const rotateStep = Math.PI / 36
+      let repeatTimer = 0
+
+      const applyControl = (type, direction) => {
+        const model = document.getElementById('model')
+        if (!model?.object3D) return
+        model.object3D.scale.set(3, 3, 3)
+        if (type === 'move') {
+          if (direction === 'front') model.object3D.position.z -= moveStep
+          if (direction === 'back') model.object3D.position.z += moveStep
+          if (direction === 'left') model.object3D.position.x -= moveStep
+          if (direction === 'right') model.object3D.position.x += moveStep
+          setARData('viewerARControlMode', 'move')
+          setARData('viewerARLastMoveDirection', direction)
+        }
+        if (type === 'rotate') {
+          model.object3D.rotation.y += direction === 'left' ? rotateStep : -rotateStep
+          setARData('viewerARControlMode', 'rotate')
+          setARData('viewerARLastRotateDirection', direction)
+        }
+        setARData('viewerARScaleLocked', 'true')
+        setARData('viewerARControlButtonsVisible', 'true')
+        setARData('viewerARControlVisualsType', 'bottom-ui')
+        updateModelState()
+      }
+
+      const stopRepeat = () => {
+        if (repeatTimer) clearInterval(repeatTimer)
+        repeatTimer = 0
+      }
+
+      document.querySelectorAll('.ar-control-button').forEach(button => {
+        const start = event => {
+          event.preventDefault()
+          event.stopPropagation()
+          const type = button.dataset.controlType
+          const direction = button.dataset.direction
+          applyControl(type, direction)
+          stopRepeat()
+          repeatTimer = setInterval(() => applyControl(type, direction), 80)
+        }
+        button.addEventListener('pointerdown', start)
+        button.addEventListener('touchstart', start, { passive: false })
+        ;['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel'].forEach(name => {
+          button.addEventListener(name, event => {
+            event.preventDefault()
+            event.stopPropagation()
+            stopRepeat()
+          }, { passive: false })
+        })
+      })
+
+      setInterval(postState, 1000)
+      postState()
+    </script>
+  </body>
+</html>

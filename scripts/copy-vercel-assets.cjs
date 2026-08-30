@@ -24,7 +24,10 @@ const skippedRootMediaPatterns = [
 function shouldSkipSourceMedia(src) {
   const relative = path.relative(sourceMediaDir, src);
   if (relative.startsWith('..') || path.isAbsolute(relative)) return false;
-  if (relative === 'optimized' || relative.startsWith(`optimized${path.sep}`)) return true;
+  if (relative === 'optimized') return false;
+  if (relative.startsWith(`optimized${path.sep}`)) {
+    return !relative.startsWith(path.join('optimized', 'draco-transform'));
+  }
   if (relative.includes(path.sep)) return false;
 
   const name = path.basename(src);

@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import Scene from './components/Scene';
-import EighthWallARExperience from './components/EighthWallARExperience';
+import AFrameEighthWallARExperience from './components/AFrameEighthWallARExperience';
 import Header from './components/Header';
 import ControlBar from './components/ControlBar';
 import LoadingScreen from './components/LoadingScreen';
@@ -876,7 +876,12 @@ function ConfiguratorApp({ viewer }) {
       const result = await launchProductAR();
       if (result.provider === EIGHTH_WALL_PROVIDER) {
         setIOSARGuideVisible(false);
-        setEighthWallARActive(true);
+        const arUrl = new URL('/aframe-manipulate.html', window.location.origin);
+        if (new URLSearchParams(window.location.search).get('arDebug') === '1') {
+          arUrl.searchParams.set('arDebug', '1');
+        }
+        arUrl.searchParams.set('v', `official-manipulate-${Date.now()}`);
+        window.location.href = arUrl.toString();
         trackOperation('ar_session_started', {
           mode: '8th-wall',
           provider: result.provider,
@@ -957,7 +962,8 @@ function ConfiguratorApp({ viewer }) {
   useEffect(() => {
     if (!sceneUiReady || autoQuickLookAttemptedRef.current) return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get('ar') !== 'quicklook') return;
+    const autoStartDebugAR = params.get('arDebug') === '1' && params.get('arAutoStart') === '1';
+    if (params.get('ar') !== 'quicklook' && !autoStartDebugAR) return;
 
     autoQuickLookAttemptedRef.current = true;
     handleEnterAR();
@@ -1040,7 +1046,7 @@ function ConfiguratorApp({ viewer }) {
     <LangContext.Provider value={lang}>
       <>
         {eighthWallARActive && (
-          <EighthWallARExperience
+          <AFrameEighthWallARExperience
             onClose={handleCloseEighthWallAR}
             onError={handleEighthWallError}
           />
@@ -1287,5 +1293,3 @@ export default function App() {
 
   return <ConfiguratorApp viewer={viewer} />;
 }
-
-
