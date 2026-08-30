@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { mediaUrl } from '../utils/assetUrl';
 import { loadEighthWallRuntime } from '../ar/eighthWallLoader';
 import {
@@ -12,7 +13,7 @@ import {
   EIGHTH_WALL_PROVIDER,
 } from '../ar/eighthWallConfig';
 
-const MODEL_URL = mediaUrl('optimized/draco-transform/12345-draco.gltf');
+const MODEL_URL = mediaUrl('mainModel-ar-ios11.glb');
 const SURFACE_HIT_TYPES = ['DETECTED_SURFACE', 'ESTIMATED_SURFACE', 'FEATURE_POINT'];
 const HIT_TYPE_PRIORITY = {
   DETECTED_SURFACE: 0,
@@ -1067,6 +1068,7 @@ export default function EighthWallARExperience({ onClose, onError }) {
             const draco = new DRACOLoader();
             draco.setDecoderPath('/draco/');
             loader.setDRACOLoader(draco);
+            loader.setMeshoptDecoder(MeshoptDecoder);
             loader.load(
               MODEL_URL,
               (gltf) => {
