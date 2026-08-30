@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { mediaUrl } from '../utils/assetUrl';
 import { loadEighthWallRuntime } from '../ar/eighthWallLoader';
 import {
@@ -12,9 +13,7 @@ import {
   EIGHTH_WALL_PROVIDER,
 } from '../ar/eighthWallConfig';
 
-const MODEL_URL = mediaUrl('optimized/draco-transform/12345-draco.gltf');
-const AR_MODEL_MODE = 'cube';
-const AR_TEST_CUBE_SIZE_METERS = 0.35;
+const MODEL_URL = mediaUrl('mainModel-ar-ios11.glb');
 const SURFACE_HIT_TYPES = ['DETECTED_SURFACE', 'ESTIMATED_SURFACE', 'FEATURE_POINT'];
 const HIT_TYPE_PRIORITY = {
   DETECTED_SURFACE: 0,
@@ -1201,27 +1200,24 @@ export default function EighthWallARExperience({ onClose, onError }) {
               if (canUpdateScanStatus()) setStatusText('移动手机扫描地面或桌面');
             };
 
-            if (AR_MODEL_MODE === 'cube') {
-              mountModel(createARTestCubeModel(), 'test-cube');
-            } else {
-              const loader = new GLTFLoader();
-              const draco = new DRACOLoader();
-              draco.setDecoderPath('/draco/');
-              loader.setDRACOLoader(draco);
-              loader.load(
-                MODEL_URL,
-                (gltf) => {
-                  mountModel(prepareModel(gltf.scene), 'gltf-draco');
-                },
-                undefined,
-                (error) => {
-                  setARData('viewerARLaunchState', 'failed');
-                  setARData('viewerARModelError', error?.message || String(error));
-                  setStatusText('模型加载失败');
-                  onError?.(error);
-                },
-              );
-            }
+            const loader = new GLTFLoader();
+            const draco = new DRACOLoader();
+            draco.setDecoderPath('/draco/');
+            loader.setDRACOLoader(draco);
+            loader.setMeshoptDecoder(MeshoptDecoder);
+            loader.load(
+              MODEL_URL,
+              (gltf) => {
+                mountModel(prepareModel(gltf.scene), 'mainModel-ar-ios11.glb');
+              },
+              undefined,
+              (error) => {
+                setARData('viewerARLaunchState', 'failed');
+                setARData('viewerARModelError', error?.message || String(error));
+                setStatusText('模型加载失败');
+                onError?.(error);
+              },
+            );
 
             cleanupRef.current = installGestureHandlers({
               element: touchLayerRef.current,
