@@ -29,6 +29,8 @@ v3d_app_data/
 opentype.js
 environment.hdr
 assets/
+!8thwall-desktop/12345/src/assets/
+!8thwall-desktop/12345/src/assets/mainModel-ar-ios11.glb
 _archive/
 backups/
 _recycle/

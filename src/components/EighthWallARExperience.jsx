@@ -1377,7 +1377,7 @@ export default function EighthWallARExperience({ onClose, onError }) {
       className={`eighth-wall-ar-shell${cameraIssue ? ' eighth-wall-ar-shell--camera-issue' : ''}`}
       role="dialog"
       aria-modal="true"
-      aria-label="8th Wall AR 预览"
+      aria-label="HE Furniture AR 预览"
     >
       <video
         ref={nativeVideoRef}

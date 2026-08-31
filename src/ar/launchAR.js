@@ -97,7 +97,7 @@ export function showARUnsupportedNotice(platformInfo) {
   if (platformInfo?.platform === 'android') {
     return '请使用支持 ARCore 的安卓手机 Chrome，并通过 HTTPS 打开页面';
   }
-  return '请使用 iPhone 或安卓手机 Chrome/Safari 通过 HTTPS 打开 8th Wall AR 预览';
+  return '请使用 iPhone 或安卓手机 Chrome/Safari 通过 HTTPS 打开 AR 预览';
 }
 
 export async function launchProductAR() {

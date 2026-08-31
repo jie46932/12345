@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const MODEL_URL = '/models/mainModel.glb';
 const MODEL_SOURCE_LABEL = '123453_v1.0.0/mainModel.glb';
@@ -7,11 +7,11 @@ const STATE_POST_INTERVAL_MS = 1000;
 const CONTROL_REPEAT_MS = 80;
 const MOVE_STEP_METERS = 0.08;
 const ROTATE_STEP_RADIANS = Math.PI / 36;
+const LONG_PRESS_MS = 450;
 
 const SCRIPT_SOURCES = [
   '/external/scripts/8frame-1.5.0.min.js',
   'https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js',
-  'https://cdn.jsdelivr.net/npm/@8thwall/landing-page@1/dist/landing-page.js',
   'https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js',
 ];
 
@@ -56,6 +56,7 @@ function resetARState() {
     ['viewerARReticleReady', 'false'],
     ['viewerARFloorGridVisible', 'false'],
     ['viewerARTapToPlaceVisible', 'true'],
+    ['viewerARPlacementMarkerVisible', 'false'],
     ['viewerARPlacementHitReady', 'false'],
     ['viewerARPlacementHitType', 'aframe-ground'],
     ['viewerARPlaced', 'false'],
@@ -68,6 +69,12 @@ function resetARState() {
     ['viewerARControlButtonsVisible', 'false'],
     ['viewerARControlVisualsType', 'bottom-ui'],
     ['viewerARControlsBoundToModel', 'false'],
+    ['viewerARMoveControlsVisible', 'false'],
+    ['viewerARRotateControlsVisible', 'false'],
+    ['viewerARPlacementRequiresReticle', 'true'],
+    ['viewerARScaleLocked', 'true'],
+    ['viewerARRotationLockedAxis', 'vertical'],
+    ['viewerARBrandingSource', 'none'],
     ['viewerARLastMoveX', ''],
     ['viewerARLastMoveZ', ''],
     ['viewerARLastRotateRadians', '0'],
@@ -184,6 +191,13 @@ function registerAFrameComponents() {
           setARData('viewerARLaunchState', 'started');
           setARData('viewerARCameraPipelineStarted', 'true');
           setARData('viewerARCameraTextureReady', window.XR8 ? 'true' : 'false');
+          setARData('viewerARPlaneReady', 'true');
+          setARData('viewerARReticleReady', 'true');
+          setARData('viewerARPlacementMarkerVisible', 'true');
+          setARData('viewerARPlacementHitReady', 'true');
+          setARData('viewerARFlowState', 'ready-to-place');
+          setARData('viewerARTapToPlaceVisible', 'true');
+          document.getElementById('aframe-status-text')?.replaceChildren('点击摆放点放置模型');
         };
         this.el.sceneEl.addEventListener('loaded', this.onSceneLoaded, { once: true });
       },
@@ -221,14 +235,18 @@ function registerAFrameComponents() {
           setARData('viewerARReticleReady', 'true');
           setARData('viewerARFloorGridVisible', 'false');
           setARData('viewerARTapToPlaceVisible', 'false');
+          setARData('viewerARPlacementMarkerVisible', 'false');
           setARData('viewerARPlacementHitReady', 'true');
           setARData('viewerARPlaced', 'true');
           setARData('viewerARFlowState', 'placed');
-          setARData('viewerARControlMode', 'move');
+          setARData('viewerARControlMode', 'idle');
+          setARData('viewerARMoveControlsVisible', 'false');
+          setARData('viewerARRotateControlsVisible', 'false');
           setARData('viewerARSelectionVisible', 'true');
           setARData('viewerARRotationRingVisible', 'true');
           updateModelTransformState(this.model);
-          document.getElementById('aframe-status-text')?.replaceChildren('单指拖动移动，双指旋转方向');
+          document.getElementById('aframe-status-text')?.replaceChildren('长按屏幕显示移动或旋转按钮');
+          window.dispatchEvent(new CustomEvent('viewer-aframe-ar-placed'));
         };
         this.onGroundClick = (event) => {
           if (!this.model) return;
@@ -260,16 +278,12 @@ function registerAFrameComponents() {
           const count = event.touches?.length || 0;
           setARData('viewerARDragging', count === 1 ? 'true' : 'false');
           setARData('viewerARTwoFingerRotating', count >= 2 ? 'true' : 'false');
-          setARData('viewerARControlMode', count >= 2 ? 'rotate' : count === 1 ? 'move' : 'idle');
         };
         this.onTouchMove = this.onTouchStart;
         this.onTouchEnd = (event) => {
           const count = event.touches?.length || 0;
           setARData('viewerARDragging', count === 1 ? 'true' : 'false');
           setARData('viewerARTwoFingerRotating', count >= 2 ? 'true' : 'false');
-          if (count === 0 && document.documentElement.dataset.viewerARPlaced === 'true') {
-            setARData('viewerARControlMode', 'move');
-          }
         };
         window.addEventListener('touchstart', this.onTouchStart, { passive: true });
         window.addEventListener('touchmove', this.onTouchMove, { passive: true });
@@ -288,14 +302,36 @@ function registerAFrameComponents() {
 
 export default function AFrameEighthWallARExperience({ onClose, onError }) {
   const [ready, setReady] = useState(false);
+  const [placed, setPlaced] = useState(false);
+  const [controlMode, setControlMode] = useState('idle');
   const [resetCount, setResetCount] = useState(0);
   const timerRef = useRef(0);
   const controlRepeatRef = useRef(0);
+  const longPressRef = useRef(0);
+  const activePointersRef = useRef(new Map());
+  const placedRef = useRef(false);
 
   const stopControlRepeat = () => {
     if (controlRepeatRef.current) window.clearInterval(controlRepeatRef.current);
     controlRepeatRef.current = 0;
   };
+
+  const setMode = useCallback((mode) => {
+    const nextMode = placedRef.current ? mode : 'idle';
+    setControlMode(nextMode);
+    setARData('viewerARControlMode', nextMode);
+    setARData('viewerARMoveControlsVisible', nextMode === 'move' ? 'true' : 'false');
+    setARData('viewerARRotateControlsVisible', nextMode === 'rotate' ? 'true' : 'false');
+    setARData('viewerARControlButtonsVisible', nextMode === 'idle' ? 'false' : 'true');
+    setARData('viewerARControlVisualsType', nextMode === 'rotate' ? 'rotate-buttons' : 'direction-buttons');
+    document.getElementById('aframe-status-text')?.replaceChildren(
+      nextMode === 'move'
+        ? '按住方向箭头水平移动'
+        : nextMode === 'rotate'
+          ? '按住左转或右转旋转'
+      : '长按屏幕显示移动或旋转按钮',
+    );
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -304,8 +340,14 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
       const message = event?.message || event?.reason?.message || String(event?.reason || 'runtime-error');
       setARData('viewerARRuntimeError', message);
     };
+    const handlePlaced = () => {
+      placedRef.current = true;
+      setPlaced(true);
+      setMode('idle');
+    };
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleError);
+    window.addEventListener('viewer-aframe-ar-placed', handlePlaced);
 
     loadAFrameRuntime()
       .then(() => {
@@ -326,8 +368,10 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
       cancelled = true;
       if (timerRef.current) window.clearInterval(timerRef.current);
       stopControlRepeat();
+      window.clearTimeout(longPressRef.current);
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleError);
+      window.removeEventListener('viewer-aframe-ar-placed', handlePlaced);
       setARData('viewerARMode', 'inactive');
       setARData('viewerAROverlayActive', 'false');
       setARData('viewerARDragging', 'false');
@@ -338,20 +382,26 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
         // 8th Wall cleanup is best-effort when React unmounts the scene.
       }
     };
-  }, [onError]);
+  }, [onError, setMode]);
 
   const handleReset = () => {
     const model = document.getElementById('aframe-product-model');
     model?.setAttribute('visible', 'false');
     model?.setAttribute('position', '0 0 0');
+    placedRef.current = false;
+    setPlaced(false);
+    setControlMode('idle');
     setARData('viewerARPlaced', 'false');
-    setARData('viewerARFlowState', 'scanning');
+    setARData('viewerARFlowState', 'ready-to-place');
     setARData('viewerARControlMode', 'idle');
     setARData('viewerARSelectionVisible', 'false');
     setARData('viewerARRotationRingVisible', 'false');
     setARData('viewerARControlButtonsVisible', 'false');
+    setARData('viewerARMoveControlsVisible', 'false');
+    setARData('viewerARRotateControlsVisible', 'false');
     setARData('viewerARControlsBoundToModel', 'false');
     setARData('viewerARTapToPlaceVisible', 'true');
+    setARData('viewerARPlacementMarkerVisible', 'true');
     setARData('viewerARLastMoveX', '');
     setARData('viewerARLastMoveZ', '');
     setResetCount((count) => {
@@ -359,7 +409,7 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
       setARData('viewerARResetCount', String(next));
       return next;
     });
-    document.getElementById('aframe-status-text')?.replaceChildren('点击地面放置模型');
+    document.getElementById('aframe-status-text')?.replaceChildren('点击摆放点放置模型');
   };
 
   const applyControl = (type, direction) => {
@@ -410,12 +460,36 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
     stopControlRepeat();
   };
 
+  const handleTouchLayerPointerDown = (event) => {
+    if (!placedRef.current || event.target?.closest?.('button')) return;
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    window.clearTimeout(longPressRef.current);
+    longPressRef.current = window.setTimeout(() => {
+      setMode(activePointersRef.current.size >= 2 ? 'rotate' : 'move');
+    }, LONG_PRESS_MS);
+  };
+
+  const handleTouchLayerPointerMove = (event) => {
+    const point = activePointersRef.current.get(event.pointerId);
+    if (!point) return;
+    if (Math.hypot(event.clientX - point.x, event.clientY - point.y) > 18) {
+      window.clearTimeout(longPressRef.current);
+    }
+  };
+
+  const handleTouchLayerPointerUp = (event) => {
+    activePointersRef.current.delete(event.pointerId);
+    if (activePointersRef.current.size === 0) {
+      window.clearTimeout(longPressRef.current);
+    }
+  };
+
   return (
-    <div className="aframe-ar-shell" role="dialog" aria-modal="true" aria-label="8th Wall A-Frame AR 预览">
+    <div className="aframe-ar-shell" role="dialog" aria-modal="true" aria-label="HE Furniture AR 预览">
       {!ready && (
         <div className="aframe-ar-loading">
           <strong>AR 预览</strong>
-          <span>正在启动 8th Wall A-Frame</span>
+          <span>正在启动 AR</span>
         </div>
       )}
       {ready && (
@@ -424,9 +498,6 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
           viewer-manipulate-telemetry
           viewer-touch-state
           xrextras-gesture-detector
-          landing-page
-          xrextras-loading
-          xrextras-runtime-error
           renderer="colorManagement:true; physicallyCorrectLights:true"
           xrweb="allowedDevices: any"
         >
@@ -463,8 +534,6 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
             rotation="0 0 0"
             scale="1 1 1"
             viewer-model-normalizer
-            xrextras-hold-drag
-            xrextras-two-finger-rotate
             shadow="receive: false"
           ></a-entity>
 
@@ -480,6 +549,21 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
       )}
 
       <div className="aframe-ar-hud" aria-hidden="true">
+        <div
+          className="aframe-touch-layer"
+          onPointerDown={handleTouchLayerPointerDown}
+          onPointerMove={handleTouchLayerPointerMove}
+          onPointerUp={handleTouchLayerPointerUp}
+          onPointerCancel={handleTouchLayerPointerUp}
+        />
+        {!placed && (
+          <div className="aframe-placement-marker">
+            <div className="aframe-placement-grid">
+              {Array.from({ length: 77 }).map((_, index) => <i key={index} />)}
+            </div>
+            <div className="aframe-placement-reticle"><span /></div>
+          </div>
+        )}
         <div className="aframe-move-arrows">
           <span className="aframe-arrow aframe-arrow-up">↑<small>前</small></span>
           <span className="aframe-arrow aframe-arrow-left">←<small>左</small></span>
@@ -504,6 +588,7 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
           ['rotate', 'left', '↶', '左转'],
           ['rotate', 'right', '↷', '右转'],
         ].map(([type, direction, icon, label]) => (
+          (controlMode === type) && (
           <button
             key={`${type}-${direction}`}
             className="aframe-control-button"
@@ -522,6 +607,7 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
             {icon}
             <small>{label}</small>
           </button>
+          )
         ))}
       </div>
 
@@ -610,6 +696,65 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
           pointer-events: none;
         }
 
+        .aframe-touch-layer {
+          position: fixed;
+          inset: 0;
+          z-index: 1;
+          pointer-events: auto;
+          touch-action: none;
+        }
+
+        .aframe-placement-marker {
+          position: fixed;
+          inset: 0;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .aframe-placement-grid {
+          position: absolute;
+          left: 50%;
+          top: 62%;
+          width: min(92vw, 460px);
+          display: grid;
+          grid-template-columns: repeat(11, 1fr);
+          gap: 14px 18px;
+          transform: translate(-50%, -50%) perspective(360px) rotateX(58deg);
+          opacity: 0.82;
+        }
+
+        .aframe-placement-grid i {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.92);
+          box-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+        }
+
+        .aframe-placement-reticle {
+          position: absolute;
+          left: 50%;
+          top: 55%;
+          width: 86px;
+          height: 86px;
+          transform: translate(-50%, -50%) perspective(360px) rotateX(58deg);
+          border: 4px solid rgba(20, 245, 255, 0.95);
+          border-radius: 8px;
+          background: rgba(5, 10, 14, 0.18);
+          box-shadow: 0 0 20px rgba(20, 245, 255, 0.52);
+        }
+
+        .aframe-placement-reticle span {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.92);
+          transform: translate(-50%, -50%);
+        }
+
         .aframe-move-arrows {
           position: absolute;
           left: 50%;
@@ -621,7 +766,7 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
           transition: opacity 180ms ease;
         }
 
-        [data-viewer-a-r-placed="true"] .aframe-move-arrows {
+        [data-viewer-a-r-control-mode="move"] .aframe-move-arrows {
           opacity: 0.42;
         }
 
@@ -664,7 +809,7 @@ export default function AFrameEighthWallARExperience({ onClose, onError }) {
           transition: opacity 180ms ease;
         }
 
-        [data-viewer-a-r-two-finger-rotating="true"] .aframe-rotation-ring {
+        [data-viewer-a-r-control-mode="rotate"] .aframe-rotation-ring {
           opacity: 0.76;
         }
 

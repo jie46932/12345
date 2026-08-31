@@ -952,11 +952,11 @@ function ConfiguratorApp({ viewer }) {
 
     if (platform === 'ios') {
       setIOSARGuideVisible(true);
-      showNotice('8th Wall AR 启动失败，可改用 Safari Quick Look 预览', 4200);
+      showNotice('AR 预览启动失败，可改用 Safari Quick Look 预览', 4200);
       return;
     }
 
-    showNotice('当前设备无法启动 8th Wall AR');
+    showNotice('当前设备无法启动 AR 预览');
   }, [showNotice]);
 
   useEffect(() => {
