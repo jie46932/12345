@@ -1,6 +1,6 @@
 import * as ecs from '@8thwall/ecs'
 
-type FlowState = 'scanning' | 'ready-to-place' | 'placed' | 'repositioning'
+type FlowState = 'scanning' | 'ready-to-place' | 'placed'
 type ControlMode = 'idle' | 'move' | 'rotate'
 type ControlAction = 'front' | 'back' | 'left' | 'right' | 'rotate-left' | 'rotate-right'
 
@@ -63,7 +63,8 @@ const DATASET_DEFAULTS: Record<string, string> = {
   viewerARTrackingEvidence: 'none',
   viewerARHitStable: 'false',
   viewerARHitStableFrames: '0',
-  viewerARRepositionAvailable: 'true',
+  viewerARHitTestActive: 'true',
+  viewerARHitLockedAfterPlacement: 'false',
   viewerARLastRealityEvent: '',
   viewerARLastMoveX: '',
   viewerARLastMoveZ: '',
@@ -240,17 +241,12 @@ class HEFurnitureARController {
   }
 
   private setFlowState(nextState: FlowState) {
-    if (this.flowState === 'placed' && nextState !== 'placed' && nextState !== 'repositioning') return
+    if (this.flowState === 'placed' && nextState !== 'placed') return
     this.flowState = nextState
     setARData('viewerARFlowState', nextState)
 
     if (nextState === 'scanning') {
       this.statusText.textContent = '移动手机扫描地面或桌面'
-      this.marker.hidden = true
-    }
-
-    if (nextState === 'repositioning') {
-      this.statusText.textContent = '移动手机扫描新的地面或桌面'
       this.marker.hidden = true
     }
 
@@ -260,7 +256,7 @@ class HEFurnitureARController {
     }
 
     if (nextState === 'placed') {
-      this.statusText.textContent = '长按移动 / 双指长按旋转 / 可重新放置'
+      this.statusText.textContent = '长按移动 / 双指长按旋转'
       this.marker.hidden = true
     }
   }
@@ -305,8 +301,14 @@ class HEFurnitureARController {
   }
 
   private updatePlacementPoint() {
+    if (this.flowState === 'placed') {
+      setARData('viewerARHitTestActive', 'false')
+      return
+    }
+
     const camera = this.world?.three?.activeCamera
     if (!camera?.position) return
+    setARData('viewerARHitTestActive', 'true')
 
     const hit = this.getSurfaceHit()
     if (!hit) {
@@ -316,7 +318,7 @@ class HEFurnitureARController {
       setARData('viewerARPlacementMarkerVisible', 'false')
       setARData('viewerARTrackingEvidence', 'none')
       this.resetHitStability()
-      if (this.flowState !== 'placed') this.setFlowState(this.modelClone ? 'repositioning' : 'scanning')
+      this.setFlowState('scanning')
       return
     }
 
@@ -327,7 +329,7 @@ class HEFurnitureARController {
       setARData('viewerARReticleReady', 'false')
       setARData('viewerARPlacementMarkerVisible', 'false')
       this.resetHitStability()
-      if (this.flowState !== 'placed') this.setFlowState(this.modelClone ? 'repositioning' : 'scanning')
+      this.setFlowState('scanning')
       return
     }
 
@@ -359,10 +361,10 @@ class HEFurnitureARController {
     this.planeReady = this.hitStableFrames >= HIT_STABLE_FRAME_TARGET
     setARData('viewerARPlaneReady', 'true')
     setARData('viewerARReticleReady', this.planeReady)
-    setARData('viewerARPlacementMarkerVisible', this.planeReady && this.flowState !== 'placed')
+    setARData('viewerARPlacementMarkerVisible', this.planeReady)
     setARData('viewerARTrackingEvidence', 'surface-hit')
     setARData('viewerARPlacementReadyReason', 'xr8-hit-test')
-    if (this.flowState !== 'placed') this.setFlowState(this.planeReady ? 'ready-to-place' : (this.modelClone ? 'repositioning' : 'scanning'))
+    this.setFlowState(this.planeReady ? 'ready-to-place' : 'scanning')
   }
 
   private updateHitStability(point: {x: number, y: number, z: number}) {
@@ -491,7 +493,6 @@ class HEFurnitureARController {
     if (this.flowState !== 'ready-to-place' || !this.modelObject) return
     this.updatePlacementPoint()
     if (!this.planeReady || this.flowState !== 'ready-to-place') return
-    const wasRepositioning = Boolean(this.modelClone)
     this.modelY = this.placementPoint.y
     const placedObject = this.modelClone || this.createModelClone()
     if (!placedObject) return
@@ -505,7 +506,9 @@ class HEFurnitureARController {
     this.lockModelTransform(false)
     setARData('viewerARPlaced', 'true')
     setARData('viewerARModelVisible', 'true')
-    setARData('viewerARTransformWriteSource', wasRepositioning ? 'reposition' : 'place-clone')
+    setARData('viewerARHitTestActive', 'false')
+    setARData('viewerARHitLockedAfterPlacement', 'true')
+    setARData('viewerARTransformWriteSource', 'place-clone')
     setARData('viewerARPlacementMarkerVisible', 'false')
     setARData('viewerARLastMoveX', this.placementPoint.x.toFixed(4))
     setARData('viewerARLastMoveZ', this.placementPoint.z.toFixed(4))
@@ -631,10 +634,7 @@ class HEFurnitureARController {
       button.addEventListener('touchcancel', stop)
     })
 
-    this.root.querySelector<HTMLButtonElement>('[data-reset]')?.addEventListener('click', () => {
-      if (this.modelClone) this.startReposition()
-      else this.resetPlacement()
-    })
+    this.root.querySelector<HTMLButtonElement>('[data-reset]')?.addEventListener('click', () => this.resetPlacement())
     this.root.querySelector<HTMLButtonElement>('[data-exit]')?.addEventListener('click', () => {
       window.history.back()
     })
@@ -707,6 +707,8 @@ class HEFurnitureARController {
     }
     setARData('viewerARPlaced', 'false')
     setARData('viewerARModelVisible', 'false')
+    setARData('viewerARHitTestActive', 'false')
+    setARData('viewerARHitLockedAfterPlacement', 'true')
     setARData('viewerARTransformWriteSource', 'reset')
     setARData('viewerARJitterSampleDelta', '0')
     this.setControlMode('idle')
@@ -714,20 +716,7 @@ class HEFurnitureARController {
     setARData('viewerARPlaneReady', 'false')
     setARData('viewerARReticleReady', 'false')
     setARData('viewerARPlacementMarkerVisible', 'false')
-    this.setFlowState('scanning')
-  }
-
-  private startReposition() {
-    this.stopControlAction()
-    this.setControlMode('idle')
-    if (this.modelClone) this.modelClone.visible = false
-    this.resetHitStability()
-    this.planeReady = false
-    setARData('viewerARPlaced', 'false')
-    setARData('viewerARModelVisible', 'false')
-    setARData('viewerARTransformWriteSource', 'start-reposition')
-    setARData('viewerARPlacementMarkerVisible', 'false')
-    this.setFlowState('repositioning')
+    this.statusText.textContent = '已重置，请退出后重新进入 AR'
   }
 
   private detectBrandingSource() {
@@ -762,7 +751,7 @@ class HEFurnitureARController {
       </div>
       <div class="he-ar-status"><strong>AR 预览</strong><span data-ar-status>移动手机扫描地面或桌面</span></div>
       <button type="button" class="he-ar-exit" data-exit aria-label="退出 AR">×</button>
-      <button type="button" class="he-ar-reset" data-reset aria-label="重新放置">重放</button>
+      <button type="button" class="he-ar-reset" data-reset aria-label="重置当前模型">重置</button>
       <style>
         html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
         .he-ar-overlay { --marker-x: 50%; --marker-y: 55%; position: fixed; inset: 0; z-index: 9999; color: #fff; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; pointer-events: none; touch-action: none; }
