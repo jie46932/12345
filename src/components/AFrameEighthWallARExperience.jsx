@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const MODEL_URL = '/models/mainModel.glb';
-const MODEL_SOURCE_LABEL = '123453_v1.0.0/mainModel.glb';
+const MODEL_URL = '/media/mainModel-ar-ios11.glb';
+const MODEL_SOURCE_LABEL = '/media/mainModel-ar-ios11.glb';
 const MODEL_TARGET_WIDTH_METERS = 1;
 const STATE_POST_INTERVAL_MS = 1000;
 const CONTROL_REPEAT_MS = 80;
