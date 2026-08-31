@@ -10,6 +10,10 @@ import scene from './.expanse.json'
 delete scene.history
 delete scene.historyVersion
 
+Object.values(scene.objects || {}).forEach((object) => {
+  if (object?.name === 'mainModel-ar-ios11.glb') object.hidden = true
+})
+
 window.ecs.application.init(scene)
 
 if (module.hot) {

@@ -168,6 +168,14 @@ class HEFurnitureARController {
     })
 
     if (!modelEntity) {
+      this.modelObject = this.findModelObjectInScene()
+      if (this.modelObject) {
+        this.hideModel()
+        this.modelScale = this.modelObject.scale?.x || 1
+        setARData('viewerARModelReady', 'true')
+        setARData('viewerARModelVisible', 'false')
+        return
+      }
       window.setTimeout(() => this.findAndHideModel(), 120)
       return
     }
@@ -175,16 +183,36 @@ class HEFurnitureARController {
     this.modelEid = modelEntity.eid
     this.modelEntity = modelEntity
     this.modelObject = this.world.three.entityToObject.get(modelEntity.eid)
-    modelEntity.hide?.()
     if (this.modelObject) {
-      this.modelObject.visible = false
       this.modelObject.traverse?.((object: any) => {
         object.frustumCulled = false
       })
       this.modelScale = this.modelObject.scale?.x || 1
       setARData('viewerARModelReady', 'true')
     }
+    this.hideModel()
     setARData('viewerARModelVisible', 'false')
+  }
+
+  private findModelObjectInScene() {
+    let found: any = null
+    const scene = this.world?.three?.scene
+    scene?.traverse?.((object: any) => {
+      if (!found && object?.name?.includes?.(MODEL_NAME_PART)) found = object
+    })
+    return found
+  }
+
+  private hideModel() {
+    this.modelEntity?.hide?.()
+    if (this.modelEid !== null) this.world?.getEntity?.(this.modelEid)?.hide?.()
+    if (this.modelObject) this.modelObject.visible = false
+  }
+
+  private showModel() {
+    this.modelEntity?.show?.()
+    if (this.modelEid !== null) this.world?.getEntity?.(this.modelEid)?.show?.()
+    if (this.modelObject) this.modelObject.visible = true
   }
 
   private setFlowState(nextState: FlowState) {
@@ -226,10 +254,23 @@ class HEFurnitureARController {
   }
 
   private tick = () => {
+    if (this.flowState !== 'placed') this.ensureModelHiddenBeforePlacement()
     if (this.flowState !== 'placed') this.updatePlacementPoint()
     this.lockModelTransform(false)
     this.detectBrandingSource()
     this.rafId = window.requestAnimationFrame(this.tick)
+  }
+
+  private ensureModelHiddenBeforePlacement() {
+    if (!this.modelObject) {
+      this.modelObject = this.findModelObjectInScene()
+      if (this.modelObject) {
+        this.modelScale = this.modelObject.scale?.x || 1
+        setARData('viewerARModelReady', 'true')
+      }
+    }
+    this.hideModel()
+    setARData('viewerARModelVisible', 'false')
   }
 
   private updatePlacementPoint() {
@@ -333,14 +374,13 @@ class HEFurnitureARController {
   }
 
   private placeModel() {
-    if (this.flowState !== 'ready-to-place' || this.modelEid === null || !this.modelObject) return
+    if (this.flowState !== 'ready-to-place' || !this.modelObject) return
     this.updatePlacementPoint()
     if (!this.planeReady || this.flowState !== 'ready-to-place') return
     this.modelY = this.placementPoint.y
-    this.world.setPosition?.(this.modelEid, this.placementPoint.x, this.modelY, this.placementPoint.z)
-    this.modelEntity?.show?.()
-    this.world.getEntity?.(this.modelEid)?.show?.()
-    this.modelObject.visible = true
+    this.modelObject.position.set?.(this.placementPoint.x, this.modelY, this.placementPoint.z)
+    if (this.modelEid !== null) this.world.setPosition?.(this.modelEid, this.placementPoint.x, this.modelY, this.placementPoint.z)
+    this.showModel()
     this.lockModelTransform(true)
     setARData('viewerARPlaced', 'true')
     setARData('viewerARModelVisible', 'true')
@@ -499,8 +539,7 @@ class HEFurnitureARController {
 
   private resetPlacement() {
     this.stopControlAction()
-    this.modelEntity?.hide?.()
-    if (this.modelEid !== null) this.world?.getEntity?.(this.modelEid)?.hide?.()
+    this.hideModel()
     if (this.modelObject) {
       this.modelObject.visible = false
       this.modelObject.position.set?.(0, this.modelY, 0)
