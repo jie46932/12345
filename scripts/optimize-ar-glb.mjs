@@ -34,6 +34,7 @@ const profiles = [
     output: 'mainModel-ar-ios11.glb',
     textureSize: '1024',
     textureCompress: 'webp',
+    compress: 'false',
     simplify: 'false',
   },
   {
@@ -41,6 +42,7 @@ const profiles = [
     output: 'mainModel-ar-quality.glb',
     textureSize: '2048',
     textureCompress: 'webp',
+    compress: 'false',
     simplify: 'false',
   },
   {
@@ -48,6 +50,7 @@ const profiles = [
     output: 'mainModel-ar-ios11-simplified.glb',
     textureSize: '1024',
     textureCompress: 'webp',
+    compress: 'false',
     simplify: 'true',
     simplifyRatio: '0.6',
     simplifyError: '0.0002',
@@ -82,7 +85,7 @@ function optimizeProfile(profile) {
     input,
     output,
     '--compress',
-    'meshopt',
+    profile.compress || 'false',
     '--texture-compress',
     profile.textureCompress,
     '--texture-size',

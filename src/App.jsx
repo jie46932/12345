@@ -28,10 +28,6 @@ import { LangContext } from './LangContext';
 import useStore from './store/useStore';
 import { mediaUrl } from './utils/assetUrl';
 import { launchProductAR } from './ar/launchAR';
-import {
-  getQuickLookUrl,
-  getSafariQuickLookPageUrl,
-} from './ar/quickLookConfig';
 import { productXRStore } from './xr/productXRStore';
 import { enterProductAR } from './xr/productXRStore';
 import { EIGHTH_WALL_PROVIDER } from './ar/eighthWallConfig';
@@ -271,95 +267,6 @@ function BackendMovedNotice({ portal }) {
   );
 }
 
-function IOSQuickLookGuide({ visible, onClose, onCopyLink, onOpenUSDZ }) {
-  if (!visible) return null;
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="ios-ar-guide-title"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 620,
-        display: 'grid',
-        placeItems: 'center',
-        padding: 20,
-        background: 'rgba(7, 10, 16, 0.42)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-      }}
-    >
-      <section
-        style={{
-          width: 'min(92vw, 390px)',
-          borderRadius: 12,
-          padding: 20,
-          color: '#ffffff',
-          background: 'rgba(15, 19, 28, 0.92)',
-          border: '1px solid rgba(255, 255, 255, 0.22)',
-          boxShadow: '0 22px 70px rgba(0, 0, 0, 0.38)',
-          fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        }}
-      >
-        <h2 id="ios-ar-guide-title" style={{ margin: '0 0 10px', fontSize: 19, lineHeight: 1.25 }}>
-          使用 Safari 打开 AR
-        </h2>
-        <p style={{ margin: '0 0 18px', fontSize: 14, lineHeight: 1.7, color: 'rgba(255,255,255,0.78)' }}>
-          苹果手机请使用 Safari 打开 AR 预览；当前 Chrome 无法直接唤起系统 Quick Look。
-        </p>
-        <div style={{ display: 'grid', gap: 10 }}>
-          <button
-            type="button"
-            onClick={onCopyLink}
-            style={{
-              minHeight: 42,
-              borderRadius: 8,
-              border: '1px solid rgba(255, 255, 255, 0.26)',
-              background: '#ffffff',
-              color: '#10141d',
-              fontSize: 15,
-              fontWeight: 800,
-            }}
-          >
-            复制 Safari 链接
-          </button>
-          <button
-            type="button"
-            onClick={onOpenUSDZ}
-            style={{
-              minHeight: 42,
-              borderRadius: 8,
-              border: '1px solid rgba(255, 255, 255, 0.24)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
-              fontSize: 15,
-              fontWeight: 800,
-            }}
-          >
-            打开 USDZ 文件
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              minHeight: 38,
-              borderRadius: 8,
-              border: '0',
-              background: 'transparent',
-              color: 'rgba(255,255,255,0.72)',
-              fontSize: 14,
-              fontWeight: 700,
-            }}
-          >
-            关闭
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
 function applyUIScale() {
   const scale = Math.max(Math.min(window.innerWidth / BASE_WIDTH, 1), 0.38);
   document.documentElement.style.setProperty('--ui-scale', scale);
@@ -396,8 +303,7 @@ function ConfiguratorApp({ viewer }) {
   const [notice, setNotice] = useState('');
   const [arActive, setArActive] = useState(false);
   const [eighthWallARActive, setEighthWallARActive] = useState(false);
-  const [iosARGuideVisible, setIOSARGuideVisible] = useState(false);
-  const autoQuickLookAttemptedRef = useRef(false);
+  const autoARAttemptedRef = useRef(false);
   const sceneUiReady = authed && sceneReady;
   const loadCompleteTrackedRef = useRef(false);
   const noticeTimerRef = useRef(null);
@@ -857,25 +763,11 @@ function ConfiguratorApp({ viewer }) {
     setNotice(message);
     noticeTimerRef.current = setTimeout(() => setNotice(''), duration);
   }, []);
-  const copySafariARLink = useCallback(async () => {
-    const url = getSafariQuickLookPageUrl();
-    try {
-      await navigator.clipboard?.writeText(url);
-      showNotice('Safari AR 链接已复制');
-    } catch {
-      window.prompt('复制 Safari AR 链接', url);
-    }
-  }, [showNotice]);
-  const openUSDZFile = useCallback(() => {
-    document.documentElement.dataset.viewerARLaunchState = 'opening-usdz';
-    window.location.href = getQuickLookUrl();
-  }, []);
   const handleEnterAR = useCallback(async () => {
     try {
       document.documentElement.dataset.viewerARRequested = 'true';
       const result = await launchProductAR();
       if (result.provider === EIGHTH_WALL_PROVIDER) {
-        setIOSARGuideVisible(false);
         const arUrl = new URL('/aframe-manipulate.html', window.location.origin);
         if (new URLSearchParams(window.location.search).get('arDebug') === '1') {
           arUrl.searchParams.set('arDebug', '1');
@@ -891,17 +783,8 @@ function ConfiguratorApp({ viewer }) {
         });
         return;
       }
-      if (result.launchState === 'safari-required') {
-        setIOSARGuideVisible(true);
-        trackOperation('ar_quicklook_safari_required', {
-          provider: result.provider,
-          platform: result.platform,
-          browser: result.browser,
-        });
-        return;
-      }
       trackOperation('ar_session_started', {
-        mode: result.provider === 'webxr' ? 'immersive-ar' : 'quick-look',
+        mode: result.provider === 'webxr' ? 'immersive-ar' : '8th-wall',
         provider: result.provider,
         platform: result.platform,
         launchState: result.launchState,
@@ -951,8 +834,7 @@ function ConfiguratorApp({ viewer }) {
     }
 
     if (platform === 'ios') {
-      setIOSARGuideVisible(true);
-      showNotice('AR 预览启动失败，可改用 Safari Quick Look 预览', 4200);
+      showNotice('8th Wall AR 启动失败，请刷新后重试', 4200);
       return;
     }
 
@@ -960,12 +842,12 @@ function ConfiguratorApp({ viewer }) {
   }, [showNotice]);
 
   useEffect(() => {
-    if (!sceneUiReady || autoQuickLookAttemptedRef.current) return;
+    if (!sceneUiReady || autoARAttemptedRef.current) return;
     const params = new URLSearchParams(window.location.search);
     const autoStartDebugAR = params.get('arDebug') === '1' && params.get('arAutoStart') === '1';
-    if (params.get('ar') !== 'quicklook' && !autoStartDebugAR) return;
+    if (!autoStartDebugAR) return;
 
-    autoQuickLookAttemptedRef.current = true;
+    autoARAttemptedRef.current = true;
     handleEnterAR();
   }, [handleEnterAR, sceneUiReady]);
 
@@ -1211,12 +1093,6 @@ function ConfiguratorApp({ viewer }) {
                 {notice}
               </div>
             )}
-            <IOSQuickLookGuide
-              visible={sceneUiReady && !arOverlayActive && iosARGuideVisible}
-              onClose={() => setIOSARGuideVisible(false)}
-              onCopyLink={copySafariARLink}
-              onOpenUSDZ={openUSDZFile}
-            />
             {/* UI 层 — zoom 反向抵消浏览器缩放 */}
             {sceneUiReady && !arOverlayActive && (
               <div id="ui-layer" style={{

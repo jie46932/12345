@@ -638,7 +638,7 @@ function installGestureHandlers({
   const place = (clientX, clientY) => {
     if (placedRef.current) return;
     if (cameraIssueRef.current) {
-      setStatusText('摄像头画面未启动，请刷新或使用兜底 AR');
+      setStatusText('摄像头画面未启动，请刷新后重试');
       return;
     }
     if (!modelReadyRef.current) {
@@ -1332,7 +1332,7 @@ export default function EighthWallARExperience({ onClose, onError }) {
           if (cancelled || cameraFeedReadyRef.current || cameraEvidenceSeen) return;
           setCameraIssueState(true);
           setARData('viewerARCameraBlackFrameSuspected', 'true');
-          setStatusText('摄像头画面未启动，请刷新或使用兜底 AR');
+          setStatusText('摄像头画面未启动，请刷新后重试');
         }, CAMERA_FEED_TIMEOUT_MS);
       } catch (error) {
         if (cancelled) return;
@@ -1543,7 +1543,7 @@ export default function EighthWallARExperience({ onClose, onError }) {
               type="button"
               onClick={() => onError?.(new Error('8th Wall camera feed unavailable'))}
             >
-              使用兜底 AR
+              重新尝试
             </button>
             <button type="button" onClick={onClose}>返回</button>
           </span>

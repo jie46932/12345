@@ -1,12 +1,5 @@
 import { enterProductAR, isProductARSupported } from '../xr/productXRStore';
 import {
-  QUICK_LOOK_PROVIDER,
-  QUICK_LOOK_SAFARI_REQUIRED_MESSAGE,
-  QUICK_LOOK_SAFARI_REQUIRED_PROVIDER,
-  QUICK_LOOK_UNAVAILABLE_MESSAGE,
-  openQuickLook,
-} from './quickLookConfig';
-import {
   EIGHTH_WALL_PROVIDER,
   isEighthWallMobilePlatform,
 } from './eighthWallConfig';
@@ -71,11 +64,7 @@ export async function detectARPlatform() {
       : 'unsupported',
     fallbackProvider: immersiveARSupported
       ? 'webxr'
-      : platformInfo.platform === 'ios'
-        ? platformInfo.browser === 'safari-ios'
-          ? QUICK_LOOK_PROVIDER
-          : QUICK_LOOK_SAFARI_REQUIRED_PROVIDER
-        : null,
+      : null,
   };
 }
 
@@ -83,16 +72,9 @@ export async function enterAndroidWebXR() {
   return enterProductAR();
 }
 
-export function enterIOSQuickLook() {
-  return openQuickLook();
-}
-
 export function showARUnsupportedNotice(platformInfo) {
-  if (platformInfo?.provider === QUICK_LOOK_SAFARI_REQUIRED_PROVIDER) {
-    return QUICK_LOOK_SAFARI_REQUIRED_MESSAGE;
-  }
   if (platformInfo?.platform === 'ios') {
-    return QUICK_LOOK_UNAVAILABLE_MESSAGE;
+    return '请使用 iPhone Chrome 或 Safari 通过 HTTPS 打开 8th Wall AR 预览';
   }
   if (platformInfo?.platform === 'android') {
     return '请使用支持 ARCore 的安卓手机 Chrome，并通过 HTTPS 打开页面';

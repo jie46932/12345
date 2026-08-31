@@ -14,7 +14,6 @@ const skippedRootMediaNames = new Set([
   '12345.gltf',
   '12345.gltf.gz',
   '12345.gltf.xz',
-  '12345-ar.previous.usdz',
 ]);
 
 const skippedRootMediaPatterns = [

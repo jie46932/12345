@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
     <title>HE Furniture AR</title>
 
+    <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.22.0/meshopt_decoder.js"></script>
     <script crossorigin="anonymous" src="/external/scripts/8frame-1.5.0.min.js"></script>
     <script crossorigin="anonymous" async src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" data-preload-chunks="slam"></script>
 
@@ -259,6 +260,7 @@
       const MOVE_STEP_METERS = 0.08
       const ROTATE_STEP_RADIANS = Math.PI / 36
       const DRAG_CANCEL_PX = 18
+      const SURFACE_HIT_TYPES = ['DETECTED_SURFACE', 'ESTIMATED_SURFACE']
 
       const setARData = (name, value) => {
         document.documentElement.dataset[name] = String(value)
@@ -341,6 +343,90 @@
       let longPressTimer = 0
       let activePointers = new Map()
       let lastGroundPoint = null
+      let lastHitType = ''
+
+      const isSurfaceHit = hit => (
+        hit?.position &&
+        (hit.type === 'DETECTED_SURFACE' || hit.type === 'ESTIMATED_SURFACE')
+      )
+
+      const pickBestHit = hits => {
+        if (!Array.isArray(hits) || !hits.length) return null
+        return hits.find(isSurfaceHit) || null
+      }
+
+      const getCenterSurfaceHit = () => {
+        if (!window.XR8?.XrController?.hitTest) return null
+        let hits = []
+        try {
+          hits = window.XR8.XrController.hitTest(0.5, 0.58, SURFACE_HIT_TYPES) || []
+        } catch {
+          hits = []
+        }
+        if (!hits.length) {
+          try {
+            hits = window.XR8.XrController.hitTest(0.5, 0.58) || []
+          } catch {
+            hits = []
+          }
+        }
+        setARData('viewerARHitCount', String(hits.length))
+        const hit = pickBestHit(hits)
+        lastHitType = hit?.type || ''
+        setARData('viewerARHitType', lastHitType)
+        return hit
+      }
+
+      const toVector3 = position => {
+        if (!position) return null
+        return new THREE.Vector3(position.x || 0, position.y || 0, position.z || 0)
+      }
+
+      const projectWorldToScreen = worldPosition => {
+        if (!camera?.object3D || !worldPosition) return null
+        const projected = worldPosition.clone().project(camera.object3D.children?.[0] || camera.object3D)
+        if (!Number.isFinite(projected.x) || !Number.isFinite(projected.y) || projected.z < -1 || projected.z > 1) {
+          return null
+        }
+        return {
+          x: (projected.x * 0.5 + 0.5) * 100,
+          y: (-projected.y * 0.5 + 0.5) * 100,
+        }
+      }
+
+      const updatePlacementFromHit = () => {
+        if (placed) return
+        const hit = getCenterSurfaceHit()
+        const hitPosition = toVector3(hit?.position)
+        planeReady = Boolean(hitPosition)
+        setARData('viewerARPlaneReady', planeReady ? 'true' : 'false')
+        setARData('viewerARReticleReady', planeReady ? 'true' : 'false')
+        setARData('viewerARPlacementHitReady', planeReady ? 'true' : 'false')
+        setARData('viewerARPlacementHitType', planeReady ? lastHitType : '')
+
+        if (!planeReady) {
+          setARData('viewerARPlacementMarkerVisible', 'false')
+          if (document.documentElement.dataset.viewerARFlowState !== 'scanning') setFlowState('scanning')
+          return
+        }
+
+        lastGroundPoint = hitPosition
+        const screen = projectWorldToScreen(hitPosition)
+        if (screen) {
+          const x = Math.min(88, Math.max(12, screen.x))
+          const y = Math.min(82, Math.max(24, screen.y))
+          document.documentElement.style.setProperty('--placement-x', `${x}%`)
+          document.documentElement.style.setProperty('--placement-y', `${y}%`)
+          setARData('viewerARReticleScreenX', x.toFixed(2))
+          setARData('viewerARReticleScreenY', y.toFixed(2))
+        }
+        if (document.documentElement.dataset.viewerARFlowState !== 'ready-to-place') {
+          setFlowState('ready-to-place')
+        } else {
+          setARData('viewerARPlacementMarkerVisible', 'true')
+          setStatus(modelReady ? '点击摆放点放置模型' : '模型加载中')
+        }
+      }
 
       const setFlowState = state => {
         setARData('viewerARFlowState', state)
@@ -405,7 +491,6 @@
       const placeModel = point => {
         if (placed || !model?.object3D || !modelReady || !planeReady) return
         const target = point?.clone ? point.clone() : getDefaultPlacement()
-        target.y = 0
         model.object3D.position.copy(target)
         model.object3D.visible = true
         placed = true
@@ -496,7 +581,7 @@
         event.preventDefault()
         activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
         if (!placed) {
-          placeModel(lastGroundPoint || getDefaultPlacement())
+          if (planeReady && modelReady) placeModel(lastGroundPoint)
           return
         }
         setARData('viewerARDragging', activePointers.size === 1 ? 'true' : 'false')
@@ -548,8 +633,7 @@
         setARData('viewerARCameraFeedReady', 'true')
         setARData('viewerARCameraTextureReady', 'true')
         setARData('viewerARCameraBlackFrameSuspected', 'false')
-        planeReady = true
-        if (!placed) setFlowState('ready-to-place')
+        if (!placed) setFlowState('scanning')
       })
 
       model.addEventListener('model-loaded', () => {
@@ -581,9 +665,7 @@
             setARData('viewerARCameraTextureReady', 'true')
             setARData('viewerARCameraBlackFrameSuspected', 'false')
           }
-          if (planeReady && !placed) {
-            setARData('viewerARPlacementMarkerVisible', 'true')
-          }
+          updatePlacementFromHit()
           updateModelState()
         }
       })

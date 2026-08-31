@@ -7,10 +7,9 @@
   "scripts": {
     "dev": "vite --open /index.dev.html",
     "dev:viewer": "vite --host 127.0.0.1 --port 5173 --open /index.dev.html",
-    "build": "npm run build:ar-glb && npm run build:ar-ios && vite build && node scripts/copy-vercel-assets.cjs && node scripts/copy-build-assets.cjs && node scripts/gzip-dist-assets.cjs",
+    "build": "npm run build:ar-glb && vite build && node scripts/copy-vercel-assets.cjs && node scripts/copy-build-assets.cjs && node scripts/gzip-dist-assets.cjs",
     "build:ar-glb": "node scripts/optimize-ar-glb.mjs",
-    "build:ar-ios": "node scripts/build-usdz.mjs",
-    "build:vercel": "npm run build:ar-ios && vite build && node scripts/copy-vercel-assets.cjs",
+    "build:vercel": "npm run build:ar-glb && vite build && node scripts/copy-vercel-assets.cjs",
     "deploy:server": "powershell -ExecutionPolicy Bypass -File scripts/deploy-server.ps1",
     "upload:oss": "node scripts/upload-media-to-oss.cjs",
     "check:max": "node scripts/check-max-report.cjs",
