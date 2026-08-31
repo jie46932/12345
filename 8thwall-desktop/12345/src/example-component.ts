@@ -226,8 +226,8 @@ class HEFurnitureARController {
   }
 
   private tick = () => {
-    this.updatePlacementPoint()
-    this.lockModelTransform()
+    if (this.flowState !== 'placed') this.updatePlacementPoint()
+    this.lockModelTransform(false)
     this.detectBrandingSource()
     this.rafId = window.requestAnimationFrame(this.tick)
   }
@@ -341,7 +341,7 @@ class HEFurnitureARController {
     this.modelEntity?.show?.()
     this.world.getEntity?.(this.modelEid)?.show?.()
     this.modelObject.visible = true
-    this.lockModelTransform()
+    this.lockModelTransform(true)
     setARData('viewerARPlaced', 'true')
     setARData('viewerARModelVisible', 'true')
     setARData('viewerARPlacementMarkerVisible', 'false')
@@ -350,14 +350,14 @@ class HEFurnitureARController {
     this.setFlowState('placed')
   }
 
-  private lockModelTransform() {
+  private lockModelTransform(syncEcs = false) {
     if (!this.modelObject) return
-    this.modelObject.position.y = this.modelY
+    if (syncEcs) this.modelObject.position.y = this.modelY
     this.modelObject.rotation.x = 0
     this.modelObject.rotation.z = 0
     this.modelObject.rotation.y = this.modelYaw
     this.modelObject.scale.set?.(this.modelScale, this.modelScale, this.modelScale)
-    if (this.modelEid !== null) {
+    if (syncEcs && this.modelEid !== null) {
       this.world?.setPosition?.(this.modelEid, this.modelObject.position.x, this.modelY, this.modelObject.position.z)
       this.world?.setScale?.(this.modelEid, this.modelScale, this.modelScale, this.modelScale)
     }
@@ -390,7 +390,7 @@ class HEFurnitureARController {
       this.modelYaw = normalizeAngle(this.modelYaw - ROTATE_STEP_RADIANS)
     }
 
-    this.lockModelTransform()
+    this.lockModelTransform(true)
     setARData('viewerARLastMoveX', this.modelObject.position.x.toFixed(4))
     setARData('viewerARLastMoveZ', this.modelObject.position.z.toFixed(4))
     setARData('viewerARLastRotateRadians', this.modelYaw.toFixed(4))
@@ -505,7 +505,7 @@ class HEFurnitureARController {
       this.modelObject.visible = false
       this.modelObject.position.set?.(0, this.modelY, 0)
       this.modelYaw = 0
-      this.lockModelTransform()
+      this.lockModelTransform(true)
     }
     setARData('viewerARPlaced', 'false')
     setARData('viewerARModelVisible', 'false')
