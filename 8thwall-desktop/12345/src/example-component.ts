@@ -8,6 +8,7 @@ declare global {
   interface Window {
     __heFurnitureARController?: HEFurnitureARController
     ecs?: any
+    XR8?: any
   }
 }
 
@@ -16,8 +17,10 @@ const LONG_PRESS_MS = 450
 const CONTROL_REPEAT_MS = 40
 const MOVE_STEP_METERS = 0.018
 const ROTATE_STEP_RADIANS = Math.PI / 90
-const DEFAULT_PLANE_Y = 0
-const DEFAULT_MARKER_DISTANCE_METERS = 1.25
+const HIT_TEST_X = 0.5
+const HIT_TEST_Y = 0.58
+const SURFACE_HIT_TYPES = new Set(['DETECTED_SURFACE', 'ESTIMATED_SURFACE'])
+const MODEL_ENTITY_ID = 'f24191cd-bd18-4c4f-91c3-5466e48822a6'
 
 const DATASET_DEFAULTS: Record<string, string> = {
   viewerARProvider: '8th-wall-ecs',
@@ -38,6 +41,18 @@ const DATASET_DEFAULTS: Record<string, string> = {
   viewerARBrandingSource: 'none',
   viewerARModelVisible: 'false',
   viewerARModelReady: 'false',
+  viewerARHitCount: '0',
+  viewerARHitType: '',
+  viewerARHitSource: '',
+  viewerARHitTestError: '',
+  viewerARPlacementPointX: '',
+  viewerARPlacementPointY: '',
+  viewerARPlacementPointZ: '',
+  viewerARReticleScreenX: '',
+  viewerARReticleScreenY: '',
+  viewerARPlacementReadyReason: '',
+  viewerARTrackingEvidence: 'none',
+  viewerARLastRealityEvent: '',
   viewerARLastMoveX: '',
   viewerARLastMoveZ: '',
   viewerARLastRotateRadians: '0',
@@ -59,14 +74,15 @@ const normalizeAngle = (angle: number) => {
 class HEFurnitureARController {
   private world: any = null
   private modelEid: number | null = null
+  private modelEntity: any = null
   private modelObject: any = null
-  private modelY = DEFAULT_PLANE_Y
+  private modelY = 0
   private modelYaw = 0
   private modelScale = 1
   private flowState: FlowState = 'scanning'
   private controlMode: ControlMode = 'idle'
   private planeReady = false
-  private placementPoint = {x: 0, y: DEFAULT_PLANE_Y, z: -DEFAULT_MARKER_DISTANCE_METERS}
+  private placementPoint = {x: 0, y: 0, z: 0}
   private markerScreen = {x: 50, y: 55}
   private rafId = 0
   private longPressTimer = 0
@@ -124,13 +140,13 @@ class HEFurnitureARController {
     const events = this.world?.events
     const globalId = events?.globalId
     if (!events || globalId === undefined) {
-      window.setTimeout(() => this.markPlaneReady('timer-estimated-plane'), 1200)
+      setARData('viewerARLastRealityEvent', 'no-event-bus')
       return
     }
 
-    const markReady = (event: any) => {
+    const recordEvent = (event: any) => {
       const eventName = event?.name || 'reality-event'
-      this.markPlaneReady(eventName)
+      setARData('viewerARLastRealityEvent', eventName)
     }
 
     ;[
@@ -140,19 +156,15 @@ class HEFurnitureARController {
       ecs.events.REALITY_LOCATION_FOUND,
       ecs.events.REALITY_LOCATION_UPDATED,
     ].forEach((eventName) => {
-      events.addListener(globalId, eventName, markReady)
+      events.addListener(globalId, eventName, recordEvent)
     })
-
-    window.setTimeout(() => {
-      if (!this.planeReady) this.markPlaneReady('timer-estimated-plane')
-    }, 1800)
   }
 
   private findAndHideModel() {
     const entities = Array.from(this.world?.eidToEntity?.values?.() || []) as any[]
     const modelEntity = entities.find((entity) => {
       const object = this.world?.three?.entityToObject?.get?.(entity.eid)
-      return object?.name?.includes?.(MODEL_NAME_PART) || entity?.eid === this.modelEid
+      return entity?.id === MODEL_ENTITY_ID || object?.name?.includes?.(MODEL_NAME_PART) || entity?.eid === this.modelEid
     })
 
     if (!modelEntity) {
@@ -161,6 +173,7 @@ class HEFurnitureARController {
     }
 
     this.modelEid = modelEntity.eid
+    this.modelEntity = modelEntity
     this.modelObject = this.world.three.entityToObject.get(modelEntity.eid)
     modelEntity.hide?.()
     if (this.modelObject) {
@@ -172,16 +185,6 @@ class HEFurnitureARController {
       setARData('viewerARModelReady', 'true')
     }
     setARData('viewerARModelVisible', 'false')
-  }
-
-  private markPlaneReady(reason: string) {
-    if (this.flowState === 'placed') return
-    this.planeReady = true
-    setARData('viewerARPlaneReady', 'true')
-    setARData('viewerARReticleReady', 'true')
-    setARData('viewerARPlacementMarkerVisible', 'true')
-    setARData('viewerARPlacementReadyReason', reason)
-    this.setFlowState('ready-to-place')
   }
 
   private setFlowState(nextState: FlowState) {
@@ -233,31 +236,85 @@ class HEFurnitureARController {
     const camera = this.world?.three?.activeCamera
     if (!camera?.position) return
 
-    const point = this.estimateCameraPlanePoint(camera)
+    const hit = this.getSurfaceHit()
+    if (!hit) {
+      this.planeReady = false
+      setARData('viewerARPlaneReady', 'false')
+      setARData('viewerARReticleReady', 'false')
+      setARData('viewerARPlacementMarkerVisible', 'false')
+      setARData('viewerARTrackingEvidence', 'none')
+      if (this.flowState !== 'placed') this.setFlowState('scanning')
+      return
+    }
+
+    const point = this.vectorFromHitPosition(hit.position)
+    if (!point) {
+      this.planeReady = false
+      setARData('viewerARPlaneReady', 'false')
+      setARData('viewerARReticleReady', 'false')
+      setARData('viewerARPlacementMarkerVisible', 'false')
+      if (this.flowState !== 'placed') this.setFlowState('scanning')
+      return
+    }
+
     this.placementPoint = point
     const projected = this.projectWorldToScreen(camera, point)
     if (projected) this.markerScreen = projected
 
     this.root.style.setProperty('--marker-x', `${this.markerScreen.x}%`)
     this.root.style.setProperty('--marker-y', `${this.markerScreen.y}%`)
+    if (projected) {
+      setARData('viewerARReticleScreenX', this.markerScreen.x.toFixed(2))
+      setARData('viewerARReticleScreenY', this.markerScreen.y.toFixed(2))
+    }
+    setARData('viewerARPlacementPointX', point.x.toFixed(4))
+    setARData('viewerARPlacementPointY', point.y.toFixed(4))
+    setARData('viewerARPlacementPointZ', point.z.toFixed(4))
+
+    this.planeReady = true
+    setARData('viewerARPlaneReady', 'true')
+    setARData('viewerARReticleReady', 'true')
+    setARData('viewerARPlacementMarkerVisible', this.flowState === 'placed' ? 'false' : 'true')
+    setARData('viewerARTrackingEvidence', 'surface-hit')
+    setARData('viewerARPlacementReadyReason', 'xr8-hit-test')
+    if (this.flowState !== 'placed') this.setFlowState('ready-to-place')
   }
 
-  private estimateCameraPlanePoint(camera: any) {
-    const origin = camera.getWorldPosition ? camera.getWorldPosition(camera.position.clone()) : camera.position
-    const direction = camera.position?.clone?.() || {x: 0, y: -0.35, z: -1}
-    if (camera.getWorldDirection && direction.set) camera.getWorldDirection(direction)
-    if (!Number.isFinite(direction.x)) direction.x = 0
-    if (!Number.isFinite(direction.y)) direction.y = -0.35
-    if (!Number.isFinite(direction.z)) direction.z = -1
-
-    let distance = Math.abs(direction.y) > 0.04 ? (DEFAULT_PLANE_Y - origin.y) / direction.y : DEFAULT_MARKER_DISTANCE_METERS
-    if (!Number.isFinite(distance) || distance < 0.35 || distance > 4) distance = DEFAULT_MARKER_DISTANCE_METERS
-
-    return {
-      x: origin.x + direction.x * distance,
-      y: DEFAULT_PLANE_Y,
-      z: origin.z + direction.z * distance,
+  private getSurfaceHit() {
+    const hitTest = window.XR8?.XrController?.hitTest
+    if (typeof hitTest !== 'function') {
+      setARData('viewerARHitTestError', 'XR8.XrController.hitTest unavailable')
+      setARData('viewerARHitCount', '0')
+      return null
     }
+
+    try {
+      const rawHits = hitTest(HIT_TEST_X, HIT_TEST_Y) || []
+      const hits = Array.isArray(rawHits) ? rawHits : [rawHits]
+      setARData('viewerARHitCount', hits.length)
+      const surfaceHit = hits.find((candidate) => {
+        const type = String(candidate?.type || candidate?.hitType || candidate?.surfaceType || '')
+        return candidate?.position && (!type || SURFACE_HIT_TYPES.has(type))
+      })
+      setARData('viewerARHitType', surfaceHit ? String(surfaceHit.type || surfaceHit.hitType || surfaceHit.surfaceType || 'SURFACE_HIT') : '')
+      setARData('viewerARHitSource', surfaceHit ? 'XR8.XrController.hitTest' : '')
+      setARData('viewerARHitTestError', '')
+      return surfaceHit || null
+    } catch (error) {
+      setARData('viewerARHitTestError', error instanceof Error ? error.message : 'hit-test failed')
+      setARData('viewerARHitCount', '0')
+      setARData('viewerARHitType', '')
+      setARData('viewerARHitSource', '')
+      return null
+    }
+  }
+
+  private vectorFromHitPosition(position: any) {
+    const x = Number(Array.isArray(position) ? position[0] : position?.x)
+    const y = Number(Array.isArray(position) ? position[1] : position?.y)
+    const z = Number(Array.isArray(position) ? position[2] : position?.z)
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null
+    return {x, y, z}
   }
 
   private projectWorldToScreen(camera: any, point: {x: number, y: number, z: number}) {
@@ -276,9 +333,12 @@ class HEFurnitureARController {
   }
 
   private placeModel() {
-    if (!this.planeReady || this.flowState !== 'ready-to-place' || !this.modelEid || !this.modelObject) return
+    if (this.flowState !== 'ready-to-place' || this.modelEid === null || !this.modelObject) return
+    this.updatePlacementPoint()
+    if (!this.planeReady || this.flowState !== 'ready-to-place') return
     this.modelY = this.placementPoint.y
     this.world.setPosition?.(this.modelEid, this.placementPoint.x, this.modelY, this.placementPoint.z)
+    this.modelEntity?.show?.()
     this.world.getEntity?.(this.modelEid)?.show?.()
     this.modelObject.visible = true
     this.lockModelTransform()
@@ -297,7 +357,7 @@ class HEFurnitureARController {
     this.modelObject.rotation.z = 0
     this.modelObject.rotation.y = this.modelYaw
     this.modelObject.scale.set?.(this.modelScale, this.modelScale, this.modelScale)
-    if (this.modelEid) {
+    if (this.modelEid !== null) {
       this.world?.setPosition?.(this.modelEid, this.modelObject.position.x, this.modelY, this.modelObject.position.z)
       this.world?.setScale?.(this.modelEid, this.modelScale, this.modelScale, this.modelScale)
     }
@@ -439,7 +499,8 @@ class HEFurnitureARController {
 
   private resetPlacement() {
     this.stopControlAction()
-    if (this.modelEid) this.world?.getEntity?.(this.modelEid)?.hide?.()
+    this.modelEntity?.hide?.()
+    if (this.modelEid !== null) this.world?.getEntity?.(this.modelEid)?.hide?.()
     if (this.modelObject) {
       this.modelObject.visible = false
       this.modelObject.position.set?.(0, this.modelY, 0)
@@ -449,7 +510,11 @@ class HEFurnitureARController {
     setARData('viewerARPlaced', 'false')
     setARData('viewerARModelVisible', 'false')
     this.setControlMode('idle')
-    this.setFlowState(this.planeReady ? 'ready-to-place' : 'scanning')
+    this.planeReady = false
+    setARData('viewerARPlaneReady', 'false')
+    setARData('viewerARReticleReady', 'false')
+    setARData('viewerARPlacementMarkerVisible', 'false')
+    this.setFlowState('scanning')
   }
 
   private detectBrandingSource() {
