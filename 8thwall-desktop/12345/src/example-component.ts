@@ -39,6 +39,12 @@ const DATASET_DEFAULTS: Record<string, string> = {
   viewerARScaleLocked: 'true',
   viewerARRotationLockedAxis: 'vertical',
   viewerARBrandingSource: 'none',
+  viewerARModelFound: 'false',
+  viewerARModelCloneActive: 'false',
+  viewerAROriginalModelHidden: 'false',
+  viewerARTransformWriteSource: 'none',
+  viewerARJitterSampleDelta: '0',
+  viewerARModelTarget: 'template',
   viewerARModelVisible: 'false',
   viewerARModelReady: 'false',
   viewerARHitCount: '0',
@@ -76,9 +82,12 @@ class HEFurnitureARController {
   private modelEid: number | null = null
   private modelEntity: any = null
   private modelObject: any = null
+  private modelClone: any = null
+  private modelCloneParent: any = null
   private modelY = 0
   private modelYaw = 0
   private modelScale = 1
+  private lastJitterSample: {x: number, y: number, z: number, yaw: number, scale: number} | null = null
   private flowState: FlowState = 'scanning'
   private controlMode: ControlMode = 'idle'
   private planeReady = false
@@ -172,6 +181,7 @@ class HEFurnitureARController {
       if (this.modelObject) {
         this.hideModel()
         this.modelScale = this.modelObject.scale?.x || 1
+        setARData('viewerARModelFound', 'true')
         setARData('viewerARModelReady', 'true')
         setARData('viewerARModelVisible', 'false')
         return
@@ -188,6 +198,7 @@ class HEFurnitureARController {
         object.frustumCulled = false
       })
       this.modelScale = this.modelObject.scale?.x || 1
+      setARData('viewerARModelFound', 'true')
       setARData('viewerARModelReady', 'true')
     }
     this.hideModel()
@@ -198,7 +209,7 @@ class HEFurnitureARController {
     let found: any = null
     const scene = this.world?.three?.scene
     scene?.traverse?.((object: any) => {
-      if (!found && object?.name?.includes?.(MODEL_NAME_PART)) found = object
+      if (!found && !object?.userData?.heFurnitureClone && object?.name?.includes?.(MODEL_NAME_PART)) found = object
     })
     return found
   }
@@ -207,12 +218,15 @@ class HEFurnitureARController {
     this.modelEntity?.hide?.()
     if (this.modelEid !== null) this.world?.getEntity?.(this.modelEid)?.hide?.()
     if (this.modelObject) this.modelObject.visible = false
+    setARData('viewerAROriginalModelHidden', 'true')
+    setARData('viewerARTransformWriteSource', 'hide-template')
   }
 
   private showModel() {
     this.modelEntity?.show?.()
     if (this.modelEid !== null) this.world?.getEntity?.(this.modelEid)?.show?.()
     if (this.modelObject) this.modelObject.visible = true
+    setARData('viewerAROriginalModelHidden', 'false')
   }
 
   private setFlowState(nextState: FlowState) {
@@ -257,6 +271,7 @@ class HEFurnitureARController {
     if (this.flowState !== 'placed') this.ensureModelHiddenBeforePlacement()
     if (this.flowState !== 'placed') this.updatePlacementPoint()
     this.lockModelTransform(false)
+    this.sampleJitter()
     this.detectBrandingSource()
     this.rafId = window.requestAnimationFrame(this.tick)
   }
@@ -266,6 +281,7 @@ class HEFurnitureARController {
       this.modelObject = this.findModelObjectInScene()
       if (this.modelObject) {
         this.modelScale = this.modelObject.scale?.x || 1
+        setARData('viewerARModelFound', 'true')
         setARData('viewerARModelReady', 'true')
       }
     }
@@ -358,6 +374,51 @@ class HEFurnitureARController {
     return {x, y, z}
   }
 
+  private getPlacedObject() {
+    if (this.modelClone) return this.modelClone
+    return this.flowState === 'placed' ? this.modelObject : null
+  }
+
+  private createModelClone() {
+    if (!this.modelObject) return null
+    const scene = this.world?.three?.scene
+    if (!scene) return null
+
+    this.removeModelClone()
+    const clone = this.modelObject.clone?.(true)
+    if (!clone) return null
+
+    clone.name = `${MODEL_NAME_PART}-placed-clone`
+    clone.userData = {...(clone.userData || {}), heFurnitureClone: true}
+    clone.visible = true
+    clone.frustumCulled = false
+    clone.traverse?.((object: any) => {
+      object.frustumCulled = false
+    })
+
+    scene.add(clone)
+    this.modelClone = clone
+    this.modelCloneParent = scene
+    this.lastJitterSample = null
+    setARData('viewerARModelCloneActive', 'true')
+    setARData('viewerARModelTarget', 'clone')
+    setARData('viewerARTransformWriteSource', 'create-clone')
+    return clone
+  }
+
+  private removeModelClone() {
+    if (this.modelClone?.parent) {
+      this.modelClone.parent.remove(this.modelClone)
+    } else if (this.modelCloneParent?.remove) {
+      this.modelCloneParent.remove(this.modelClone)
+    }
+    this.modelClone = null
+    this.modelCloneParent = null
+    this.lastJitterSample = null
+    setARData('viewerARModelCloneActive', 'false')
+    setARData('viewerARModelTarget', 'template')
+  }
+
   private projectWorldToScreen(camera: any, point: {x: number, y: number, z: number}) {
     try {
       const vector = camera.position.clone()
@@ -378,12 +439,18 @@ class HEFurnitureARController {
     this.updatePlacementPoint()
     if (!this.planeReady || this.flowState !== 'ready-to-place') return
     this.modelY = this.placementPoint.y
-    this.modelObject.position.set?.(this.placementPoint.x, this.modelY, this.placementPoint.z)
-    if (this.modelEid !== null) this.world.setPosition?.(this.modelEid, this.placementPoint.x, this.modelY, this.placementPoint.z)
-    this.showModel()
-    this.lockModelTransform(true)
+    const placedObject = this.createModelClone()
+    if (!placedObject) return
+    this.hideModel()
+    placedObject.position.set?.(this.placementPoint.x, this.modelY, this.placementPoint.z)
+    placedObject.rotation.x = 0
+    placedObject.rotation.z = 0
+    placedObject.rotation.y = this.modelYaw
+    placedObject.scale.set?.(this.modelScale, this.modelScale, this.modelScale)
+    this.lockModelTransform(false)
     setARData('viewerARPlaced', 'true')
     setARData('viewerARModelVisible', 'true')
+    setARData('viewerARTransformWriteSource', 'place-clone')
     setARData('viewerARPlacementMarkerVisible', 'false')
     setARData('viewerARLastMoveX', this.placementPoint.x.toFixed(4))
     setARData('viewerARLastMoveZ', this.placementPoint.z.toFixed(4))
@@ -391,14 +458,15 @@ class HEFurnitureARController {
   }
 
   private lockModelTransform(syncEcs = false) {
-    if (!this.modelObject) return
-    if (syncEcs) this.modelObject.position.y = this.modelY
-    this.modelObject.rotation.x = 0
-    this.modelObject.rotation.z = 0
-    this.modelObject.rotation.y = this.modelYaw
-    this.modelObject.scale.set?.(this.modelScale, this.modelScale, this.modelScale)
-    if (syncEcs && this.modelEid !== null) {
-      this.world?.setPosition?.(this.modelEid, this.modelObject.position.x, this.modelY, this.modelObject.position.z)
+    const object = this.getPlacedObject()
+    if (!object) return
+    object.position.y = this.modelY
+    object.rotation.x = 0
+    object.rotation.z = 0
+    object.rotation.y = this.modelYaw
+    object.scale.set?.(this.modelScale, this.modelScale, this.modelScale)
+    if (syncEcs && !this.modelClone && this.modelEid !== null) {
+      this.world?.setPosition?.(this.modelEid, object.position.x, this.modelY, object.position.z)
       this.world?.setScale?.(this.modelEid, this.modelScale, this.modelScale, this.modelScale)
     }
     setARData('viewerARScaleLocked', 'true')
@@ -406,34 +474,67 @@ class HEFurnitureARController {
   }
 
   private applyAction(action: ControlAction) {
-    if (this.flowState !== 'placed' || !this.modelObject) return
+    const object = this.getPlacedObject()
+    if (this.flowState !== 'placed' || !object) return
     const camera = this.world?.three?.activeCamera
     const yaw = this.getCameraYaw(camera)
     const forward = {x: Math.sin(yaw), z: -Math.cos(yaw)}
     const right = {x: Math.cos(yaw), z: Math.sin(yaw)}
 
     if (action === 'front') {
-      this.modelObject.position.x += forward.x * MOVE_STEP_METERS
-      this.modelObject.position.z += forward.z * MOVE_STEP_METERS
+      object.position.x += forward.x * MOVE_STEP_METERS
+      object.position.z += forward.z * MOVE_STEP_METERS
     } else if (action === 'back') {
-      this.modelObject.position.x -= forward.x * MOVE_STEP_METERS
-      this.modelObject.position.z -= forward.z * MOVE_STEP_METERS
+      object.position.x -= forward.x * MOVE_STEP_METERS
+      object.position.z -= forward.z * MOVE_STEP_METERS
     } else if (action === 'left') {
-      this.modelObject.position.x -= right.x * MOVE_STEP_METERS
-      this.modelObject.position.z -= right.z * MOVE_STEP_METERS
+      object.position.x -= right.x * MOVE_STEP_METERS
+      object.position.z -= right.z * MOVE_STEP_METERS
     } else if (action === 'right') {
-      this.modelObject.position.x += right.x * MOVE_STEP_METERS
-      this.modelObject.position.z += right.z * MOVE_STEP_METERS
+      object.position.x += right.x * MOVE_STEP_METERS
+      object.position.z += right.z * MOVE_STEP_METERS
     } else if (action === 'rotate-left') {
       this.modelYaw = normalizeAngle(this.modelYaw + ROTATE_STEP_RADIANS)
     } else if (action === 'rotate-right') {
       this.modelYaw = normalizeAngle(this.modelYaw - ROTATE_STEP_RADIANS)
     }
 
-    this.lockModelTransform(true)
-    setARData('viewerARLastMoveX', this.modelObject.position.x.toFixed(4))
-    setARData('viewerARLastMoveZ', this.modelObject.position.z.toFixed(4))
+    this.lockModelTransform(false)
+    setARData('viewerARTransformWriteSource', `control-${action}`)
+    setARData('viewerARLastMoveX', object.position.x.toFixed(4))
+    setARData('viewerARLastMoveZ', object.position.z.toFixed(4))
     setARData('viewerARLastRotateRadians', this.modelYaw.toFixed(4))
+  }
+
+  private sampleJitter() {
+    const object = this.getPlacedObject()
+    if (this.flowState !== 'placed' || !object || this.controlTimer) {
+      this.lastJitterSample = null
+      return
+    }
+
+    const current = {
+      x: Number(object.position?.x || 0),
+      y: Number(object.position?.y || 0),
+      z: Number(object.position?.z || 0),
+      yaw: Number(object.rotation?.y || 0),
+      scale: Number(object.scale?.x || 1),
+    }
+
+    if (!this.lastJitterSample) {
+      this.lastJitterSample = current
+      setARData('viewerARJitterSampleDelta', '0')
+      return
+    }
+
+    const delta =
+      Math.abs(current.x - this.lastJitterSample.x) +
+      Math.abs(current.y - this.lastJitterSample.y) +
+      Math.abs(current.z - this.lastJitterSample.z) +
+      Math.abs(current.yaw - this.lastJitterSample.yaw) +
+      Math.abs(current.scale - this.lastJitterSample.scale)
+    setARData('viewerARJitterSampleDelta', delta.toFixed(6))
+    this.lastJitterSample = current
   }
 
   private getCameraYaw(camera: any) {
@@ -539,15 +640,17 @@ class HEFurnitureARController {
 
   private resetPlacement() {
     this.stopControlAction()
+    this.removeModelClone()
     this.hideModel()
     if (this.modelObject) {
       this.modelObject.visible = false
       this.modelObject.position.set?.(0, this.modelY, 0)
       this.modelYaw = 0
-      this.lockModelTransform(true)
     }
     setARData('viewerARPlaced', 'false')
     setARData('viewerARModelVisible', 'false')
+    setARData('viewerARTransformWriteSource', 'reset')
+    setARData('viewerARJitterSampleDelta', '0')
     this.setControlMode('idle')
     this.planeReady = false
     setARData('viewerARPlaneReady', 'false')
